@@ -7,12 +7,13 @@ import {
   Param,
   Patch,
   Delete,
+  Query,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { GradesService } from "./grades.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateGradeDto } from "./dto/create-grade.dto";
-  import { UpdateGradeDto } from "./dto/update-grade.dto";
+import { UpdateGradeDto } from "./dto/update-grade.dto";
 
 @ApiTags("Grades")
 @ApiBearerAuth()
@@ -28,8 +29,22 @@ export class GradesController {
   }
 
   @Get()
-  findAll() {
-    return this.gradesService.findAll();
+  findAll(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("search") search?: string,
+    @Query("studentIds") studentIds?: string
+  ) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 10;
+    const studentIdsArray = studentIds ? studentIds.split(",") : undefined;
+
+    return this.gradesService.findAll(
+      pageNum,
+      limitNum,
+      search,
+      studentIdsArray
+    );
   }
 
   @Get(":id")

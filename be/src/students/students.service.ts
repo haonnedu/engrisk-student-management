@@ -1,16 +1,44 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateStudentDto, UpdateStudentDto } from './dto';
-import { StudentStatus } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateStudentDto, UpdateStudentDto } from "./dto";
+import { StudentStatus, UserRole } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class StudentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createStudentDto: CreateStudentDto) {
+    // If userId is not provided, automatically create a User with default password
+    let userId = createStudentDto.userId;
+
+    if (!userId) {
+      const defaultPassword = "123456";
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+      const createdUser = await this.prisma.user.create({
+        data: {
+          email: undefined, // optional; may be set later
+          phone: createStudentDto.phone, // attach phone if provided
+          password: hashedPassword,
+          role: UserRole.STUDENT,
+        },
+      });
+
+      userId = createdUser.id;
+    }
+
     return this.prisma.student.create({
       data: {
-        ...createStudentDto,
+        userId,
+        firstName: createStudentDto.firstName,
+        engName: createStudentDto.engName,
+        lastName: createStudentDto.lastName,
+        dateOfBirth: createStudentDto.dateOfBirth,
+        phone: createStudentDto.phone,
+        address: createStudentDto.address,
+        emergencyContact: createStudentDto.emergencyContact,
+        status: createStudentDto.status ?? StudentStatus.ACTIVE,
         studentId: `STU${Date.now()}`, // Generate unique student ID
       },
       include: {
@@ -54,7 +82,7 @@ export class StudentsService {
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
       }),
       this.prisma.student.count({ where }),

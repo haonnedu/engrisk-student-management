@@ -12,7 +12,8 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
+  email     String?  @unique
+  phone     String?  @unique
   password  String
   role      UserRole @default(STUDENT)
   createdAt DateTime @default(now())
@@ -30,6 +31,7 @@ model Student {
   userId       String   @unique
   studentId    String   @unique // Student ID number
   firstName    String
+  engName      String
   lastName     String
   dateOfBirth  DateTime
   phone        String?
@@ -44,6 +46,8 @@ model Student {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
   grades      Grade[]
+  assessmentScores AssessmentScore[]
+  attendance  Attendance[]
 
   @@map("students")
 }
@@ -78,6 +82,7 @@ model Course {
   // Relations
   enrollments Enrollment[]
   grades      Grade[]
+  sections    ClassSection[]
 
   @@map("courses")
 }
@@ -86,6 +91,7 @@ model Enrollment {
   id           String   @id @default(cuid())
   studentId    String
   courseId     String
+  sectionId    String?
   enrolledAt   DateTime @default(now())
   status       EnrollmentStatus @default(ENROLLED)
   completedAt  DateTime?
@@ -95,6 +101,7 @@ model Enrollment {
   // Relations
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  section ClassSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
   @@map("enrollments")
@@ -116,6 +123,81 @@ model Grade {
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@map("grades")
+}
+
+model ClassSection {
+  id              String   @id @default(cuid())
+  name            String
+  code            String   @unique
+  timeDescription String?
+  day1            Int?
+  day2            Int?
+  teacherName     String?
+  book            String?
+  courseId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  course      Course?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  assessments Assessment[]
+  attendance  Attendance[]
+
+  @@map("class_sections")
+}
+
+model Assessment {
+  id         String   @id @default(cuid())
+  sectionId  String
+  code       String   // e.g. HW, SP, PP, TEST_1L
+  label      String
+  maxScore   Int      @default(10)
+  weight     Float    @default(1)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  section ClassSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  scores  AssessmentScore[]
+
+  @@unique([sectionId, code])
+  @@map("assessments")
+}
+
+model AssessmentScore {
+  id           String   @id @default(cuid())
+  assessmentId String
+  studentId    String
+  score        Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, studentId])
+  @@map("assessment_scores")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  sectionId String
+  studentId String
+  date      DateTime
+  status    AttendanceStatus @default(PRESENT)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  section ClassSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, studentId, date])
+  @@map("attendance")
 }
 
 // Enums
@@ -151,4 +233,20 @@ enum GradeType {
   MIDTERM
   FINAL
   PROJECT
+  HW
+  SP
+  PP
+  TEST_1L
+  TEST_1RW
+  TEST_2L
+  TEST_2RW
+  TEST_3L
+  TEST_3RW
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
 }

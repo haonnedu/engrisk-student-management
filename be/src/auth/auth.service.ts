@@ -1,27 +1,27 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcryptjs';
-import { LoginDto, RegisterDto } from './dto';
-import { UserRole } from '@prisma/client';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { PrismaService } from "../prisma/prisma.service";
+import * as bcrypt from "bcryptjs";
+import { LoginDto, RegisterDto } from "./dto";
+import { UserRole } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(emailOrPhone: string, password: string): Promise<any> {
+    // Check if input is email or phone
+    const isEmail = emailOrPhone.includes("@");
+
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: isEmail ? { email: emailOrPhone } : { phone: emailOrPhone },
       include: {
         student: true,
         admin: true,
       },
     });
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
     }
@@ -29,15 +29,18 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(
+      loginDto.emailOrPhone,
+      loginDto.password
+    );
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
-    const payload = { 
-      sub: user.id, 
-      email: user.email, 
-      role: user.role 
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     };
 
     return {
@@ -54,10 +57,11 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    
+
     const user = await this.prisma.user.create({
       data: {
         email: registerDto.email,
+        phone: registerDto.phone,
         password: hashedPassword,
         role: registerDto.role || UserRole.STUDENT,
       },
@@ -71,12 +75,16 @@ export class AuthService {
           studentId: `STU${Date.now()}`, // Generate student ID
           firstName: registerDto.firstName,
           lastName: registerDto.lastName,
+          engName: registerDto.engName,
           dateOfBirth: registerDto.dateOfBirth,
           phone: registerDto.phone,
           address: registerDto.address,
         },
       });
-    } else if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+    } else if (
+      user.role === UserRole.ADMIN ||
+      user.role === UserRole.SUPER_ADMIN
+    ) {
       await this.prisma.admin.create({
         data: {
           userId: user.id,

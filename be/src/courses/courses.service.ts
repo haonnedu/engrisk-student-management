@@ -1,71 +1,64 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { CourseStatus } from "@prisma/client";
 
 @Injectable()
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: {
-    courseCode: string;
-    title: string;
-    description?: string;
-    credits: number;
-    duration: number;
-    maxStudents?: number;
-    status?: CourseStatus;
-  }) {
-    return this.prisma.course.create({ data });
-  }
-
-  async findAll() {
-    return this.prisma.course.findMany({
-      include: {
-        enrollments: {
-          include: {
-            student: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
+  create(data: any) {
+    return this.prisma.course.create({
+      data,
     });
   }
 
-  async findOne(id: string) {
-    const course = await this.prisma.course.findUnique({
-      where: { id },
-      include: {
-        enrollments: {
-          include: {
-            student: true,
-          },
+  findAll(page = 1, limit = 10, search?: string) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        {
+          title: { contains: search, mode: "insensitive" as const },
         },
-      },
-    });
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
+        {
+          courseCode: { contains: search, mode: "insensitive" as const },
+        },
+        {
+          description: { contains: search, mode: "insensitive" as const },
+        },
+      ];
     }
-    return course;
+
+    return Promise.all([
+      this.prisma.course.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      this.prisma.course.count({ where }),
+    ]).then(([data, total]) => ({
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    }));
   }
 
-  async update(
-    id: string,
-    data: Partial<{
-      courseCode: string;
-      title: string;
-      description?: string;
-      credits: number;
-      duration: number;
-      maxStudents?: number;
-      status?: CourseStatus;
-    }>
-  ) {
-    await this.findOne(id);
-    return this.prisma.course.update({ where: { id }, data });
+  findOne(id: string) {
+    return this.prisma.course.findUnique({
+      where: { id },
+    });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.course.delete({ where: { id } });
+  update(id: string, data: any) {
+    return this.prisma.course.update({
+      where: { id },
+      data,
+    });
+  }
+
+  remove(id: string) {
+    return this.prisma.course.delete({
+      where: { id },
+    });
   }
 }

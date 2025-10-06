@@ -1,50 +1,212 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { EnrollmentStatus } from "@prisma/client";
 
 @Injectable()
 export class EnrollmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: {
-    studentId: string;
-    courseId: string;
-    status?: EnrollmentStatus;
-  }) {
-    return this.prisma.enrollment.create({ data });
-  }
-
-  async findAll() {
-    return this.prisma.enrollment.findMany({
+  async create(data: any) {
+    // Create enrollment
+    const enrollment = await this.prisma.enrollment.create({
+      data,
       include: {
-        student: true,
-        course: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            engName: true,
+            studentId: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            courseCode: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
-      orderBy: { createdAt: "desc" },
     });
-  }
 
-  async findOne(id: string) {
-    const enrollment = await this.prisma.enrollment.findUnique({
-      where: { id },
-      include: { student: true, course: true },
-    });
-    if (!enrollment) {
-      throw new NotFoundException(`Enrollment with ID ${id} not found`);
+    // Auto-create default grades for all grade types
+    const gradeTypes = [
+      "ASSIGNMENT",
+      "QUIZ",
+      "EXAM",
+      "FINAL",
+      "HW",
+      "SP",
+      "PP",
+      "TEST_1L",
+      "TEST_1RW",
+      "TEST_2L",
+      "TEST_2RW",
+      "TEST_3L",
+      "TEST_3RW",
+    ];
+
+    const gradePromises = gradeTypes.map((gradeType) =>
+      this.prisma.grade.create({
+        data: {
+          studentId: data.studentId,
+          courseId: data.courseId,
+          grade: 0,
+          gradeType: gradeType as any,
+          comments: `Auto-generated for ${gradeType}`,
+        },
+      })
+    );
+
+    try {
+      await Promise.all(gradePromises);
+    } catch (error) {
+      console.log("Some grades may already exist, continuing...");
     }
+
     return enrollment;
   }
 
-  async update(
-    id: string,
-    data: Partial<{ status: EnrollmentStatus; completedAt?: Date }>
-  ) {
-    await this.findOne(id);
-    return this.prisma.enrollment.update({ where: { id }, data });
+  findAll(page = 1, limit = 10, search?: string, sectionId?: string) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        {
+          student: {
+            firstName: { contains: search, mode: "insensitive" as const },
+          },
+        },
+        {
+          student: {
+            lastName: { contains: search, mode: "insensitive" as const },
+          },
+        },
+        {
+          course: {
+            title: { contains: search, mode: "insensitive" as const },
+          },
+        },
+      ];
+    }
+
+    if (sectionId) {
+      where.sectionId = sectionId;
+    }
+
+    return Promise.all([
+      this.prisma.enrollment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              engName: true,
+              studentId: true,
+            },
+          },
+          course: {
+            select: {
+              id: true,
+              title: true,
+              courseCode: true,
+            },
+          },
+          section: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
+      }),
+      this.prisma.enrollment.count({ where }),
+    ]).then(([data, total]) => ({
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    }));
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.enrollment.delete({ where: { id } });
+  findOne(id: string) {
+    return this.prisma.enrollment.findUnique({
+      where: { id },
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            engName: true,
+            studentId: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            courseCode: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+    });
+  }
+
+  update(id: string, data: any) {
+    return this.prisma.enrollment.update({
+      where: { id },
+      data,
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            engName: true,
+            studentId: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            courseCode: true,
+          },
+        },
+        section: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+    });
+  }
+
+  remove(id: string) {
+    return this.prisma.enrollment.delete({
+      where: { id },
+    });
   }
 }
