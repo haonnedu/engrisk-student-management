@@ -82,6 +82,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get all courses */
         get: operations["CoursesController_findAll"];
         put?: never;
         /** Create a new course */
@@ -99,15 +100,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get a course by ID */
         get: operations["CoursesController_findOne"];
-        put?: never;
+        /** Update a course */
+        put: operations["CoursesController_update"];
         post?: never;
         /** Delete a course */
         delete: operations["CoursesController_remove"];
         options?: never;
         head?: never;
-        /** Update a course */
-        patch: operations["CoursesController_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/enrollments": {
@@ -117,9 +119,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get all enrollments */
         get: operations["EnrollmentsController_findAll"];
         put?: never;
-        /** Create enrollment */
+        /** Create a new enrollment */
         post: operations["EnrollmentsController_create"];
         delete?: never;
         options?: never;
@@ -134,13 +137,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get an enrollment by ID */
         get: operations["EnrollmentsController_findOne"];
-        put?: never;
+        /** Update an enrollment */
+        put: operations["EnrollmentsController_update"];
         post?: never;
+        /** Delete an enrollment */
         delete: operations["EnrollmentsController_remove"];
         options?: never;
         head?: never;
-        patch: operations["EnrollmentsController_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/grades": {
@@ -174,6 +180,305 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["GradesController_update"];
+        trace?: never;
+    };
+    "/api/v1/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all classes */
+        get: operations["ClassesController_findAll"];
+        put?: never;
+        /** Create a new class */
+        post: operations["ClassesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a class by ID */
+        get: operations["ClassesController_findOne"];
+        /** Update a class */
+        put: operations["ClassesController_update"];
+        post?: never;
+        /** Delete a class */
+        delete: operations["ClassesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/assessments/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seed assessments for a class */
+        post: operations["ClassesController_seedAssessments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get assessments for a class */
+        get: operations["ClassesController_getAssessments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/scores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Update scores for a class */
+        post: operations["ClassesController_updateScores"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/attendance/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate attendance for a class */
+        post: operations["ClassesController_generateAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance for a class */
+        get: operations["ClassesController_getAttendance"];
+        put?: never;
+        /** Set attendance for a student */
+        post: operations["ClassesController_setAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_findAll"];
+        put?: never;
+        post: operations["AttendanceController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["AttendanceController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["AttendanceController_update"];
+        trace?: never;
+    };
+    "/api/v1/attendance/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_setAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_generateAttendance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/homework": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HomeworkController_findAll"];
+        put?: never;
+        post: operations["HomeworkController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/homework/stats/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HomeworkController_getStudentStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/homework/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HomeworkController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["HomeworkController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["HomeworkController_update"];
+        trace?: never;
+    };
+    "/api/v1/grade-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GradeTypesController_findAll"];
+        put?: never;
+        post: operations["GradeTypesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/grade-types/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GradeTypesController_getActiveGradeTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/grade-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GradeTypesController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["GradeTypesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["GradeTypesController_update"];
+        trace?: never;
+    };
+    "/api/v1/grade-types/sort/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["GradeTypesController_updateSortOrder"];
         trace?: never;
     };
 }
@@ -344,123 +649,18 @@ export interface components {
              */
             status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "SUSPENDED";
         };
-        CreateCourseDto: {
-            /**
-             * @description Unique course code
-             * @example CS101
-             */
-            courseCode: string;
-            /**
-             * @description Course title
-             * @example Introduction to Computer Science
-             */
-            title: string;
-            /** @description Course description */
-            description?: string;
-            /**
-             * @description Course credits
-             * @example 3
-             */
-            credits: number;
-            /**
-             * @description Duration in weeks
-             * @example 12
-             */
-            duration: number;
-            /**
-             * @description Maximum number of students
-             * @example 40
-             */
-            maxStudents?: number;
-            /**
-             * @description Course status
-             * @enum {string}
-             */
-            status?: "ACTIVE" | "INACTIVE" | "ARCHIVED";
-        };
-        UpdateCourseDto: {
-            /**
-             * @description Unique course code
-             * @example CS101
-             */
-            courseCode?: string;
-            /**
-             * @description Course title
-             * @example Introduction to Computer Science
-             */
-            title?: string;
-            /** @description Course description */
-            description?: string;
-            /**
-             * @description Course credits
-             * @example 3
-             */
-            credits?: number;
-            /**
-             * @description Duration in weeks
-             * @example 12
-             */
-            duration?: number;
-            /**
-             * @description Maximum number of students
-             * @example 40
-             */
-            maxStudents?: number;
-            /**
-             * @description Course status
-             * @enum {string}
-             */
-            status?: "ACTIVE" | "INACTIVE" | "ARCHIVED";
-        };
-        CreateEnrollmentDto: {
-            /**
-             * @description Student ID
-             * @example clx_student_1
-             */
-            studentId: string;
-            /**
-             * @description Course ID
-             * @example clx_course_1
-             */
-            courseId: string;
-            /**
-             * @description Enrollment status
-             * @enum {string}
-             */
-            status?: "ENROLLED" | "COMPLETED" | "DROPPED" | "FAILED";
-        };
-        UpdateEnrollmentDto: {
-            /**
-             * @description Student ID
-             * @example clx_student_1
-             */
-            studentId?: string;
-            /**
-             * @description Course ID
-             * @example clx_course_1
-             */
-            courseId?: string;
-            /**
-             * @description Enrollment status
-             * @enum {string}
-             */
-            status?: "ENROLLED" | "COMPLETED" | "DROPPED" | "FAILED";
-        };
         CreateGradeDto: {
             /** @description Student ID */
             studentId: string;
             /** @description Course ID */
             courseId: string;
+            /** @description Grade Type ID */
+            gradeTypeId: string;
             /**
              * @description Grade value (0-100)
              * @example 85
              */
             grade: number;
-            /**
-             * @description Type of grade
-             * @enum {string}
-             */
-            gradeType: "ASSIGNMENT" | "QUIZ" | "MIDTERM" | "FINAL" | "PROJECT";
             /** @description Optional comments */
             comments?: string;
         };
@@ -469,18 +669,147 @@ export interface components {
             studentId?: string;
             /** @description Course ID */
             courseId?: string;
+            /** @description Grade Type ID */
+            gradeTypeId?: string;
             /**
              * @description Grade value (0-100)
              * @example 85
              */
             grade?: number;
-            /**
-             * @description Type of grade
-             * @enum {string}
-             */
-            gradeType?: "ASSIGNMENT" | "QUIZ" | "MIDTERM" | "FINAL" | "PROJECT";
             /** @description Optional comments */
             comments?: string;
+        };
+        CreateAttendanceDto: {
+            /** @description Section ID */
+            sectionId: string;
+            /** @description Student ID */
+            studentId: string;
+            /**
+             * @description Attendance date
+             * @example 2025-01-15
+             */
+            date: string;
+            /**
+             * @description Attendance status
+             * @enum {string}
+             */
+            status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
+            /** @description Optional note */
+            note?: string;
+        };
+        UpdateAttendanceDto: {
+            /** @description Section ID */
+            sectionId?: string;
+            /** @description Student ID */
+            studentId?: string;
+            /**
+             * @description Attendance date
+             * @example 2025-01-15
+             */
+            date?: string;
+            /**
+             * @description Attendance status
+             * @enum {string}
+             */
+            status?: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
+            /** @description Optional note */
+            note?: string;
+        };
+        CreateHomeworkDto: {
+            /** @description Student ID */
+            studentId: string;
+            /** @description Section ID */
+            sectionId: string;
+            /** @description Homework title */
+            title: string;
+            /** @description Homework description */
+            description?: string;
+            /** @description Points earned */
+            points: number;
+            /** @description Maximum possible points */
+            maxPoints?: number;
+            /**
+             * @description Due date
+             * @example 2025-01-15T23:59:59.000Z
+             */
+            dueDate?: string;
+        };
+        UpdateHomeworkDto: {
+            /** @description Student ID */
+            studentId?: string;
+            /** @description Section ID */
+            sectionId?: string;
+            /** @description Homework title */
+            title?: string;
+            /** @description Homework description */
+            description?: string;
+            /** @description Points earned */
+            points?: number;
+            /** @description Maximum possible points */
+            maxPoints?: number;
+            /**
+             * @description Due date
+             * @example 2025-01-15T23:59:59.000Z
+             */
+            dueDate?: string;
+        };
+        CreateGradeTypeDto: {
+            /**
+             * @description Grade type name
+             * @example Assignment
+             */
+            name: string;
+            /**
+             * @description Grade type code
+             * @example ASSIGNMENT
+             */
+            code: string;
+            /** @description Grade type description */
+            description?: string;
+            /**
+             * @description Weight for calculating average
+             * @default 1
+             */
+            weight: number;
+            /**
+             * @description Whether the grade type is active
+             * @default true
+             */
+            isActive: boolean;
+            /**
+             * @description Sort order for display
+             * @default 0
+             */
+            sortOrder: number;
+        };
+        UpdateGradeTypeDto: {
+            /**
+             * @description Grade type name
+             * @example Assignment
+             */
+            name?: string;
+            /**
+             * @description Grade type code
+             * @example ASSIGNMENT
+             */
+            code?: string;
+            /** @description Grade type description */
+            description?: string;
+            /**
+             * @description Weight for calculating average
+             * @default 1
+             */
+            weight: number;
+            /**
+             * @description Whether the grade type is active
+             * @default true
+             */
+            isActive: boolean;
+            /**
+             * @description Sort order for display
+             * @default 0
+             */
+            sortOrder: number;
         };
     };
     responses: never;
@@ -687,13 +1016,18 @@ export interface operations {
     };
     CoursesController_findAll: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Courses retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -709,13 +1043,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCourseDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Course created */
+            /** @description Course created successfully */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -735,6 +1065,27 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Course retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CoursesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course updated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -754,29 +1105,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CoursesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCourseDto"];
-            };
-        };
-        responses: {
+            /** @description Course deleted successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -787,13 +1116,19 @@ export interface operations {
     };
     EnrollmentsController_findAll: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string;
+                sectionId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Enrollments retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -809,12 +1144,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateEnrollmentDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
+            /** @description Enrollment created successfully */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -834,6 +1166,27 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Enrollment retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EnrollmentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrollment updated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -853,29 +1206,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    EnrollmentsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateEnrollmentDto"];
-            };
-        };
-        responses: {
+            /** @description Enrollment deleted successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -886,7 +1217,12 @@ export interface operations {
     };
     GradesController_findAll: {
         parameters: {
-            query?: never;
+            query: {
+                page: string;
+                limit: string;
+                search: string;
+                studentIds: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -974,6 +1310,627 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateGradeDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_findAll: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Classes retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Class deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_seedAssessments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assessments seeded successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_getAssessments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assessments retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_updateScores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scores updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_generateAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attendance generated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_getAttendance: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attendance retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_setAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attendance updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_findAll: {
+        parameters: {
+            query: {
+                sectionId: string;
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAttendanceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAttendanceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_setAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendanceController_generateAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_findAll: {
+        parameters: {
+            query: {
+                sectionId: string;
+                studentId: string;
+                page: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHomeworkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_getStudentStats: {
+        parameters: {
+            query: {
+                sectionId: string;
+            };
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HomeworkController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHomeworkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_findAll: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                search?: string;
+                isActive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradeTypeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_getActiveGradeTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGradeTypeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GradeTypesController_updateSortOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

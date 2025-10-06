@@ -1,0 +1,90 @@
+name: Deploy to Cloud Linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install Backend Dependencies
+        run: |
+          cd be
+          npm ci
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd fe
+          npm ci
+
+      - name: Build Frontend
+        run: |
+          cd fe
+          npm run build
+
+      - name: Build Backend
+        run: |
+          cd be
+          npm run build
+
+      - name: Setup Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd be
+          npm run deploy:setup
+
+      - name: Deploy to Cloud Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 103.216.117.100
+          username: root
+          password: tMlB5PJbeO7%rJpJE#Wc
+          port: 24700
+          script: |
+            # Create application directory
+            sudo mkdir -p /var/www/engrisk-student-management
+            cd /var/www/engrisk-student-management
+
+            # Pull latest code
+            sudo git pull origin main
+
+            # Install dependencies
+            cd be
+            sudo npm ci --production
+
+            cd ../fe
+            sudo npm ci --production
+
+            # Build applications
+            sudo npm run build
+
+            cd ../be
+            sudo npm run build
+
+            # Setup database
+            sudo npm run deploy:setup
+
+            # Restart services
+            sudo systemctl restart engrisk-backend
+            sudo systemctl restart nginx
+
+            echo "Deployment completed successfully!"
+
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f ${{ secrets.APP_URL }}/api/v1/health || exit 1

@@ -21,7 +21,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="font-bold text-xl">
-          ESM
+          Ms. Jenny
         </Link>
       </div>
 

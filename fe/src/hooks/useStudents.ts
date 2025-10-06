@@ -8,10 +8,12 @@ export type Student = {
   studentId: string;
   firstName: string;
   lastName: string;
+  engName?: string;
   dateOfBirth: string;
   phone?: string;
   address?: string;
   emergencyContact?: string;
+  classSchool?: string;
   enrollmentDate: string;
   status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "SUSPENDED";
   createdAt: string;

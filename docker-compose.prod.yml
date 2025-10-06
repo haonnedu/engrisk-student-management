@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: engrisk-postgres
+    environment:
+      POSTGRES_DB: student_management
+      POSTGRES_USER: engrisk_user
+      POSTGRES_PASSWORD: your-secure-password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    container_name: engrisk-backend
+    environment:
+      DATABASE_URL: postgresql://engrisk_user:your-secure-password@postgres:5432/student_management
+      JWT_SECRET: your-super-secret-jwt-key
+      NODE_ENV: production
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - ./be:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    container_name: engrisk-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

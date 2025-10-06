@@ -36,31 +36,20 @@ export class EnrollmentsService {
       },
     });
 
-    // Auto-create default grades for all grade types
-    const gradeTypes = [
-      "ASSIGNMENT",
-      "QUIZ",
-      "EXAM",
-      "FINAL",
-      "HW",
-      "SP",
-      "PP",
-      "TEST_1L",
-      "TEST_1RW",
-      "TEST_2L",
-      "TEST_2RW",
-      "TEST_3L",
-      "TEST_3RW",
-    ];
+    // Auto-create default grades for all active grade types
+    const gradeTypes = await this.prisma.gradeType.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
 
     const gradePromises = gradeTypes.map((gradeType) =>
       this.prisma.grade.create({
         data: {
           studentId: data.studentId,
           courseId: data.courseId,
+          gradeTypeId: gradeType.id,
           grade: 0,
-          gradeType: gradeType as any,
-          comments: `Auto-generated for ${gradeType}`,
+          comments: `Auto-generated for ${gradeType.name}`,
         },
       })
     );
@@ -204,7 +193,38 @@ export class EnrollmentsService {
     });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    // First, get the enrollment to get studentId, courseId, and sectionId
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id },
+      select: {
+        studentId: true,
+        courseId: true,
+        sectionId: true,
+      },
+    });
+
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+
+    // Delete all grades for this student and course combination
+    await this.prisma.grade.deleteMany({
+      where: {
+        studentId: enrollment.studentId,
+        courseId: enrollment.courseId,
+      },
+    });
+
+    // Delete all homework records for this student and section
+    await this.prisma.homework.deleteMany({
+      where: {
+        studentId: enrollment.studentId,
+        sectionId: enrollment.sectionId,
+      },
+    });
+
+    // Finally, delete the enrollment
     return this.prisma.enrollment.delete({
       where: { id },
     });

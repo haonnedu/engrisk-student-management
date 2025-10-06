@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,36 +15,34 @@ model User {
   role      UserRole @default(STUDENT)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  student Student?
-  admin   Admin?
+  admin     Admin?
+  student   Student?
 
   @@map("users")
 }
 
 model Student {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  studentId    String   @unique // Student ID number
-  firstName    String
-  engName      String
-  lastName     String
-  dateOfBirth  DateTime
-  phone        String?
-  address      String?
+  id               String            @id @default(cuid())
+  userId           String            @unique
+  studentId        String            @unique
+  firstName        String
+  engName          String
+  lastName         String
+  dateOfBirth      DateTime
+  phone            String?
+  address          String?
   emergencyContact String?
-  enrollmentDate DateTime @default(now())
-  status       StudentStatus @default(ACTIVE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  enrollments Enrollment[]
-  grades      Grade[]
+  classSchool      String?
+  enrollmentDate   DateTime          @default(now())
+  status           StudentStatus     @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   assessmentScores AssessmentScore[]
-  attendance  Attendance[]
+  attendance       Attendance[]
+  enrollments      Enrollment[]
+  grades           Grade[]
+  homework         Homework[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("students")
 }
@@ -60,147 +55,165 @@ model Admin {
   position  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  courseCode  String   @unique
+  id          String         @id @default(cuid())
+  courseCode  String         @unique
   title       String
   description String?
   credits     Int
-  duration    Int      // Duration in weeks
-  maxStudents Int      @default(30)
-  status      CourseStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
+  duration    Int
+  maxStudents Int            @default(30)
+  status      CourseStatus   @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sections    ClassSection[]
   enrollments Enrollment[]
   grades      Grade[]
-  sections    ClassSection[]
 
   @@map("courses")
 }
 
 model Enrollment {
-  id           String   @id @default(cuid())
-  studentId    String
-  courseId     String
-  sectionId    String?
-  enrolledAt   DateTime @default(now())
-  status       EnrollmentStatus @default(ENROLLED)
-  completedAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  section ClassSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  id          String           @id @default(cuid())
+  studentId   String
+  courseId    String
+  sectionId   String?
+  enrolledAt  DateTime         @default(now())
+  status      EnrollmentStatus @default(ENROLLED)
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  section     ClassSection?    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  student     Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
   @@map("enrollments")
 }
 
 model Grade {
-  id        String   @id @default(cuid())
-  studentId String
-  courseId  String
-  grade     Float    // Grade value (0-100)
-  gradeType GradeType
-  comments  String?
-  gradedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  studentId   String
+  courseId    String
+  gradeTypeId String
+  grade       Float
+  comments    String?
+  gradedAt    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  gradeType   GradeType @relation(fields: [gradeTypeId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("grades")
 }
 
 model ClassSection {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   name            String
-  code            String   @unique
+  code            String       @unique
   timeDescription String?
   day1            Int?
   day2            Int?
   teacherName     String?
   book            String?
   courseId        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  course      Course?     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  enrollments Enrollment[]
-  assessments Assessment[]
-  attendance  Attendance[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  assessments     Assessment[]
+  attendance      Attendance[]
+  course          Course?      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments     Enrollment[]
+  homework        Homework[]
 
   @@map("class_sections")
 }
 
 model Assessment {
-  id         String   @id @default(cuid())
-  sectionId  String
-  code       String   // e.g. HW, SP, PP, TEST_1L
-  label      String
-  maxScore   Int      @default(10)
-  weight     Float    @default(1)
-  order      Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  section ClassSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  scores  AssessmentScore[]
+  id        String            @id @default(cuid())
+  sectionId String
+  code      String
+  label     String
+  maxScore  Int               @default(10)
+  weight    Float             @default(1)
+  order     Int               @default(0)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  scores    AssessmentScore[]
+  section   ClassSection      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@unique([sectionId, code])
   @@map("assessments")
 }
 
 model AssessmentScore {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   assessmentId String
   studentId    String
   score        Float?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([assessmentId, studentId])
   @@map("assessment_scores")
 }
 
 model Attendance {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   sectionId String
   studentId String
   date      DateTime
   status    AttendanceStatus @default(PRESENT)
   note      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  section ClassSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  section   ClassSection     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([sectionId, studentId, date])
   @@map("attendance")
 }
 
-// Enums
+model Homework {
+  id          String       @id @default(cuid())
+  studentId   String
+  sectionId   String
+  title       String
+  description String?
+  points      Float
+  maxPoints   Float        @default(100)
+  dueDate     DateTime?
+  submittedAt DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  section     ClassSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("homework")
+}
+
+model GradeType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  weight      Float    @default(1.0)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  grades      Grade[]
+
+  @@map("grade_types")
+}
+
 enum UserRole {
   STUDENT
   ADMIN
@@ -225,23 +238,6 @@ enum EnrollmentStatus {
   COMPLETED
   DROPPED
   FAILED
-}
-
-enum GradeType {
-  ASSIGNMENT
-  QUIZ
-  MIDTERM
-  FINAL
-  PROJECT
-  HW
-  SP
-  PP
-  TEST_1L
-  TEST_1RW
-  TEST_2L
-  TEST_2RW
-  TEST_3L
-  TEST_3RW
 }
 
 enum AttendanceStatus {

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,6 +41,7 @@ const studentSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   emergencyContact: z.string().optional(),
+  classSchool: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "GRADUATED", "SUSPENDED"]).optional(),
 });
 
@@ -78,6 +80,7 @@ export function StudentDialog({
           phone: student.phone ?? "",
           address: student.address ?? "",
           emergencyContact: student.emergencyContact ?? "",
+          classSchool: (student as any).classSchool ?? "",
           status: student.status ?? "ACTIVE",
         }
       : { status: "ACTIVE", engName: "" };
@@ -86,6 +89,8 @@ export function StudentDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -190,10 +195,19 @@ export function StudentDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label htmlFor="dateOfBirth">Date of birth</Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                {...register("dateOfBirth")}
+              <DatePicker
+                value={
+                  watch("dateOfBirth")
+                    ? new Date(watch("dateOfBirth"))
+                    : undefined
+                }
+                onChange={(date) => {
+                  if (date) {
+                    setValue("dateOfBirth", date.toISOString().split("T")[0]);
+                  }
+                }}
+                placeholder="Select date of birth"
+                className="h-9"
               />
               {errors.dateOfBirth && (
                 <p className="text-sm text-red-500">
@@ -210,6 +224,20 @@ export function StudentDialog({
           <div className="grid gap-3">
             <Label htmlFor="address">Address</Label>
             <Input id="address" {...register("address")} />
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="classSchool">Class - School</Label>
+            <Input
+              id="classSchool"
+              {...register("classSchool")}
+              placeholder="e.g., 12A1 - THPT Nguyen Du"
+            />
+            {errors.classSchool && (
+              <p className="text-sm text-red-500">
+                {errors.classSchool.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

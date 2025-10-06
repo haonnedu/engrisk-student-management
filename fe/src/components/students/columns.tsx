@@ -88,6 +88,13 @@ export function buildStudentColumns(
       ),
     },
     {
+      header: "Class - School",
+      accessorKey: "classSchool",
+      cell: (info) => (
+        <span className="text-sm">{(info.getValue() as string) || "-"}</span>
+      ),
+    },
+    {
       header: "Status",
       accessorKey: "status",
       cell: (info) => {

@@ -11,7 +11,12 @@
     "start:prod": "node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:reset": "prisma migrate reset --force",
+    "seed": "node scripts/seed-data.js",
+    "seed:dev": "prisma migrate dev && node scripts/seed-data.js",
+    "deploy:setup": "prisma migrate deploy && node scripts/seed-data.js"
   },
   "keywords": [
     "nestjs",

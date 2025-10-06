@@ -1,17 +1,8 @@
 "use client";
-import * as React from "react";
-import { useState } from "react";
 import { AttendanceGrid } from "@/components/attendance/AttendanceGrid";
 import { AttendanceToolbar } from "@/components/attendance/AttendanceToolbar";
-import {
-  useAttendance,
-  useSetAttendance,
-  useGenerateAttendance,
-  useBulkUpdateAttendance,
-  type Attendance,
-} from "@/hooks/useAttendance";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +10,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  useAttendance,
+  useBulkUpdateAttendance,
+  useGenerateAttendance,
+  useSetAttendance,
+  type Attendance,
+} from "@/hooks/useAttendance";
 import { Calendar } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function AttendancePage() {
   const [sectionId, setSectionId] = useState<string>("");
@@ -241,20 +239,28 @@ export default function AttendancePage() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+              <DatePicker
+                value={startDate ? new Date(startDate) : undefined}
+                onChange={(date) => {
+                  if (date) {
+                    setStartDate(date.toISOString().split("T")[0]);
+                  }
+                }}
+                placeholder="Select start date"
+                className="h-9"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+              <DatePicker
+                value={endDate ? new Date(endDate) : undefined}
+                onChange={(date) => {
+                  if (date) {
+                    setEndDate(date.toISOString().split("T")[0]);
+                  }
+                }}
+                placeholder="Select end date"
+                className="h-9"
               />
             </div>
           </div>

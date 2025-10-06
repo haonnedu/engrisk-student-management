@@ -77,6 +77,14 @@ export class CreateStudentDto {
   emergencyContact?: string;
 
   @ApiPropertyOptional({
+    description: "Class - School information",
+    example: "12A1 - THPT Nguyen Du",
+  })
+  @IsString()
+  @IsOptional()
+  classSchool?: string;
+
+  @ApiPropertyOptional({
     description: "Student status",
     enum: StudentStatus,
     default: StudentStatus.ACTIVE,

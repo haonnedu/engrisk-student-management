@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useClass } from "@/hooks/useClasses";
 import { useGrades, useGradesByClass } from "@/hooks/useGrades";
+import { useActiveGradeTypes } from "@/hooks/useGradeTypes";
+import type { GradeType } from "@/lib/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +28,7 @@ import {
 import { ArrowLeft, Download } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { EditableGradeCell } from "@/components/grades/EditableGradeCell";
+import { HomeworkGradeCell } from "@/components/grades/HomeworkGradeCell";
 
 export default function ClassGradesPage() {
   const params = useParams();
@@ -44,6 +47,7 @@ export default function ClassGradesPage() {
     error,
     refetch,
   } = useGradesByClass(classId, page, pageSize);
+  const { data: activeGradeTypes } = useActiveGradeTypes();
 
   const totalStudents = gradesData?.meta?.total || 0;
   const totalPages = gradesData?.meta?.totalPages || 0;
@@ -114,7 +118,9 @@ export default function ClassGradesPage() {
 
     if (gradeTypeFilter !== "all") {
       filtered = filtered.filter((studentData) =>
-        studentData.grades.some((grade) => grade.gradeType === gradeTypeFilter)
+        studentData.grades.some(
+          (grade) => grade.gradeType?.id === gradeTypeFilter
+        )
       );
     }
 
@@ -145,27 +151,8 @@ export default function ClassGradesPage() {
     );
   }
 
-  // Define all possible grade types in order
-  const allGradeTypes = [
-    "HW",
-    "SP",
-    "PP",
-    "TEST_1L",
-    "TEST_1RW",
-    "TEST_2L",
-    "TEST_2RW",
-    "TEST_3L",
-    "TEST_3RW",
-    "ASSIGNMENT",
-    "QUIZ",
-    "EXAM",
-    "FINAL",
-  ];
-
-  // Get grade types that actually have data for this class
-  const gradeTypes = allGradeTypes.filter((type) =>
-    classGrades.some((grade: any) => grade.gradeType === type)
-  );
+  // Get grade types from database, ordered by sortOrder
+  const gradeTypes: GradeType[] = activeGradeTypes || [];
 
   return (
     <div className="space-y-6">
@@ -211,9 +198,9 @@ export default function ClassGradesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Grade Types</SelectItem>
-            {gradeTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
+            {gradeTypes.map((gradeType) => (
+              <SelectItem key={gradeType.id} value={gradeType.id}>
+                {gradeType.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -232,9 +219,12 @@ export default function ClassGradesPage() {
                   <TableHead className="min-w-[120px]">English Name</TableHead>
                   <TableHead className="min-w-[100px]">Class</TableHead>
                   <TableHead className="min-w-[80px]">Grade</TableHead>
-                  {gradeTypes.map((type) => (
-                    <TableHead key={type} className="min-w-[80px] text-center">
-                      {type}
+                  {gradeTypes.map((gradeType) => (
+                    <TableHead
+                      key={gradeType.id}
+                      className="min-w-[80px] text-center"
+                    >
+                      {gradeType.name}
                     </TableHead>
                   ))}
                   <TableHead className="min-w-[80px] text-center">
@@ -282,17 +272,26 @@ export default function ClassGradesPage() {
                         {studentData.average.toFixed(1)}
                       </Badge>
                     </TableCell>
-                    {gradeTypes.map((type) => {
+                    {gradeTypes.map((gradeType) => {
                       const grade = studentData.grades.find(
-                        (g) => g.gradeType === type
+                        (g) => g.gradeType?.id === gradeType.id
                       );
                       return (
-                        <TableCell key={type} className="text-center">
+                        <TableCell key={gradeType.id} className="text-center">
                           {grade ? (
-                            <EditableGradeCell
-                              grade={grade}
-                              onUpdate={refetch}
-                            />
+                            gradeType.code === "HW" ? (
+                              <HomeworkGradeCell
+                                grade={grade}
+                                classId={classId}
+                                className={classInfo.name}
+                                onUpdate={refetch}
+                              />
+                            ) : (
+                              <EditableGradeCell
+                                grade={grade}
+                                onUpdate={refetch}
+                              />
+                            )
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}

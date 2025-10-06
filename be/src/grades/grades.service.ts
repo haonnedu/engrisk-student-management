@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { GradeType } from "@prisma/client";
 
 @Injectable()
 export class GradesService {
@@ -9,11 +8,31 @@ export class GradesService {
   async create(data: {
     studentId: string;
     courseId: string;
+    gradeTypeId: string;
     grade: number;
-    gradeType: GradeType;
     comments?: string;
   }) {
-    return this.prisma.grade.create({ data });
+    return this.prisma.grade.create({
+      data,
+      include: {
+        gradeType: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            studentId: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            courseCode: true,
+          },
+        },
+      },
+    });
   }
 
   async findAll(page = 1, limit = 10, search?: string, studentIds?: string[]) {
@@ -50,6 +69,7 @@ export class GradesService {
         skip,
         take: limit,
         include: {
+          gradeType: true,
           student: {
             select: {
               id: true,
@@ -91,7 +111,11 @@ export class GradesService {
   async findOne(id: string) {
     const grade = await this.prisma.grade.findUnique({
       where: { id },
-      include: { student: true, course: true },
+      include: {
+        gradeType: true,
+        student: true,
+        course: true,
+      },
     });
     if (!grade) {
       throw new NotFoundException(`Grade with ID ${id} not found`);
@@ -101,10 +125,31 @@ export class GradesService {
 
   async update(
     id: string,
-    data: Partial<{ grade: number; gradeType: GradeType; comments?: string }>
+    data: Partial<{ grade: number; gradeTypeId: string; comments?: string }>
   ) {
     await this.findOne(id);
-    return this.prisma.grade.update({ where: { id }, data });
+    return this.prisma.grade.update({
+      where: { id },
+      data,
+      include: {
+        gradeType: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            studentId: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            courseCode: true,
+          },
+        },
+      },
+    });
   }
 
   async remove(id: string) {

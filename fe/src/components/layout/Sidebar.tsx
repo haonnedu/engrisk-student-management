@@ -1,14 +1,12 @@
 import {
-  Calendar,
-  Home,
-  Users,
-  Search,
-  Settings,
+  BarChart3,
+  BookMarked,
   BookOpen,
   GraduationCap,
+  Home,
   UserCheck,
   UserPlus,
-  BookMarked,
+  Users,
 } from "lucide-react";
 
 import {
@@ -58,6 +56,11 @@ const items = [
     title: "Enrollments",
     url: "/enrollments",
     icon: UserPlus,
+  },
+  {
+    title: "Grade Types",
+    url: "/grade-types",
+    icon: BarChart3,
   },
 ];
 
