@@ -59,9 +59,9 @@ export default function AttendancePage() {
         onSuccess: () => {
           toast.success("Attendance updated");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast.error(
-            error.response?.data?.message || "Failed to update attendance"
+            (error as Error).message || "Failed to update attendance"
           );
         },
       }
@@ -89,8 +89,8 @@ export default function AttendancePage() {
         onSuccess: () => {
           toast.success("Note updated");
         },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.message || "Failed to update note");
+        onError: (error: unknown) => {
+          toast.error((error as Error).message || "Failed to update note");
         },
       }
     );
@@ -110,9 +110,9 @@ export default function AttendancePage() {
           setGenerateDialogOpen(false);
           refetch(); // Refresh data after generation
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast.error(
-            error.response?.data?.message || "Failed to generate attendance"
+            (error as Error).message || "Failed to generate attendance"
           );
         },
       }
