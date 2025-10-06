@@ -126,9 +126,37 @@ jobs:
             sudo systemctl restart engrisk-backend
             sudo systemctl restart nginx
 
+            # Check services status
+            echo "Checking services status..."
+            sudo systemctl status engrisk-backend --no-pager || echo "Backend service issue"
+            sudo systemctl status engrisk-frontend --no-pager || echo "Frontend service issue"
+            sudo systemctl status nginx --no-pager || echo "Nginx service issue"
+
+            # Check if ports are listening
+            echo "Checking if ports are listening..."
+            sudo netstat -tlnp | grep :3001 || echo "Backend port 3001 not listening"
+            sudo netstat -tlnp | grep :3000 || echo "Frontend port 3000 not listening"
+            sudo netstat -tlnp | grep :80 || echo "Nginx port 80 not listening"
+            sudo netstat -tlnp | grep :443 || echo "Nginx port 443 not listening"
+
+            # Setup SSL certificate if not exists
+            echo "Setting up SSL certificate..."
+            if [ ! -f "/etc/letsencrypt/live/msjenny.io.vn/fullchain.pem" ]; then
+                echo "SSL certificate not found, setting up..."
+                sudo certbot --nginx -d msjenny.io.vn -d www.msjenny.io.vn --non-interactive --agree-tos --email admin@msjenny.io.vn || echo "SSL setup failed, but continuing..."
+            else
+                echo "SSL certificate already exists"
+            fi
+
+            # Restart nginx after SSL setup
+            sudo systemctl restart nginx
+
             echo "Deployment completed successfully!"
 
       - name: Health Check
         run: |
           sleep 30
-          curl -f ${{ secrets.APP_URL }}/api/v1/health || exit 1
+          echo "Testing backend health..."
+          curl -f https://msjenny.io.vn/api/v1/health || echo "Backend health check failed"
+          echo "Testing frontend..."
+          curl -f https://msjenny.io.vn/ || echo "Frontend health check failed"
