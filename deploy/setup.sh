@@ -35,7 +35,7 @@ sudo chown -R $USER:$USER /var/www/engrisk-student-management
 # Clone repository
 echo "📥 Cloning repository..."
 cd /var/www/engrisk-student-management
-git clone https://github.com/your-username/engrisk-student-management.git .
+git clone https://github.com/haonnedu/engrisk-student-management.git .
 
 # Install dependencies
 echo "📦 Installing dependencies..."

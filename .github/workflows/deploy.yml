@@ -58,8 +58,14 @@ jobs:
             sudo mkdir -p /var/www/engrisk-student-management
             cd /var/www/engrisk-student-management
 
-            # Pull latest code
-            sudo git pull origin main
+            # Clone or pull latest code
+            if [ -d ".git" ]; then
+                echo "Repository exists, pulling latest code..."
+                sudo git pull origin main
+            else
+                echo "Cloning repository..."
+                sudo git clone https://github.com/haonnedu/engrisk-student-management.git .
+            fi
 
             # Install dependencies
             cd be

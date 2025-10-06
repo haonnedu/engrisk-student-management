@@ -19,8 +19,14 @@ sshpass -p "$PASSWORD" ssh -p $PORT -o StrictHostKeyChecking=no $USER@$HOST << '
     echo "📁 Updating application directory..."
     cd /var/www/engrisk-student-management
     
-    # Pull latest code
-    git pull origin main
+    # Clone or pull latest code
+    if [ -d ".git" ]; then
+        echo "📥 Pulling latest code..."
+        git pull origin main
+    else
+        echo "📥 Cloning repository..."
+        git clone https://github.com/haonnedu/engrisk-student-management.git .
+    fi
     
     # Install dependencies
     echo "📦 Installing dependencies..."
