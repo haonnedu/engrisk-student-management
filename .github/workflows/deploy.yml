@@ -74,8 +74,47 @@ jobs:
             cd ../be
             sudo npm run build
 
-            # Setup database
-            sudo npm run deploy:setup
+            # Setup database with Docker (persistent)
+            echo "Setting up PostgreSQL database with Docker..."
+            sudo apt update
+            sudo apt install -y docker.io docker-compose
+            sudo systemctl start docker
+            sudo systemctl enable docker
+
+            # Check if database container already exists
+            if sudo docker ps -a --format "table {{.Names}}" | grep -q "engrisk-postgres"; then
+                echo "Database container already exists, starting it..."
+                sudo docker start engrisk-postgres
+            else
+                echo "Creating new database container..."
+                cd /var/www/engrisk-student-management
+                sudo docker-compose -f deploy/docker-compose.database.yml up -d
+            fi
+
+            # Wait for database to be ready
+            echo "Waiting for database to be ready..."
+            sleep 30
+
+            # Setup environment variables
+            echo "DATABASE_URL=\"postgresql://engrisk_user:your-secure-password@localhost:5432/student_management\"" | sudo tee -a /var/www/engrisk-student-management/be/.env
+
+            # Check if database needs migration (only run if needed)
+            cd be
+            echo "Checking if database needs migration..."
+            if sudo npm run prisma:deploy; then
+                echo "Database migration completed"
+            else
+                echo "Database migration failed, but continuing..."
+            fi
+
+            # Only seed data if database is empty
+            echo "Checking if database needs seeding..."
+            if ! sudo -u postgres psql -h localhost -U engrisk_user -d student_management -c "SELECT COUNT(*) FROM users;" 2>/dev/null | grep -q "0"; then
+                echo "Database already has data, skipping seed..."
+            else
+                echo "Database is empty, running seed script..."
+                sudo npm run seed
+            fi
 
             # Restart services
             sudo systemctl restart engrisk-backend

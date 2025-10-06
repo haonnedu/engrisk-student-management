@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: engrisk-postgres
+    environment:
+      POSTGRES_DB: student_management
+      POSTGRES_USER: engrisk_user
+      POSTGRES_PASSWORD: your-secure-password
+    volumes:
+      - engrisk_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engrisk_user -d student_management"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  engrisk_postgres_data:
