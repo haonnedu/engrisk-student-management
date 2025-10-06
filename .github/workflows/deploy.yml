@@ -97,8 +97,8 @@ jobs:
 
             # Setup environment variables
             cat << EOF | sudo tee /var/www/engrisk-student-management/be/.env
-            DATABASE_URL="postgresql://engrisk_user:your-secure-password@localhost:5432/student_management"
-            JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+            DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@localhost:5432/student_management"
+            JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
             NODE_ENV="production"
             PORT=3001
             FRONTEND_URL="https://msjenny.io.vn"

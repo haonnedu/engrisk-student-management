@@ -56,14 +56,14 @@ npm run build
 # Setup PostgreSQL database
 echo "🗄️ Setting up PostgreSQL database..."
 sudo -u postgres psql -c "CREATE DATABASE student_management;"
-sudo -u postgres psql -c "CREATE USER engrisk_user WITH PASSWORD 'your-secure-password';"
+sudo -u postgres psql -c "CREATE USER engrisk_user WITH PASSWORD 'EngRisk2024!SecureDB#789';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE student_management TO engrisk_user;"
 
 # Setup environment variables
 echo "⚙️ Setting up environment variables..."
 cat > /var/www/engrisk-student-management/be/.env << EOF
-DATABASE_URL="postgresql://engrisk_user:your-secure-password@localhost:5432/student_management"
-JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@localhost:5432/student_management"
+JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
 NODE_ENV="production"
 PORT=3001
 EOF

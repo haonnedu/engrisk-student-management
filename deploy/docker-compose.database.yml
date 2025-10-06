@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: student_management
       POSTGRES_USER: engrisk_user
-      POSTGRES_PASSWORD: your-secure-password
+      POSTGRES_PASSWORD: EngRisk2024!SecureDB#789
     volumes:
       - engrisk_postgres_data:/var/lib/postgresql/data
     ports:
