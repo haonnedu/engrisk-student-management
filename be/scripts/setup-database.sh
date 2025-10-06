@@ -7,18 +7,22 @@ echo "🗄️ Setting up database for production..."
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
-for i in {1..60}; do
+for i in {1..120}; do
     if docker exec engrisk-postgres pg_isready -U engrisk_user -d student_management >/dev/null 2>&1; then
         echo "✅ Database is ready!"
         break
     fi
-    echo "⏳ Waiting for database... ($i/60)"
+    echo "⏳ Waiting for database... ($i/120)"
     sleep 2
 done
 
 # Check if database is ready
 if ! docker exec engrisk-postgres pg_isready -U engrisk_user -d student_management >/dev/null 2>&1; then
-    echo "❌ Database is not ready after 2 minutes"
+    echo "❌ Database is not ready after 4 minutes"
+    echo "🔍 Checking Docker container status..."
+    docker ps -a | grep engrisk-postgres
+    echo "🔍 Checking container logs..."
+    docker logs engrisk-postgres --tail 20
     exit 1
 fi
 

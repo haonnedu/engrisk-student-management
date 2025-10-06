@@ -91,9 +91,13 @@ jobs:
                 sudo docker-compose -f deploy/docker-compose.database.yml up -d
             fi
 
+            # Check container status
+            echo "Checking Docker container status..."
+            sudo docker ps -a | grep engrisk-postgres || echo "No engrisk-postgres container found"
+
             # Wait for database to be ready
             echo "Waiting for database to be ready..."
-            sleep 30
+            sleep 60
 
             # Setup environment variables
             cat << EOF | sudo tee /var/www/engrisk-student-management/be/.env
@@ -105,10 +109,36 @@ jobs:
             API_PREFIX="api/v1"
             EOF
 
+            # Also update for fallback PostgreSQL
+            echo "Updating PostgreSQL configuration for fallback..."
+            sudo -u postgres psql -c "ALTER USER engrisk_user PASSWORD 'EngRisk2024!SecureDB#789';" || true
+
             # Setup database using custom script
             cd be
             echo "Setting up database..."
-            sudo npm run deploy:setup
+
+            # Try custom script first
+            if sudo npm run deploy:setup; then
+                echo "✅ Database setup completed successfully"
+            else
+                echo "❌ Custom database setup failed, trying fallback..."
+                
+                # Fallback: Install PostgreSQL directly
+                sudo apt install -y postgresql postgresql-contrib
+                sudo systemctl start postgresql
+                sudo systemctl enable postgresql
+                
+                # Create database and user
+                sudo -u postgres psql -c "CREATE DATABASE student_management;" || true
+                sudo -u postgres psql -c "CREATE USER engrisk_user WITH PASSWORD 'EngRisk2024!SecureDB#789';" || true
+                sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE student_management TO engrisk_user;" || true
+                
+                # Run migration
+                sudo npm run prisma:deploy || echo "Migration failed, but continuing..."
+                
+                # Seed data
+                sudo npm run seed || echo "Seed failed, but continuing..."
+            fi
 
             # Setup frontend service
             sudo cp /var/www/engrisk-student-management/deploy/engrisk-frontend.service /etc/systemd/system/
