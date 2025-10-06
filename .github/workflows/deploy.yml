@@ -96,25 +96,19 @@ jobs:
             sleep 30
 
             # Setup environment variables
-            echo "DATABASE_URL=\"postgresql://engrisk_user:your-secure-password@localhost:5432/student_management\"" | sudo tee -a /var/www/engrisk-student-management/be/.env
+            cat << EOF | sudo tee /var/www/engrisk-student-management/be/.env
+            DATABASE_URL="postgresql://engrisk_user:your-secure-password@localhost:5432/student_management"
+            JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+            NODE_ENV="production"
+            PORT=3001
+            FRONTEND_URL="https://msjenny.io.vn"
+            API_PREFIX="api/v1"
+            EOF
 
-            # Check if database needs migration (only run if needed)
+            # Setup database using custom script
             cd be
-            echo "Checking if database needs migration..."
-            if sudo npm run prisma:deploy; then
-                echo "Database migration completed"
-            else
-                echo "Database migration failed, but continuing..."
-            fi
-
-            # Only seed data if database is empty
-            echo "Checking if database needs seeding..."
-            if ! sudo -u postgres psql -h localhost -U engrisk_user -d student_management -c "SELECT COUNT(*) FROM users;" 2>/dev/null | grep -q "0"; then
-                echo "Database already has data, skipping seed..."
-            else
-                echo "Database is empty, running seed script..."
-                sudo npm run seed
-            fi
+            echo "Setting up database..."
+            sudo npm run deploy:setup
 
             # Restart services
             sudo systemctl restart engrisk-backend

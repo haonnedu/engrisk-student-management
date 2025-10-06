@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "msjenny.io.vn"
+    ? "https://msjenny.io.vn/api/v1"
+    : "http://localhost:3001/api/v1");
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

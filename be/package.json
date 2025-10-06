@@ -16,7 +16,7 @@
     "prisma:reset": "prisma migrate reset --force",
     "seed": "node scripts/seed-data.js",
     "seed:dev": "prisma migrate dev && node scripts/seed-data.js",
-    "deploy:setup": "prisma migrate deploy && node scripts/seed-data.js"
+    "deploy:setup": "chmod +x scripts/setup-database.sh && ./scripts/setup-database.sh"
   },
   "keywords": [
     "nestjs",

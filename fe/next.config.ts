@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  env: {
+    NEXT_PUBLIC_API_URL:
+      process.env.NODE_ENV === "production"
+        ? "https://msjenny.io.vn/api/v1"
+        : "http://localhost:3001/api/v1",
+  },
+  output: "export",
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
