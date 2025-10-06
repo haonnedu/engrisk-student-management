@@ -60,6 +60,11 @@ jobs:
                 sudo git clone https://github.com/haonnedu/engrisk-student-management.git .
             fi
 
+            # Install Node.js and npm
+            echo "Installing Node.js and npm..."
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+
             # Install dependencies
             cd be
             sudo npm install --production
@@ -126,12 +131,16 @@ jobs:
             sudo systemctl restart engrisk-backend
             sudo systemctl restart nginx
 
+            # Install Docker Compose
+            echo "Installing Docker Compose..."
+            sudo apt install -y docker-compose
+
             # Build and run Dockerized app stack
             echo "Building Docker images..."
             sudo docker network create engrisk-student-management_default || true
-            sudo docker compose -f deploy/docker-compose.app.yml build
+            sudo docker-compose -f deploy/docker-compose.app.yml build
             echo "Restarting app stack..."
-            sudo docker compose -f deploy/docker-compose.app.yml up -d
+            sudo docker-compose -f deploy/docker-compose.app.yml up -d
 
             echo "Checking containers..."
             sudo docker ps -a | grep engrisk-
