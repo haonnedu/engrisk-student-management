@@ -53,7 +53,7 @@ After deployment, you'll have:
 
 - **ENG101**: English Fundamentals (3 credits, 16 weeks, 30 max students)
 
-### 🏫 Classes
+### 🏫 Classes 
 
 - **ENG101-A1**: English Fundamentals - Class A1
   - Teacher: Ms. Jenny
