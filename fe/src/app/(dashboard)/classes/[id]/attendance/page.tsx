@@ -2,6 +2,12 @@
 import { ClassAttendancePage } from "@/components/classes/ClassAttendancePage";
 import { useParams } from "next/navigation";
 
+// Generate static params for dynamic route
+export async function generateStaticParams() {
+  // Return empty array for now - will be populated at build time
+  return [];
+}
+
 export default function ClassAttendanceRoute() {
   const params = useParams();
   const sectionId = params?.id as string;

@@ -2,6 +2,12 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+
+// Generate static params for dynamic route
+export async function generateStaticParams() {
+  // Return empty array for now - will be populated at build time
+  return [];
+}
 import { useClass } from "@/hooks/useClasses";
 import { useGrades, useGradesByClass } from "@/hooks/useGrades";
 import { useActiveGradeTypes } from "@/hooks/useGradeTypes";
