@@ -1,216 +1,221 @@
-# 🚀 EngRisk Student Management - Deployment
+# EngRisk Student Management - Docker Deployment
 
-## 📋 Server Information
+Hệ thống deploy tự động sử dụng Docker và GitHub Actions cho ứng dụng EngRisk Student Management.
 
-- **IP**: 103.216.117.100
-- **SSH Port**: 24700
-- **Username**: root
-- **Password**: tMlB5PJbeO7%rJpJE#Wc
-- **Domain**: msjenny.io.vn
+## 🚀 Tính năng
 
-## 🚀 Quick Deploy
+- **Docker-based deployment**: Sử dụng Docker containers cho tất cả services
+- **GitHub Actions CI/CD**: Tự động build và deploy khi push code
+- **SSL/TLS**: Tự động cấu hình SSL certificates với Let's Encrypt
+- **Health checks**: Kiểm tra sức khỏe của các services
+- **Auto-scaling**: Tự động restart services khi cần thiết
+- **Monitoring**: Giám sát và log tự động
 
-### Option 1: Automated Script (Recommended)
+## 📋 Yêu cầu hệ thống
+
+- Ubuntu 20.04+ hoặc tương đương
+- Docker 20.10+
+- Docker Compose 2.0+
+- Git
+- 2GB RAM tối thiểu
+- 10GB disk space
+
+## 🛠️ Cài đặt ban đầu
+
+### 1. Chạy script setup trên server
 
 ```bash
-# Make script executable
-chmod +x deploy/quick-deploy.sh
+# SSH vào server
+ssh root@your-server-ip
 
-# Run deployment
-./deploy/quick-deploy.sh
+# Tải và chạy script setup
+wget https://raw.githubusercontent.com/haonnedu/engrisk-student-management/main/deploy/initial-setup.sh
+chmod +x initial-setup.sh
+./initial-setup.sh
 ```
 
-### Option 2: Manual Deploy
+### 2. Cấu hình GitHub Secrets
+
+Thêm các secrets sau vào GitHub repository (Settings > Secrets and variables > Actions):
+
+```
+PROD_HOST=your-server-ip
+PROD_USER=root
+PROD_SSH_KEY=your-ssh-private-key
+PROD_PORT=22
+GITHUB_TOKEN=your-github-token
+```
+
+### 3. Cấu hình DNS
+
+Trỏ domain `msjenny.io.vn` và `www.msjenny.io.vn` về IP server của bạn.
+
+## 🔄 Quy trình Deploy
+
+### Tự động (GitHub Actions)
+
+1. Push code lên branch `main`
+2. GitHub Actions sẽ tự động:
+   - Build Docker images
+   - Push images lên GitHub Container Registry
+   - Deploy lên production server
+   - Chạy health checks
+
+### Thủ công
 
 ```bash
-# Connect to server
-ssh -p 24700 root@103.216.117.100
+# SSH vào server
+ssh root@your-server-ip
 
-# Clone repository
-git clone https://github.com/your-username/engrisk-student-management.git /var/www/engrisk-student-management
+# Chạy script deploy
 cd /var/www/engrisk-student-management
-
-# Run setup
-chmod +x deploy/setup.sh
-./deploy/setup.sh
+./deploy/auto-deploy.sh
 ```
 
-### Option 3: GitHub Actions (Automated)
+## 🏗️ Kiến trúc hệ thống
 
-1. Push code to main branch
-2. GitHub Actions will automatically deploy
-3. Monitor deployment in Actions tab
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Nginx Proxy   │────│   Frontend      │────│   Backend       │
+│   (Port 80/443) │    │   (Next.js)     │    │   (NestJS)      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                       │
+                                               ┌─────────────────┐
+                                               │   PostgreSQL    │
+                                               │   Database      │
+                                               └─────────────────┘
+```
 
-## 📊 Sample Data Included
+## 📁 Cấu trúc thư mục
 
-After deployment, you'll have:
+```
+deploy/
+├── nginx/                    # Nginx configuration
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── conf.d/
+│       └── default.conf
+├── auto-deploy.sh            # Script deploy tự động
+├── initial-setup.sh          # Script setup ban đầu
+└── README.md                 # Tài liệu này
+```
 
-### 👤 Users
+## 🔧 Cấu hình
 
-- **Super Admin**: admin@engrisk.com / admin123
+### Environment Variables
 
-### 📚 Courses
+#### Backend (.env)
 
-- **ENG101**: English Fundamentals (3 credits, 16 weeks, 30 max students)
+```env
+DATABASE_URL=postgresql://engrisk_user:password@engrisk-postgres:5432/student_management
+JWT_SECRET=your-jwt-secret
+NODE_ENV=production
+PORT=3001
+FRONTEND_URL=https://msjenny.io.vn
+API_PREFIX=api/v1
+```
 
-### 🏫 Classes 
+#### Frontend (.env.local)
 
-- **ENG101-A1**: English Fundamentals - Class A1
-  - Teacher: Ms. Jenny
-  - Schedule: Monday, Wednesday, Friday - 8:00 AM - 10:00 AM
-  - Book: English Fundamentals Book 1
+```env
+NEXT_PUBLIC_API_URL=https://msjenny.io.vn/api/v1
+NODE_ENV=production
+```
 
-### 👥 Students
+### Docker Compose
 
-- **ST001**: Nguyen Van An (John) - 12A1 - THPT Nguyen Du
-- **ST002**: Tran Thi Binh (Mary) - 12A2 - THPT Le Hong Phong
-- **ST003**: Le Van Cuong (David) - 12B1 - THPT Marie Curie
+File `docker-compose.prod.yml` chứa cấu hình production với:
 
-### 📊 Grade Types
+- PostgreSQL database
+- Backend API (NestJS)
+- Frontend (Next.js)
+- Nginx reverse proxy
 
-1. **Homework (HW)** - 20% weight
-2. **Speaking Practice (SP)** - 15% weight
-3. **Pronunciation Practice (PP)** - 10% weight
-4. **Test 1 Listening (Test1L)** - 15% weight
-5. **Test 1 Reading & Writing (Test1RW)** - 15% weight
-6. **Test 2 Listening (Test2L)** - 15% weight
-7. **Test 2 Reading & Writing (Test2RW)** - 15% weight
-8. **Final Exam (Final)** - 25% weight
+## 📊 Monitoring
 
-## 🔧 Management Commands
+### Health Checks
 
-### Check Services
+- Backend: `https://msjenny.io.vn/api/v1/health`
+- Frontend: `https://msjenny.io.vn/`
+
+### Logs
 
 ```bash
-# Backend service
-systemctl status engrisk-backend
+# Xem logs của tất cả containers
+docker-compose -f docker-compose.prod.yml logs -f
 
-# Nginx
-systemctl status nginx
-
-# Database
-systemctl status postgresql
+# Xem logs của service cụ thể
+docker-compose -f docker-compose.prod.yml logs -f backend
+docker-compose -f docker-compose.prod.yml logs -f frontend
+docker-compose -f docker-compose.prod.yml logs -f nginx
 ```
 
-### View Logs
+### Monitoring Script
+
+Script monitoring tự động chạy mỗi 5 phút để kiểm tra và restart services nếu cần.
+
+## 🔒 Bảo mật
+
+- SSL/TLS encryption với Let's Encrypt
+- Rate limiting cho API endpoints
+- Security headers
+- Firewall configuration
+- Non-root containers
+
+## 🚨 Troubleshooting
+
+### Container không start
 
 ```bash
-# Backend logs
-journalctl -u engrisk-backend -f
+# Kiểm tra logs
+docker-compose -f docker-compose.prod.yml logs
 
-# Nginx logs
-tail -f /var/log/nginx/access.log
-tail -f /var/log/nginx/error.log
+# Restart containers
+docker-compose -f docker-compose.prod.yml restart
 ```
 
-### Restart Services
+### Database connection issues
 
 ```bash
-# Restart backend
-systemctl restart engrisk-backend
+# Kiểm tra database container
+docker ps | grep postgres
 
-# Reload nginx
-systemctl reload nginx
+# Kiểm tra database logs
+docker logs engrisk-postgres
 
-# Restart database
-systemctl restart postgresql
+# Test connection
+docker exec engrisk-postgres pg_isready -U engrisk_user
 ```
 
-### Update Application
+### SSL certificate issues
 
 ```bash
-cd /var/www/engrisk-student-management
-git pull origin main
-cd be && npm ci --production && npm run build
-cd ../fe && npm ci --production && npm run build
-cd ../be && npm run deploy:setup
-systemctl restart engrisk-backend
+# Renew certificate
+certbot renew
+
+# Check certificate status
+certbot certificates
 ```
 
-## 🔒 Security Notes
+## 📞 Hỗ trợ
 
-### Change Default Passwords
+Nếu gặp vấn đề, vui lòng:
 
-1. **Database**: Update password in `/var/www/engrisk-student-management/be/.env`
-2. **Admin User**: Change password after first login
-3. **JWT Secret**: Update in environment variables
+1. Kiểm tra logs: `/var/log/engrisk-*.log`
+2. Kiểm tra container status: `docker ps -a`
+3. Tạo issue trên GitHub repository
 
-### SSL Certificate
+## 🔄 Cập nhật
 
-```bash
-# Install Let's Encrypt
-apt install certbot python3-certbot-nginx
+Để cập nhật hệ thống:
 
-# Get certificate
-certbot --nginx -d msjenny.io.vn -d www.msjenny.io.vn
-```
+1. Push code mới lên branch `main`
+2. GitHub Actions sẽ tự động deploy
+3. Hoặc chạy thủ công: `./deploy/auto-deploy.sh`
 
-### Firewall
+## 📝 Changelog
 
-```bash
-# Allow necessary ports
-ufw allow 22
-ufw allow 80
-ufw allow 443
-ufw enable
-```
-
-## 📱 Access URLs
-
-- **Main Application**: https://msjenny.io.vn
-- **API Endpoint**: https://msjenny.io.vn/api/v1
-- **Health Check**: https://msjenny.io.vn/api/v1/health
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-1. **Port 3001 already in use**
-
-   ```bash
-   lsof -i :3001
-   kill -9 <PID>
-   ```
-
-2. **Database connection failed**
-
-   ```bash
-   systemctl restart postgresql
-   sudo -u postgres psql -c "SELECT 1"
-   ```
-
-3. **Nginx configuration error**
-
-   ```bash
-   nginx -t
-   systemctl reload nginx
-   ```
-
-4. **Permission denied**
-   ```bash
-   chown -R www-data:www-data /var/www/engrisk-student-management
-   ```
-
-### Reset Everything
-
-```bash
-# Stop services
-systemctl stop engrisk-backend
-
-# Reset database
-sudo -u postgres psql -c "DROP DATABASE student_management;"
-sudo -u postgres psql -c "CREATE DATABASE student_management;"
-
-# Re-run setup
-cd /var/www/engrisk-student-management
-./deploy/setup.sh
-```
-
-## 📞 Support
-
-If you encounter any issues:
-
-1. Check logs: `journalctl -u engrisk-backend -f`
-2. Verify services: `systemctl status engrisk-backend nginx postgresql`
-3. Test connectivity: `curl https://msjenny.io.vn`
-4. Check database: `sudo -u postgres psql -d student_management -c "SELECT COUNT(*) FROM users;"`
+- **v1.0.0**: Initial Docker-based deployment
+- **v1.1.0**: Added GitHub Actions CI/CD
+- **v1.2.0**: Added SSL/TLS support
+- **v1.3.0**: Added monitoring and health checks
