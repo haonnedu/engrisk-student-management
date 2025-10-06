@@ -39,13 +39,6 @@ jobs:
           cd be
           npm run build
 
-      - name: Setup Database
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          cd be
-          npm run deploy:setup
-
       - name: Deploy to Cloud Server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -111,36 +104,17 @@ jobs:
             API_PREFIX="api/v1"
             EOF
 
-            # Also update for fallback PostgreSQL
-            echo "Updating PostgreSQL configuration for fallback..."
-            sudo -u postgres psql -c "ALTER USER engrisk_user PASSWORD 'EngRisk2024!SecureDB#789';" || true
-
-            # Setup database using custom script
+            # Run database migrations and seeding
             cd be
-            echo "Setting up database..."
+            echo "Running database migrations and seeding..."
 
-            # Try custom script first
-            if sudo npm run deploy:setup; then
-                echo "✅ Database setup completed successfully"
-            else
-                echo "❌ Custom database setup failed, trying fallback..."
-                
-                # Fallback: Install PostgreSQL directly
-                sudo apt install -y postgresql postgresql-contrib
-                sudo systemctl start postgresql
-                sudo systemctl enable postgresql
-                
-                # Create database and user
-                sudo -u postgres psql -c "CREATE DATABASE student_management;" || true
-                sudo -u postgres psql -c "CREATE USER engrisk_user WITH PASSWORD 'EngRisk2024!SecureDB#789';" || true
-                sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE student_management TO engrisk_user;" || true
-                
-                # Run migration
-                sudo npm run prisma:deploy || echo "Migration failed, but continuing..."
-                
-                # Seed data
-                sudo npm run seed || echo "Seed failed, but continuing..."
-            fi
+            # Run migration
+            echo "🔄 Running database migrations..."
+            sudo npm run prisma:deploy || echo "Migration failed, but continuing..."
+
+            # Seed data
+            echo "🌱 Seeding sample data..."
+            sudo npm run seed || echo "Seed failed, but continuing..."
 
             # Setup frontend service
             sudo cp /var/www/engrisk-student-management/deploy/engrisk-frontend.service /etc/systemd/system/
