@@ -17,11 +17,6 @@ const nextConfig: NextConfig = {
         ? "https://msjenny.io.vn/api/v1"
         : "http://localhost:3001/api/v1",
   },
-  output: "export",
-  trailingSlash: true,
-  images: {
-    unoptimized: true,
-  },
 };
 
 export default nextConfig;

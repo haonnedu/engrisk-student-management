@@ -110,6 +110,12 @@ jobs:
             echo "Setting up database..."
             sudo npm run deploy:setup
 
+            # Setup frontend service
+            sudo cp /var/www/engrisk-student-management/deploy/engrisk-frontend.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable engrisk-frontend
+            sudo systemctl start engrisk-frontend
+
             # Restart services
             sudo systemctl restart engrisk-backend
             sudo systemctl restart nginx
