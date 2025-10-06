@@ -17,26 +17,19 @@
 ## 🚀 Quick Start
 
 ### Option 1: Setup Docker First (Recommended)
-1. **Setup Docker on server** (run once):
-   ```bash
-   # Linux/macOS
-   chmod +x deploy/ssh-setup-docker.sh
-   ./deploy/ssh-setup-docker.sh
-   
-   # Windows PowerShell
-   .\deploy\setup-docker.ps1
-   ```
 
+1. **Docker already setup on server** ✅
 2. **Push code to GitHub** (triggers automatic deployment)
 
-### Option 2: Direct Deployment
-1. **Push code to GitHub** (triggers automatic deployment with Docker setup)
-2. **Manual deployment** (if needed):
+### Option 2: Manual Deployment
+
+1. **Quick deploy**:
+
    ```bash
    # Quick deploy
    chmod +x deploy/quick-deploy.sh
    ./deploy/quick-deploy.sh
-   
+
    # Or manual deploy
    chmod +x deploy/deploy-manual.sh
    ./deploy/deploy-manual.sh
@@ -47,6 +40,7 @@
 The deployment uses Docker for PostgreSQL database with persistent storage.
 
 ### Manual Docker Setup
+
 ```bash
 # SSH into server
 ssh -p 24700 root@103.216.117.100
@@ -100,6 +94,7 @@ The deployment is automated via GitHub Actions:
 ## 🔧 Troubleshooting
 
 ### Database Issues
+
 ```bash
 # Check Docker container
 sudo docker ps -a | grep engrisk-postgres
@@ -112,6 +107,7 @@ sudo docker restart engrisk-postgres
 ```
 
 ### Service Issues
+
 ```bash
 # Check service status
 sudo systemctl status engrisk-backend
@@ -123,6 +119,7 @@ sudo systemctl restart engrisk-frontend
 ```
 
 ### Nginx Issues
+
 ```bash
 # Check Nginx status
 sudo systemctl status nginx

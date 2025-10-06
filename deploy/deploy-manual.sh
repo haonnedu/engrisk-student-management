@@ -43,9 +43,18 @@ sshpass -p "$PASSWORD" ssh -p $PORT -o StrictHostKeyChecking=no $USER@$HOST << '
     cd ../be
     npm run build
     
-    # Setup database
-    echo "🌱 Setting up database..."
-    npm run deploy:setup
+    # Verify database and run migrations
+    echo "🔍 Verifying database connection..."
+    if sudo docker exec engrisk-postgres pg_isready -U engrisk_user -d student_management >/dev/null 2>&1; then
+        echo "✅ Database is ready!"
+        echo "🔄 Running database migrations..."
+        npm run prisma:deploy
+        echo "🌱 Seeding sample data..."
+        npm run seed
+    else
+        echo "❌ Database not ready, skipping migrations and seeding"
+        echo "Please check database container: sudo docker ps -a | grep engrisk-postgres"
+    fi
     
     # Restart services
     echo "🔄 Restarting services..."
