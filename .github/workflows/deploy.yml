@@ -18,17 +18,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
 
       - name: Install Backend Dependencies
         run: |
           cd be
-          npm ci
+          npm install
 
       - name: Install Frontend Dependencies
         run: |
           cd fe
-          npm ci
+          npm install
 
       - name: Build Frontend
         run: |
@@ -64,10 +63,10 @@ jobs:
 
             # Install dependencies
             cd be
-            sudo npm ci --production
+            sudo npm install --production
 
             cd ../fe
-            sudo npm ci --production
+            sudo npm install --production
 
             # Build applications
             sudo npm run build
