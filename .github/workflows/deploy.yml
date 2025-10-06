@@ -82,28 +82,75 @@ jobs:
 
             # Setup database with Docker (persistent)
             echo "Setting up PostgreSQL database with Docker..."
-            sudo apt update
-            sudo apt install -y docker.io docker-compose
-            sudo systemctl start docker
-            sudo systemctl enable docker
+
+            # Install Docker if not already installed
+            if ! command -v docker &> /dev/null; then
+                echo "Installing Docker..."
+                sudo apt update
+                sudo apt install -y docker.io docker-compose
+                sudo systemctl start docker
+                sudo systemctl enable docker
+            else
+                echo "Docker already installed"
+            fi
+
+            # Check Docker status
+            echo "Docker status:"
+            sudo systemctl status docker --no-pager || echo "Docker not running"
 
             # Check if database container already exists
             if sudo docker ps -a --format "table {{.Names}}" | grep -q "engrisk-postgres"; then
                 echo "Database container already exists, starting it..."
                 sudo docker start engrisk-postgres
+                
+                # Wait for container to be ready
+                echo "Waiting for container to start..."
+                sleep 10
             else
                 echo "Creating new database container..."
                 cd /var/www/engrisk-student-management
                 sudo docker-compose -f deploy/docker-compose.database.yml up -d
+                
+                # Wait for container to be ready
+                echo "Waiting for container to start..."
+                sleep 30
             fi
 
             # Check container status
             echo "Checking Docker container status..."
             sudo docker ps -a | grep engrisk-postgres || echo "No engrisk-postgres container found"
 
-            # Wait for database to be ready
+            # Wait for database to be ready with better checking
             echo "Waiting for database to be ready..."
-            sleep 60
+            for i in {1..60}; do
+                if sudo docker exec engrisk-postgres pg_isready -U engrisk_user -d student_management >/dev/null 2>&1; then
+                    echo "✅ Database is ready! (attempt $i/60)"
+                    break
+                fi
+                echo "Waiting for database... ($i/60)"
+                sleep 5
+            done
+
+            # Final check
+            if ! sudo docker exec engrisk-postgres pg_isready -U engrisk_user -d student_management >/dev/null 2>&1; then
+                echo "❌ Database is not ready after 5 minutes"
+                echo "Container logs:"
+                sudo docker logs engrisk-postgres
+                echo "Trying fallback PostgreSQL installation..."
+                
+                # Fallback: Install PostgreSQL directly
+                sudo apt install -y postgresql postgresql-contrib
+                sudo systemctl start postgresql
+                sudo systemctl enable postgresql
+                
+                # Create database and user
+                sudo -u postgres psql -c "CREATE DATABASE student_management;"
+                sudo -u postgres psql -c "CREATE USER engrisk_user WITH PASSWORD 'EngRisk2024!SecureDB#789';"
+                sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE student_management TO engrisk_user;"
+                sudo -u postgres psql -c "ALTER USER engrisk_user CREATEDB;"
+                
+                echo "✅ Fallback PostgreSQL setup completed"
+            fi
 
             # Setup environment variables
             cat << EOF | sudo tee /var/www/engrisk-student-management/be/.env
