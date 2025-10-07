@@ -20,7 +20,7 @@ services:
     image: ghcr.io/haonnedu/engrisk-student-management-backend:latest
     container_name: engrisk-backend
     environment:
-      DATABASE_URL: postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management
+      DATABASE_URL: postgresql://engrisk_user:EngRisk2024!SecureDB#789@esm_postgres:5432/student_management
       JWT_SECRET: EngRisk2024!JWTSecretKey#456!Production
       NODE_ENV: production
       PORT: 3001

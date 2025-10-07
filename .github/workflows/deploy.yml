@@ -46,7 +46,9 @@ jobs:
         with:
           context: ./be
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -55,7 +57,9 @@ jobs:
         with:
           context: ./fe
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -64,7 +68,9 @@ jobs:
         with:
           context: ./deploy/nginx
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -115,7 +121,7 @@ jobs:
             # Run database migrations
             echo "Running database migrations..."
             sudo docker run --rm --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management" \
+              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@esm_postgres:5432/student_management" \
               ghcr.io/${{ github.repository }}-backend:${{ github.sha }} \
               npx prisma migrate deploy
 
