@@ -182,14 +182,13 @@ jobs:
             sudo docker ps | grep frontend || echo "Frontend container not running"
             sudo docker logs engrisk-frontend || echo "No frontend logs available"
 
-            # Create nginx configuration
+            # Create nginx configuration with HTTPS
             echo "Creating nginx configuration..."
             sudo mkdir -p /var/www/engrisk-student-management/nginx-config
-            sudo cp /dev/null /var/www/engrisk-student-management/nginx-config/nginx.conf
-            echo "events { worker_connections 1024; }" | sudo tee -a /var/www/engrisk-student-management/nginx-config/nginx.conf
-            echo "http { upstream backend { server engrisk-backend:3001; } upstream frontend { server engrisk-frontend:3000; } server { listen 80; server_name msjenny.io.vn www.msjenny.io.vn; location /api/ { proxy_pass http://backend; proxy_http_version 1.1; proxy_set_header Upgrade \$http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto \$scheme; proxy_cache_bypass \$http_upgrade; } location / { proxy_pass http://frontend; proxy_http_version 1.1; proxy_set_header Upgrade \$http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto \$scheme; proxy_cache_bypass \$http_upgrade; } } }" | sudo tee -a /var/www/engrisk-student-management/nginx-config/nginx.conf
+            sudo echo 'events { worker_connections 1024; }' > /var/www/engrisk-student-management/nginx-config/nginx.conf
+            sudo echo 'http { server { listen 80; server_name msjenny.io.vn www.msjenny.io.vn; return 301 https://$host$request_uri; } server { listen 443 ssl; server_name msjenny.io.vn www.msjenny.io.vn; ssl_certificate /etc/letsencrypt/live/msjenny.io.vn/fullchain.pem; ssl_certificate_key /etc/letsencrypt/live/msjenny.io.vn/privkey.pem; add_header X-Frame-Options "SAMEORIGIN"; add_header X-XSS-Protection "1; mode=block"; add_header X-Content-Type-Options "nosniff"; add_header Referrer-Policy "no-referrer-when-downgrade"; location /api/ { proxy_pass http://engrisk-backend:3001; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location / { proxy_pass http://engrisk-frontend:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } } }' >> /var/www/engrisk-student-management/nginx-config/nginx.conf
 
-            # Start nginx
+            # Start nginx with HTTPS
             echo "Starting nginx container..."
             sudo docker run -d \
               --name engrisk-nginx \
@@ -197,6 +196,7 @@ jobs:
               -p 80:80 \
               -p 443:443 \
               -v /var/www/engrisk-student-management/nginx-config/nginx.conf:/etc/nginx/nginx.conf:ro \
+              -v /etc/letsencrypt:/etc/letsencrypt:ro \
               nginx:alpine
 
             # Wait for services to be ready
@@ -205,13 +205,13 @@ jobs:
 
             # Health check
             echo "Running health checks..."
-            if curl -f http://localhost/api/v1/health; then
+            if curl -f -k https://localhost/api/v1/health; then
                 echo "✅ Backend is healthy"
             else
                 echo "❌ Backend health check failed"
             fi
 
-            if curl -f http://localhost/; then
+            if curl -f -k https://localhost/; then
                 echo "✅ Frontend is healthy"
             else
                 echo "❌ Frontend health check failed"
@@ -227,5 +227,5 @@ jobs:
         run: |
           sleep 60
           echo "Testing production endpoints..."
-          curl -f https://msjenny.io.vn/api/v1/health || echo "Backend health check failed"
-          curl -f https://msjenny.io.vn/ || echo "Frontend health check failed"
+          curl -f -k https://msjenny.io.vn/api/v1/health || echo "Backend health check failed"
+          curl -f -k https://msjenny.io.vn/ || echo "Frontend health check failed"
