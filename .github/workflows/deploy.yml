@@ -112,11 +112,22 @@ jobs:
             sudo docker network create engrisk-network || true
 
             # Start database if not running
-            if ! sudo docker ps --format "table {{.Names}}" | grep -q "engrisk-postgres"; then
+            if ! sudo docker ps --format "table {{.Names}}" | grep -q "esm_postgres"; then
                 echo "Starting database container..."
-                sudo docker-compose -f docker-compose.yml up -d postgres
-                sleep 10
+                sudo docker run -d \
+                  --name esm_postgres \
+                  --network engrisk-network \
+                  -e POSTGRES_DB=student_management \
+                  -e POSTGRES_USER=engrisk_user \
+                  -e POSTGRES_PASSWORD=EngRisk2024!SecureDB#789 \
+                  -p 5432:5432 \
+                  postgres:15-alpine
+                sleep 15
             fi
+
+            # Wait for database to be ready
+            echo "Waiting for database to be ready..."
+            sudo docker exec esm_postgres pg_isready -U engrisk_user -d student_management || sleep 10
 
             # Run database migrations
             echo "Running database migrations..."
@@ -125,9 +136,51 @@ jobs:
               ghcr.io/${{ github.repository }}-backend:${{ github.sha }} \
               npx prisma migrate deploy
 
-            # Start application stack
+            # Start application stack manually
             echo "Starting application stack..."
-            sudo docker-compose -f docker-compose.prod.yml up -d
+
+            # Stop existing containers
+            sudo docker stop engrisk-backend engrisk-frontend engrisk-nginx || true
+            sudo docker rm engrisk-backend engrisk-frontend engrisk-nginx || true
+
+            # Start backend
+            echo "Starting backend container..."
+            sudo docker run -d \
+              --name engrisk-backend \
+              --network engrisk-network \
+              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB%23789@esm_postgres:5432/student_management" \
+              -e JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production" \
+              -e NODE_ENV=production \
+              -e PORT=3001 \
+              -e FRONTEND_URL="https://msjenny.io.vn" \
+              -e API_PREFIX="api/v1" \
+              -p 3001:3001 \
+              ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
+
+            # Start frontend
+            echo "Starting frontend container..."
+            sudo docker run -d \
+              --name engrisk-frontend \
+              --network engrisk-network \
+              -e NODE_ENV=production \
+              -e PORT=3000 \
+              -e NEXT_PUBLIC_API_URL="https://msjenny.io.vn/api/v1" \
+              -p 3000:3000 \
+              ghcr.io/${{ github.repository }}-frontend:${{ github.sha }} || echo "Frontend container failed to start"
+
+            # Check frontend container status
+            echo "Checking frontend container status..."
+            sudo docker ps | grep frontend || echo "Frontend container not running"
+            sudo docker logs engrisk-frontend || echo "No frontend logs available"
+
+            # Start nginx
+            echo "Starting nginx container..."
+            sudo docker run -d \
+              --name engrisk-nginx \
+              --network engrisk-network \
+              -p 80:80 \
+              -p 443:443 \
+              ghcr.io/${{ github.repository }}-nginx:${{ github.sha }}
 
             # Wait for services to be ready
             echo "Waiting for services to be ready..."
