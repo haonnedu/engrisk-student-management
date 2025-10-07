@@ -84,63 +84,71 @@ jobs:
 
       - name: Deploy via SSH (compose pull/up)
         uses: appleboy/ssh-action@v1.0.0
+        env:                              # ⬅️ đưa secrets/vars vào môi trường của runner
+          TAG: ${{ github.sha }}          # truyền TAG từ GitHub vào
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          REGISTRY: ghcr.io
+          IMAGE_NAME: ${{ github.repository }}
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
-          envs: DB_USER,DB_PASSWORD,JWT_SECRET,REGISTRY,IMAGE_NAME
+          envs: TAG,DB_USER,DB_PASSWORD,JWT_SECRET,REGISTRY,IMAGE_NAME
           script_stop: true
           script: |
             set -Eeuo pipefail
             APP_DIR=/var/www/engrisk-student-management
             DOMAIN=msjenny.io.vn
-            TAG=${GITHUB_SHA}
-
+      
+            echo "Using TAG=$TAG, DB_USER=$DB_USER, IMAGE_NAME=$IMAGE_NAME"
             mkdir -p "$APP_DIR" "$APP_DIR/nginx-config"
             cd "$APP_DIR"
-
+      
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
-
+      
             umask 177
-            cat > .env <<'ENV'
+            cat > .env <<ENV
             TAG=${TAG}
             DOMAIN=${DOMAIN}
-
+            
             # DB
             POSTGRES_DB=student_management
             POSTGRES_USER=${DB_USER}
             POSTGRES_PASSWORD=${DB_PASSWORD}
-            DB_HOST=esm_postgres
-            DB_PORT=5432
-            DB_USERNAME=${DB_USER}
-            DB_PASSWORD=${DB_PASSWORD}
-            DB_NAME=student_management
             DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@esm_postgres:5432/student_management
-
+            
             # JWT
             JWT_SECRET=${JWT_SECRET}
             JWT_EXPIRES_IN=24h
-
+            
             # Backend
             NODE_ENV=production
             PORT_BE=3001
             FRONTEND_URL=https://${DOMAIN}
             API_PREFIX=api/v1
-
+            
             # Frontend
             PORT_FE=3000
             NEXT_PUBLIC_API_URL=https://${DOMAIN}/api/v1
             ENV
-
-            chmod 600 .env
-
-            docker compose -f docker-compose.prod.yml --env-file .env pull
-            docker compose -f docker-compose.prod.yml --env-file .env up -d
-
+            
+                  chmod 600 .env
+      
+            COMPOSE_FILE="docker-compose.prod.yml"
+            if [ ! -f "$COMPOSE_FILE" ] && [ -f "deploy/docker-compose.prod.yml" ]; then
+              COMPOSE_FILE="deploy/docker-compose.prod.yml"
+            fi
+      
+            docker compose -f "$COMPOSE_FILE" --env-file .env pull
+            docker compose -f "$COMPOSE_FILE" --env-file .env up -d
+      
             sleep 12
-            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null
-            curl -fsS -k "https://${DOMAIN}/" >/dev/null
+            
+            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null || (docker compose -f "$COMPOSE_FILE" logs backend | tail -n 120; exit 1)
+            curl -fsS -k "https://${DOMAIN}/" >/dev/null || (docker compose -f "$COMPOSE_FILE" logs nginx | tail -n 120; exit 1)
 
       - name: Production Health Check (external)
         run: |
