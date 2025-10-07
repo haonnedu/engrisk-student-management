@@ -123,7 +123,7 @@ jobs:
                   --network engrisk-network \
                   -e POSTGRES_DB=student_management \
                   -e POSTGRES_USER=engrisk_user \
-                  -e POSTGRES_PASSWORD=EngRisk2024!SecureDB#789 \
+                  -e POSTGRES_PASSWORD="EngRisk2024!SecureDB#789" \
                   -p 5432:5432 \
                   -v postgres_data:/var/lib/postgresql/data \
                   postgres:15-alpine
@@ -141,7 +141,7 @@ jobs:
             # Run database migrations
             echo "Running database migrations..."
             sudo docker run --rm --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB%23789@esm_postgres:5432/student_management" \
+              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024%21SecureDB%23789@esm_postgres:5432/student_management" \
               ghcr.io/${{ github.repository }}-backend:${{ github.sha }} \
               npx prisma migrate deploy
 
@@ -157,8 +157,8 @@ jobs:
             sudo docker run -d \
               --name engrisk-backend \
               --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB%23789@esm_postgres:5432/student_management" \
-              -e JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production" \
+              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024%21SecureDB%23789@esm_postgres:5432/student_management" \
+              -e JWT_SECRET="EngRisk2024%21JWTSecretKey%23456%21Production" \
               -e NODE_ENV=production \
               -e PORT=3001 \
               -e FRONTEND_URL="https://msjenny.io.vn" \
