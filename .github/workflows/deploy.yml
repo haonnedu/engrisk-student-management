@@ -80,8 +80,8 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
           source: |
-            deploy/docker-compose.prod.yml
-            deploy/nginx/nginx.conf
+            ./docker-compose.prod.yml
+            ./deploy/nginx/nginx.conf
           target: /var/www/engrisk-student-management
 
       - name: Deploy via SSH (compose pull/up)
@@ -137,8 +137,8 @@ jobs:
 
             chmod 600 .env
 
-            docker compose -f deploy/docker-compose.prod.yml --env-file .env pull
-            docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d
+            docker compose -f docker-compose.prod.yml --env-file .env pull
+            docker compose -f docker-compose.prod.yml --env-file .env up -d
 
             sleep 12
             curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null
