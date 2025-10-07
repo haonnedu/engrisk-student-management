@@ -10,7 +10,10 @@ async function main() {
     // 1. Create Super Admin User
     console.log("👤 Creating super admin user...");
 
-    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const hashedPassword = await bcrypt.hash(
+      process.env.ADMIN_PASSWORD || "ChangeMe123!",
+      10
+    );
 
     const superAdmin = await prisma.user.upsert({
       where: { email: "admin@engrisk.com" },
@@ -216,7 +219,10 @@ async function main() {
         data: {
           email: `${studentData.studentId.toLowerCase()}@student.engrisk.com`,
           phone: studentData.phone,
-          password: await bcrypt.hash("student123", 10),
+          password: await bcrypt.hash(
+            process.env.DEFAULT_STUDENT_PASSWORD || "Student123!",
+            10
+          ),
           role: "STUDENT",
         },
       });
@@ -270,7 +276,9 @@ async function main() {
 
     console.log("🎉 Data seeding completed successfully!");
     console.log("\n📋 Summary:");
-    console.log("- Super Admin: admin@engrisk.com / admin123");
+    console.log(
+      "- Super Admin: admin@engrisk.com / [use ADMIN_PASSWORD environment variable]"
+    );
     console.log("- Grade Types:", gradeTypes.length);
     console.log("- Sample Course: ENG101 - English Fundamentals");
     console.log("- Sample Class: ENG101-A1");

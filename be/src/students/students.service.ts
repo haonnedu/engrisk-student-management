@@ -13,7 +13,8 @@ export class StudentsService {
     let userId = createStudentDto.userId;
 
     if (!userId) {
-      const defaultPassword = "123456";
+      const defaultPassword =
+        process.env.DEFAULT_STUDENT_PASSWORD || "Student123!";
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
       const createdUser = await this.prisma.user.create({

@@ -197,7 +197,7 @@ tail -f /var/log/nginx/error.log
 ### Test Application
 
 - Visit: https://msjenny.io.vn
-- Login: admin@engrisk.com / admin123
+- Login: admin@engrisk.com / [use environment variable ADMIN_PASSWORD]
 
 ## 🔄 Updates
 
@@ -297,7 +297,7 @@ journalctl -u engrisk-backend --since "1 hour ago" | grep ERROR
 ## 📝 Default Credentials
 
 - **Admin Email**: admin@engrisk.com
-- **Admin Password**: admin123
+- **Admin Password**: [use environment variable ADMIN_PASSWORD]
 - **Database**: student_management
 - **Database User**: engrisk_user
 - **Database Password**: your-secure-password

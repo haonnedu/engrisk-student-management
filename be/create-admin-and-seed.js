@@ -7,7 +7,10 @@ async function createAdminAndSeed() {
   try {
     console.log("Creating admin user...");
 
-    const hashedPassword = await bcrypt.hash("123456", 10);
+    const hashedPassword = await bcrypt.hash(
+      process.env.ADMIN_PASSWORD || "ChangeMe123!",
+      10
+    );
 
     const user = await prisma.user.create({
       data: {

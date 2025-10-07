@@ -12,7 +12,7 @@ import { Transform } from "class-transformer";
 export class CreateStudentDto {
   @ApiPropertyOptional({
     description:
-      "Existing User ID to associate with this student (optional). If omitted, a new user will be created automatically with default password 123456.",
+      "Existing User ID to associate with this student (optional). If omitted, a new user will be created automatically with default password.",
     example: "clx1234567890",
   })
   @IsString()

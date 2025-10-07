@@ -19,10 +19,10 @@ mkdir -p /var/www/engrisk-student-management/fe
 # Tạo file be/.env
 cat > /var/www/engrisk-student-management/be/.env << 'EOF'
 # Database
-DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management"
+DATABASE_URL="postgresql://${POSTGRES_USER:-engrisk_user}:${POSTGRES_PASSWORD}@engrisk-postgres:5432/student_management"
 
 # JWT
-JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
+JWT_SECRET="${JWT_SECRET}"
 
 # Application
 NODE_ENV="production"

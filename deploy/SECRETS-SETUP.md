@@ -66,10 +66,10 @@ Tạo file `be/.env` trên server:
 
 ```env
 # Database
-DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management"
+DATABASE_URL="postgresql://${POSTGRES_USER:-engrisk_user}:${POSTGRES_PASSWORD}@engrisk-postgres:5432/student_management"
 
 # JWT
-JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
+JWT_SECRET="${JWT_SECRET}"
 
 # Application
 NODE_ENV="production"
@@ -112,12 +112,12 @@ File `docker-compose.prod.yml` sử dụng các environment variables:
 environment:
   # Database
   POSTGRES_DB: student_management
-  POSTGRES_USER: engrisk_user
-  POSTGRES_PASSWORD: EngRisk2024!SecureDB#789
+  POSTGRES_USER: ${POSTGRES_USER:-engrisk_user}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   # Backend
-  DATABASE_URL: postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management
-  JWT_SECRET: EngRisk2024!JWTSecretKey#456!Production
+  DATABASE_URL: postgresql://${POSTGRES_USER:-engrisk_user}:${POSTGRES_PASSWORD}@engrisk-postgres:5432/student_management
+  JWT_SECRET: ${JWT_SECRET}
   NODE_ENV: production
   PORT: 3001
   FRONTEND_URL: https://msjenny.io.vn
@@ -133,17 +133,17 @@ environment:
 
 ```env
 # Strong password cho database
-POSTGRES_PASSWORD="EngRisk2024!SecureDB#789"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
 
 # User riêng cho application
-POSTGRES_USER="engrisk_user"
+POSTGRES_USER="${POSTGRES_USER:-engrisk_user}"
 ```
 
 ### JWT Security
 
 ```env
 # JWT secret mạnh (32+ ký tự)
-JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
+JWT_SECRET="${JWT_SECRET}"
 ```
 
 ### SSL/TLS Configuration
@@ -235,11 +235,15 @@ docker exec engrisk-postgres psql -U engrisk_user -d student_management -c "SELE
 
 ## 📝 Template Files
 
+### Environment Variables Template
+
+A comprehensive environment variables template is available at `deploy/env.example`. This file contains all the necessary environment variables with descriptions and security notes.
+
 ### be/.env.template
 
 ```env
-DATABASE_URL="postgresql://username:password@host:port/database"
-JWT_SECRET="your-super-secret-jwt-key"
+DATABASE_URL="postgresql://${POSTGRES_USER:-username}:${POSTGRES_PASSWORD}@host:port/database"
+JWT_SECRET="${JWT_SECRET}"
 NODE_ENV="production"
 PORT=3001
 FRONTEND_URL="https://your-domain.com"
@@ -253,3 +257,9 @@ NEXT_PUBLIC_API_URL="https://your-domain.com/api/v1"
 NODE_ENV="production"
 NEXT_TELEMETRY_DISABLED=1
 ```
+
+### Quick Setup
+
+1. Copy the template: `cp deploy/env.example .env`
+2. Edit the `.env` file with your actual values
+3. Never commit the `.env` file to version control

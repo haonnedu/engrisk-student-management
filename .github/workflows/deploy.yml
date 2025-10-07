@@ -5,235 +5,139 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: prod-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
+    strategy:
+      matrix:
+        service:
+          - name: backend
+            context: ./be
+          - name: frontend
+            context: ./fe
+          - name: nginx
+            context: ./deploy/nginx
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Login GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service.name }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
+            type=raw,value=${{ github.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Backend image
-        uses: docker/build-push-action@v5
+      - name: Build & Push ${{ matrix.service.name }}
+        id: buildpush
+        uses: docker/build-push-action@v6
         with:
-          context: ./be
+          context: ${{ matrix.service.context }}
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: false
 
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./fe
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout (for compose/nginx.conf)
+        uses: actions/checkout@v4
 
-      - name: Build and push Nginx image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./deploy/nginx
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Deploy to Production Server
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Copy compose & nginx.conf to server
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
+          source: "deploy/docker-compose.prod.yml,deploy/nginx/nginx.conf"
+          target: "/var/www/engrisk-student-management"
+
+      - name: Deploy via SSH (compose pull/up)
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          TAG: ${{ github.sha }}
+          REGISTRY: ghcr.io
+          IMAGE_NAME: ${{ github.repository }}
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT }}
+          script_stop: true
           script: |
-            # Create application directory
-            sudo mkdir -p /var/www/engrisk-student-management
-            cd /var/www/engrisk-student-management
+            set -Eeuo pipefail
+            APP_DIR=/var/www/engrisk-student-management
+            cd "$APP_DIR"
 
-            # Clone or pull latest code
-            if [ -d ".git" ]; then
-                echo "Repository exists, pulling latest code..."
-                sudo git pull origin main
-            else
-                echo "Cloning repository..."
-                sudo git clone https://github.com/haonnedu/engrisk-student-management.git .
-            fi
+            # 1) Chuẩn bị thư mục & quyền
+            sudo mkdir -p "$APP_DIR" "$APP_DIR/nginx-config" "$APP_DIR/data"
+            sudo chown -R $USER:$USER "$APP_DIR"
 
-            # Login to GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # 2) Login GHCR để pull ảnh
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
 
-            # Pull latest images
-            echo "Pulling latest Docker images..."
-            sudo docker pull ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
-            sudo docker pull ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
-            sudo docker pull ghcr.io/${{ github.repository }}-nginx:${{ github.sha }}
+            # 3) Tạo/ghi file .env (KHÔNG commit .env lên git)
+            #   Lưu ý: thay đổi các biến dưới bằng secrets của bạn trong GitHub Action → chuyển qua SSH echo an toàn
+            ENV_FILE="$APP_DIR/.env"
+            umask 177
+            {
+              echo "TAG=${TAG}"
+              echo "DOMAIN=msjenny.io.vn"
+              echo "POSTGRES_DB=student_management"
+              echo "POSTGRES_USER=${{ secrets.DB_USER }}"
+              echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}"
+              echo "DATABASE_URL=postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@esm_postgres:5432/student_management"
+              echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+              echo "JWT_EXPIRES_IN=24h"
+              echo "NODE_ENV=production"
+              echo "PORT_BE=3001"
+              echo "PORT_FE=3000"
+              echo "FRONTEND_URL=https://msjenny.io.vn"
+              echo "NEXT_PUBLIC_API_URL=https://msjenny.io.vn/api/v1"
+            } > "$ENV_FILE"
 
-            # Stop only application containers (keep database running)
-            echo "Stopping application containers..."
-            sudo docker stop engrisk-backend engrisk-frontend engrisk-nginx || true
-            sudo docker rm engrisk-backend engrisk-frontend engrisk-nginx || true
+            # 4) Docker login lại nếu cần & pull + up
+            docker compose -f deploy/docker-compose.prod.yml --env-file "$ENV_FILE" pull
+            docker compose -f deploy/docker-compose.prod.yml --env-file "$ENV_FILE" up -d
 
-            # Create network if not exists
-            sudo docker network create engrisk-network || true
+            # 5) Healthcheck thô
+            sleep 10
+            curl -fsS -k "https://$DOMAIN/api/v1/health" || (echo "Backend healthcheck FAILED" && exit 1)
+            curl -fsS -k "https://$DOMAIN/" || (echo "Frontend healthcheck FAILED" && exit 1)
 
-            # Create volume for database persistence
-            sudo docker volume create postgres_data || true
-
-            # Check if database volume has data
-            if sudo docker run --rm -v postgres_data:/data alpine sh -c "ls -la /data | grep -q postgresql"; then
-                echo "Database volume contains existing data - preserving it"
-            else
-                echo "Database volume is empty - will initialize new database"
-            fi
-
-            # Ensure database is running with persistent volume
-            if ! sudo docker ps --format "table {{.Names}}" | grep -q "esm_postgres"; then
-                echo "Starting database container with persistent volume..."
-                sudo docker run -d \
-                  --name esm_postgres \
-                  --network engrisk-network \
-                  -e POSTGRES_DB=student_management \
-                  -e POSTGRES_USER=engrisk_user \
-                  -e POSTGRES_PASSWORD="EngRisk2024!SecureDB#789" \
-                  -p 5432:5432 \
-                  -v postgres_data:/var/lib/postgresql/data \
-                  postgres:15-alpine
-                sleep 15
-            else
-                echo "Database container already running with existing data"
-                # Connect existing database to new network
-                sudo docker network connect engrisk-network esm_postgres || true
-            fi
-
-            # Wait for database to be ready
-            echo "Waiting for database to be ready..."
-            sudo docker exec esm_postgres pg_isready -U engrisk_user -d student_management || sleep 10
-
-            # Run database migrations only if needed
-            echo "Checking if database migrations are needed..."
-            sudo docker run --rm --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024%21SecureDB%23789@esm_postgres:5432/student_management" \
-              ghcr.io/${{ github.repository }}-backend:${{ github.sha }} \
-              npx prisma migrate deploy
-
-            # Start application stack manually
-            echo "Starting application stack..."
-
-            # Stop existing containers
-            sudo docker stop engrisk-backend engrisk-frontend engrisk-nginx || true
-            sudo docker rm engrisk-backend engrisk-frontend engrisk-nginx || true
-
-            # Start backend
-            echo "Starting backend container..."
-            sudo docker run -d \
-              --name engrisk-backend \
-              --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024%21SecureDB%23789@esm_postgres:5432/student_management" \
-              -e JWT_SECRET="EngRisk2024%21JWTSecretKey%23456%21Production" \
-              -e JWT_EXPIRES_IN="24h" \
-              -e NODE_ENV=production \
-              -e PORT=3001 \
-              -e FRONTEND_URL="https://msjenny.io.vn" \
-              -e API_PREFIX="api/v1" \
-              -p 3001:3001 \
-              ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
-
-            # Start frontend
-            echo "Starting frontend container..."
-            sudo docker run -d \
-              --name engrisk-frontend \
-              --network engrisk-network \
-              -e NODE_ENV=production \
-              -e PORT=3000 \
-              -e NEXT_PUBLIC_API_URL="https://msjenny.io.vn/api/v1" \
-              -p 3000:3000 \
-              ghcr.io/${{ github.repository }}-frontend:${{ github.sha }} || echo "Frontend container failed to start"
-
-            # Check frontend container status
-            echo "Checking frontend container status..."
-            sudo docker ps | grep frontend || echo "Frontend container not running"
-            sudo docker logs engrisk-frontend || echo "No frontend logs available"
-
-            # Create nginx configuration with HTTPS
-            echo "Creating nginx configuration..."
-            sudo mkdir -p /var/www/engrisk-student-management/nginx-config
-            sudo echo 'events { worker_connections 1024; }' > /var/www/engrisk-student-management/nginx-config/nginx.conf
-            sudo echo 'http { server { listen 80; server_name msjenny.io.vn www.msjenny.io.vn; return 301 https://$host$request_uri; } server { listen 443 ssl; server_name msjenny.io.vn www.msjenny.io.vn; ssl_certificate /etc/letsencrypt/live/msjenny.io.vn/fullchain.pem; ssl_certificate_key /etc/letsencrypt/live/msjenny.io.vn/privkey.pem; add_header X-Frame-Options "SAMEORIGIN"; add_header X-XSS-Protection "1; mode=block"; add_header X-Content-Type-Options "nosniff"; add_header Referrer-Policy "no-referrer-when-downgrade"; location /api/ { proxy_pass http://engrisk-backend:3001; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location / { proxy_pass http://engrisk-frontend:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } } }' >> /var/www/engrisk-student-management/nginx-config/nginx.conf
-
-            # Start nginx with HTTPS
-            echo "Starting nginx container..."
-            sudo docker run -d \
-              --name engrisk-nginx \
-              --network engrisk-network \
-              -p 80:80 \
-              -p 443:443 \
-              -v /var/www/engrisk-student-management/nginx-config/nginx.conf:/etc/nginx/nginx.conf:ro \
-              -v /etc/letsencrypt:/etc/letsencrypt:ro \
-              nginx:alpine
-
-            # Wait for services to be ready
-            echo "Waiting for services to be ready..."
-            sleep 30
-
-            # Health check
-            echo "Running health checks..."
-            if curl -f -k https://localhost/api/v1/health; then
-                echo "✅ Backend is healthy"
-            else
-                echo "❌ Backend health check failed"
-            fi
-
-            if curl -f -k https://localhost/; then
-                echo "✅ Frontend is healthy"
-            else
-                echo "❌ Frontend health check failed"
-            fi
-
-            # Clean up old images
-            echo "Cleaning up old images..."
-            sudo docker image prune -f
-
-            echo "Deployment completed successfully!"
-
-      - name: Production Health Check
+      - name: Production Health Check (external)
         run: |
-          sleep 60
-          echo "Testing production endpoints..."
+          sleep 20
           curl -f -k https://msjenny.io.vn/api/v1/health || echo "Backend health check failed"
           curl -f -k https://msjenny.io.vn/ || echo "Frontend health check failed"

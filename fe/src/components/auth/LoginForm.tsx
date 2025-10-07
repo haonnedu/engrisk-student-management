@@ -112,8 +112,9 @@ export function LoginForm() {
           </form>
           <div className="mt-4 text-center text-sm text-gray-600">
             <p>Demo credentials:</p>
-            <p className="font-mono text-xs">admin@example.com / password123</p>
-            <p className="font-mono text-xs">+84123456789 / password123</p>
+            <p className="font-mono text-xs">
+              Use your registered email/phone and password
+            </p>
           </div>
         </CardContent>
       </Card>

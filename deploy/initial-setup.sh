@@ -178,8 +178,8 @@ setup_environment() {
     
     # Create .env file for backend
     cat > $APP_DIR/be/.env << EOF
-DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management"
-JWT_SECRET="EngRisk2024!JWTSecretKey#456!Production"
+DATABASE_URL="postgresql://\${POSTGRES_USER:-engrisk_user}:\${POSTGRES_PASSWORD}@engrisk-postgres:5432/student_management"
+JWT_SECRET="\${JWT_SECRET}"
 NODE_ENV="production"
 PORT=3001
 FRONTEND_URL="https://msjenny.io.vn"

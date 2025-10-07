@@ -200,7 +200,7 @@ deploy_application() {
     # Run database migrations
     log "Running database migrations..."
     docker run --rm --network engrisk-network \
-      -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@engrisk-postgres:5432/student_management" \
+      -e DATABASE_URL="postgresql://${POSTGRES_USER:-engrisk_user}:${POSTGRES_PASSWORD}@engrisk-postgres:5432/student_management" \
       ghcr.io/haonnedu/engrisk-student-management-backend:latest \
       npx prisma migrate deploy
     
