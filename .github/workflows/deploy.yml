@@ -104,14 +104,18 @@ jobs:
             sudo docker pull ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
             sudo docker pull ghcr.io/${{ github.repository }}-nginx:${{ github.sha }}
 
-            # Stop existing containers
-            echo "Stopping existing containers..."
-            sudo docker-compose -f docker-compose.prod.yml down || true
+            # Stop only application containers (keep database running)
+            echo "Stopping application containers..."
+            sudo docker stop engrisk-backend engrisk-frontend engrisk-nginx || true
+            sudo docker rm engrisk-backend engrisk-frontend engrisk-nginx || true
 
             # Create network if not exists
             sudo docker network create engrisk-network || true
 
-            # Start database if not running
+            # Create volume for database persistence
+            sudo docker volume create postgres_data || true
+
+            # Ensure database is running
             if ! sudo docker ps --format "table {{.Names}}" | grep -q "esm_postgres"; then
                 echo "Starting database container..."
                 sudo docker run -d \
@@ -121,8 +125,13 @@ jobs:
                   -e POSTGRES_USER=engrisk_user \
                   -e POSTGRES_PASSWORD=EngRisk2024!SecureDB#789 \
                   -p 5432:5432 \
+                  -v postgres_data:/var/lib/postgresql/data \
                   postgres:15-alpine
                 sleep 15
+            else
+                echo "Database container already running"
+                # Connect existing database to new network
+                sudo docker network connect engrisk-network esm_postgres || true
             fi
 
             # Wait for database to be ready
