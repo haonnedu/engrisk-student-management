@@ -20,7 +20,7 @@ services:
     image: ghcr.io/haonnedu/engrisk-student-management-backend:latest
     container_name: engrisk-backend
     environment:
-      DATABASE_URL: postgresql://engrisk_user:EngRisk2024!SecureDB#789@esm_postgres:5432/student_management
+      DATABASE_URL: postgresql://engrisk_user:EngRisk2024!SecureDB%23789@esm_postgres:5432/student_management
       JWT_SECRET: EngRisk2024!JWTSecretKey#456!Production
       NODE_ENV: production
       PORT: 3001
@@ -33,12 +33,6 @@ services:
     restart: unless-stopped
     networks:
       - engrisk-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   frontend:
     image: ghcr.io/haonnedu/engrisk-student-management-frontend:latest
@@ -54,12 +48,6 @@ services:
     restart: unless-stopped
     networks:
       - engrisk-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   nginx:
     image: ghcr.io/haonnedu/engrisk-student-management-nginx:latest

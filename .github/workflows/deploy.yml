@@ -121,7 +121,7 @@ jobs:
             # Run database migrations
             echo "Running database migrations..."
             sudo docker run --rm --network engrisk-network \
-              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB#789@esm_postgres:5432/student_management" \
+              -e DATABASE_URL="postgresql://engrisk_user:EngRisk2024!SecureDB%23789@esm_postgres:5432/student_management" \
               ghcr.io/${{ github.repository }}-backend:${{ github.sha }} \
               npx prisma migrate deploy
 
