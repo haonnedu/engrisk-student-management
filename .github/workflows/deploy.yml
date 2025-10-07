@@ -72,17 +72,6 @@ jobs:
       - name: Checkout (compose/nginx.conf)
         uses: actions/checkout@v4
 
-      # Debug: liệt kê file để chắc chắn đường dẫn đúng
-      - name: List repo files (debug)
-        run: |
-          pwd
-          ls -la
-          echo "---- deploy ----"
-          ls -la deploy || true
-          echo "---- deploy/nginx ----"
-          ls -la deploy/nginx || true
-
-      # SỬA Ở ĐÂY: source dùng multi-line, đường dẫn tương đối từ root repo
       - name: Copy compose & nginx.conf to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -90,9 +79,7 @@ jobs:
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
-          source: |
-            ./docker-compose.prod.yml
-            ./deploy/nginx/nginx.conf
+          source: deploy/** 
           target: /var/www/engrisk-student-management
 
       - name: Deploy via SSH (compose pull/up)
