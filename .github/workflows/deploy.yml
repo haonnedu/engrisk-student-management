@@ -22,7 +22,7 @@ jobs:
 
     strategy:
       matrix:
-        service:
+        include:
           - name: backend
             context: ./be
           - name: frontend
@@ -48,17 +48,15 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service.name }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.name }}
           tags: |
             type=raw,value=${{ github.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & Push ${{ matrix.service.name }}
-        id: buildpush
+      - name: Build & Push ${{ matrix.name }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.service.context }}
+          context: ${{ matrix.context }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
@@ -69,8 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
+
     steps:
-      - name: Checkout (for compose/nginx.conf)
+      - name: Checkout (compose/nginx.conf)
         uses: actions/checkout@v4
 
       - name: Copy compose & nginx.conf to server
@@ -80,64 +79,73 @@ jobs:
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
-          source: "deploy/docker-compose.prod.yml,deploy/nginx/nginx.conf"
-          target: "/var/www/engrisk-student-management"
+          source: |
+            deploy/docker-compose.prod.yml
+            deploy/nginx/nginx.conf
+          target: /var/www/engrisk-student-management
 
       - name: Deploy via SSH (compose pull/up)
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          TAG: ${{ github.sha }}
-          REGISTRY: ghcr.io
-          IMAGE_NAME: ${{ github.repository }}
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,REGISTRY,IMAGE_NAME
           script_stop: true
           script: |
             set -Eeuo pipefail
             APP_DIR=/var/www/engrisk-student-management
+            DOMAIN=msjenny.io.vn
+            TAG=${GITHUB_SHA}
+
+            mkdir -p "$APP_DIR" "$APP_DIR/nginx-config"
             cd "$APP_DIR"
 
-            # 1) Chuẩn bị thư mục & quyền
-            sudo mkdir -p "$APP_DIR" "$APP_DIR/nginx-config" "$APP_DIR/data"
-            sudo chown -R $USER:$USER "$APP_DIR"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
 
-            # 2) Login GHCR để pull ảnh
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
-
-            # 3) Tạo/ghi file .env (KHÔNG commit .env lên git)
-            #   Lưu ý: thay đổi các biến dưới bằng secrets của bạn trong GitHub Action → chuyển qua SSH echo an toàn
-            ENV_FILE="$APP_DIR/.env"
             umask 177
-            {
-              echo "TAG=${TAG}"
-              echo "DOMAIN=msjenny.io.vn"
-              echo "POSTGRES_DB=student_management"
-              echo "POSTGRES_USER=${{ secrets.DB_USER }}"
-              echo "POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}"
-              echo "DATABASE_URL=postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@esm_postgres:5432/student_management"
-              echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
-              echo "JWT_EXPIRES_IN=24h"
-              echo "NODE_ENV=production"
-              echo "PORT_BE=3001"
-              echo "PORT_FE=3000"
-              echo "FRONTEND_URL=https://msjenny.io.vn"
-              echo "NEXT_PUBLIC_API_URL=https://msjenny.io.vn/api/v1"
-            } > "$ENV_FILE"
+            cat > .env <<'ENV'
+            TAG=${TAG}
+            DOMAIN=${DOMAIN}
 
-            # 4) Docker login lại nếu cần & pull + up
-            docker compose -f deploy/docker-compose.prod.yml --env-file "$ENV_FILE" pull
-            docker compose -f deploy/docker-compose.prod.yml --env-file "$ENV_FILE" up -d
+            # DB
+            POSTGRES_DB=student_management
+            POSTGRES_USER=${DB_USER}
+            POSTGRES_PASSWORD=${DB_PASSWORD}
+            DB_HOST=esm_postgres
+            DB_PORT=5432
+            DB_USERNAME=${DB_USER}
+            DB_PASSWORD=${DB_PASSWORD}
+            DB_NAME=student_management
+            DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@esm_postgres:5432/student_management
 
-            # 5) Healthcheck thô
-            sleep 10
-            curl -fsS -k "https://$DOMAIN/api/v1/health" || (echo "Backend healthcheck FAILED" && exit 1)
-            curl -fsS -k "https://$DOMAIN/" || (echo "Frontend healthcheck FAILED" && exit 1)
+            # JWT
+            JWT_SECRET=${JWT_SECRET}
+            JWT_EXPIRES_IN=24h
+
+            # Backend
+            NODE_ENV=production
+            PORT_BE=3001
+            FRONTEND_URL=https://${DOMAIN}
+            API_PREFIX=api/v1
+
+            # Frontend
+            PORT_FE=3000
+            NEXT_PUBLIC_API_URL=https://${DOMAIN}/api/v1
+            ENV
+
+            chmod 600 .env
+
+            docker compose -f deploy/docker-compose.prod.yml --env-file .env pull
+            docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d
+
+            sleep 12
+            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null
+            curl -fsS -k "https://${DOMAIN}/" >/dev/null
 
       - name: Production Health Check (external)
         run: |
           sleep 20
-          curl -f -k https://msjenny.io.vn/api/v1/health || echo "Backend health check failed"
-          curl -f -k https://msjenny.io.vn/ || echo "Frontend health check failed"
+          curl -f -k https://msjenny.io.vn/api/v1/health
+          curl -f -k https://msjenny.io.vn/
