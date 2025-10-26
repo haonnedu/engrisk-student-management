@@ -272,7 +272,11 @@ export function HomeworkDialog({
         toast.success("Homework created successfully!");
       }
 
+      const currentStudentId = values.studentId;
       reset({
+        studentId: currentStudentId,
+        title: "",
+        description: "",
         points: 0,
         maxPoints: 100,
         dueDate: getTodayDate(), // Today's date
@@ -669,12 +673,19 @@ export function HomeworkDialog({
                 <DatePicker
                   value={
                     watch("dueDate") && watch("dueDate") !== ""
-                      ? new Date(watch("dueDate")!)
+                      ? (() => {
+                          const dateStr = watch("dueDate")!;
+                          const [year, month, day] = dateStr.split('-').map(Number);
+                          return new Date(year, month - 1, day);
+                        })()
                       : undefined
                   }
                   onChange={(date) => {
                     if (date) {
-                      setValue("dueDate", date.toISOString().split("T")[0]);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const day = String(date.getDate()).padStart(2, "0");
+                      setValue("dueDate", `${year}-${month}-${day}`);
                     } else {
                       setValue("dueDate", "");
                     }

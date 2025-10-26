@@ -243,7 +243,11 @@ export default function AttendancePage() {
                 value={startDate ? new Date(startDate) : undefined}
                 onChange={(date) => {
                   if (date) {
-                    setStartDate(date.toISOString().split("T")[0]);
+                    // Format date as YYYY-MM-DD to avoid timezone issues
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    setStartDate(`${year}-${month}-${day}`);
                   }
                 }}
                 placeholder="Select start date"
@@ -256,7 +260,11 @@ export default function AttendancePage() {
                 value={endDate ? new Date(endDate) : undefined}
                 onChange={(date) => {
                   if (date) {
-                    setEndDate(date.toISOString().split("T")[0]);
+                    // Format date as YYYY-MM-DD to avoid timezone issues
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    setEndDate(`${year}-${month}-${day}`);
                   }
                 }}
                 placeholder="Select end date"

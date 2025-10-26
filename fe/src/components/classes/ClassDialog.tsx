@@ -200,37 +200,63 @@ export function ClassDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label htmlFor="day1">Day 1</Label>
-              <select
-                id="day1"
-                className="h-9 rounded-md border px-3 text-sm"
-                {...register("day1", { valueAsNumber: true })}
+              <Select
+                value={
+                  watch("day1") !== null && watch("day1") !== undefined
+                    ? String(watch("day1"))
+                    : "none"
+                }
+                onValueChange={(value) =>
+                  setValue("day1", value === "none" ? undefined : Number(value))
+                }
               >
-                <option value="">Select day</option>
-                <option value={0}>Sunday</option>
-                <option value={1}>Monday</option>
-                <option value={2}>Tuesday</option>
-                <option value={3}>Wednesday</option>
-                <option value={4}>Thursday</option>
-                <option value={5}>Friday</option>
-                <option value={6}>Saturday</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Select day</SelectItem>
+                  <SelectItem value="0">Sunday</SelectItem>
+                  <SelectItem value="1">Monday</SelectItem>
+                  <SelectItem value="2">Tuesday</SelectItem>
+                  <SelectItem value="3">Wednesday</SelectItem>
+                  <SelectItem value="4">Thursday</SelectItem>
+                  <SelectItem value="5">Friday</SelectItem>
+                  <SelectItem value="6">Saturday</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.day1 && (
+                <p className="text-sm text-red-500">{errors.day1.message}</p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="day2">Day 2</Label>
-              <select
-                id="day2"
-                className="h-9 rounded-md border px-3 text-sm"
-                {...register("day2", { valueAsNumber: true })}
+              <Select
+                value={
+                  watch("day2") !== null && watch("day2") !== undefined
+                    ? String(watch("day2"))
+                    : "none"
+                }
+                onValueChange={(value) =>
+                  setValue("day2", value === "none" ? undefined : Number(value))
+                }
               >
-                <option value="">Select day</option>
-                <option value={0}>Sunday</option>
-                <option value={1}>Monday</option>
-                <option value={2}>Tuesday</option>
-                <option value={3}>Wednesday</option>
-                <option value={4}>Thursday</option>
-                <option value={5}>Friday</option>
-                <option value={6}>Saturday</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Select day</SelectItem>
+                  <SelectItem value="0">Sunday</SelectItem>
+                  <SelectItem value="1">Monday</SelectItem>
+                  <SelectItem value="2">Tuesday</SelectItem>
+                  <SelectItem value="3">Wednesday</SelectItem>
+                  <SelectItem value="4">Thursday</SelectItem>
+                  <SelectItem value="5">Friday</SelectItem>
+                  <SelectItem value="6">Saturday</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.day2 && (
+                <p className="text-sm text-red-500">{errors.day2.message}</p>
+              )}
             </div>
           </div>
 

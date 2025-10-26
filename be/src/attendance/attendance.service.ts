@@ -193,23 +193,57 @@ export class AttendanceService {
       throw new Error("No enrolled students found for this section");
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Get class/section information to check day1 and day2
+    const section = await this.prisma.classSection.findUnique({
+      where: { id: sectionId },
+      select: {
+        day1: true,
+        day2: true,
+      },
+    });
+
+    // Days of week: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const allowedDays = [];
+    if (section?.day1 !== null && section?.day1 !== undefined) {
+      allowedDays.push(section.day1);
+    }
+    if (section?.day2 !== null && section?.day2 !== undefined) {
+      allowedDays.push(section.day2);
+    }
+
+    // If no days are set, generate for all days (backward compatibility)
+    const shouldFilterByDays = allowedDays.length > 0;
+
+    // Parse dates correctly to avoid timezone issues
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+    
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
     const attendanceRecords = [];
 
     // Generate attendance for each day in the range
-    for (
-      let date = new Date(start);
-      date <= end;
-      date.setDate(date.getDate() + 1)
-    ) {
+    const currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+      // Check if this date matches the allowed days
+      const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      
+      if (shouldFilterByDays && !allowedDays.includes(dayOfWeek)) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue; // Skip dates that don't match the class schedule
+      }
+
       for (const enrollment of enrollments) {
+        // Create a date with local time at noon to avoid timezone issues
+        const localDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 12, 0, 0);
+        
         // Check if attendance already exists for this student and date
         const existing = await this.prisma.attendance.findFirst({
           where: {
             sectionId,
             studentId: enrollment.student.id,
-            date: new Date(date),
+            date: localDate,
           },
         });
 
@@ -218,7 +252,7 @@ export class AttendanceService {
             data: {
               sectionId,
               studentId: enrollment.student.id,
-              date: new Date(date),
+              date: localDate,
               status: "PRESENT" as any, // Default to present
               note: "",
             },
@@ -244,6 +278,9 @@ export class AttendanceService {
           attendanceRecords.push(attendance);
         }
       }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return attendanceRecords;
