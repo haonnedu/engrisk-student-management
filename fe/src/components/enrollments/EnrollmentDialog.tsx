@@ -112,9 +112,10 @@ export function EnrollmentDialog({
     
     const filterLower = studentFilter.toLowerCase();
     return studentsData.data.filter((student) => {
+      const engName = (student.engName || "").toLowerCase();
       const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
       const studentId = student.studentId?.toLowerCase() || "";
-      return fullName.includes(filterLower) || studentId.includes(filterLower);
+      return engName.includes(filterLower) || fullName.includes(filterLower) || studentId.includes(filterLower);
     });
   }, [studentsData?.data, studentFilter]);
 
@@ -203,8 +204,8 @@ export function EnrollmentDialog({
                   ) : (
                     filteredStudents.map((student) => (
                       <SelectItem key={student.id} value={student.id}>
-                        {student.firstName} {student.lastName} (
-                        {student.studentId})
+                        {student.engName} - {student.firstName} {student.lastName}
+                        {student.studentId && ` (${student.studentId})`}
                       </SelectItem>
                     ))
                   )}
