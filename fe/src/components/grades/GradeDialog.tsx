@@ -172,7 +172,7 @@ export function GradeDialog({
                 value={watch("studentId") || ""}
                 onValueChange={(value) => setValue("studentId", value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full truncate">
                   <SelectValue placeholder="Select student" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +196,7 @@ export function GradeDialog({
                 value={watch("courseId") || ""}
                 onValueChange={(value) => setValue("courseId", value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full truncate">
                   <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
@@ -222,7 +222,7 @@ export function GradeDialog({
                 value={watch("gradeType") || "HW"}
                 onValueChange={(value) => setValue("gradeType", value as any)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

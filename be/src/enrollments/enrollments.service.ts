@@ -6,6 +6,20 @@ export class EnrollmentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: any) {
+    // Check if enrollment already exists
+    const existingEnrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        studentId: data.studentId,
+        courseId: data.courseId,
+      },
+    });
+
+    if (existingEnrollment) {
+      throw new Error(
+        "This student is already enrolled in this course."
+      );
+    }
+
     // Create enrollment
     const enrollment = await this.prisma.enrollment.create({
       data,

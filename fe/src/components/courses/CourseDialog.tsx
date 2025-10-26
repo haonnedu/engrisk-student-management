@@ -243,7 +243,7 @@ export function CourseDialog({
               value={watch("status") || "ACTIVE"}
               onValueChange={(value) => setValue("status", value as any)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -6,7 +6,13 @@ export class ClassesService {
   constructor(private prisma: PrismaService) {}
 
   createSection(data: any) {
-    return this.prisma.classSection.create({ data });
+    // Convert day1 and day2 to numbers or null
+    const processedData = {
+      ...data,
+      day1: data.day1 === "" || data.day1 === null || data.day1 === undefined ? null : Number(data.day1),
+      day2: data.day2 === "" || data.day2 === null || data.day2 === undefined ? null : Number(data.day2),
+    };
+    return this.prisma.classSection.create({ data: processedData });
   }
 
   getSection(id: string) {
@@ -61,7 +67,13 @@ export class ClassesService {
   }
 
   updateSection(id: string, data: any) {
-    return this.prisma.classSection.update({ where: { id }, data });
+    // Convert day1 and day2 to numbers or null
+    const processedData = {
+      ...data,
+      day1: data.day1 === "" || data.day1 === null || data.day1 === undefined ? null : Number(data.day1),
+      day2: data.day2 === "" || data.day2 === null || data.day2 === undefined ? null : Number(data.day2),
+    };
+    return this.prisma.classSection.update({ where: { id }, data: processedData });
   }
 
   removeSection(id: string) {

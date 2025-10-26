@@ -445,7 +445,7 @@ export function HomeworkDialog({
                 value={selectedStudent}
                 onValueChange={setSelectedStudent}
               >
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All students" />
                 </SelectTrigger>
                 <SelectContent>
@@ -887,22 +887,36 @@ export function HomeworkDialog({
                       >
                         <TableCell>
                           <div>
-                            <div className="font-medium">
+                            <div 
+                              className="font-medium truncate max-w-[150px]" 
+                              title={`${record.student?.firstName} ${record.student?.lastName}`}
+                            >
                               {record.student?.firstName}{" "}
                               {record.student?.lastName}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {record.student?.studentId}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">
+                            <div 
+                              className="text-xs text-slate-500 mt-1 truncate max-w-[150px]"
+                              title={`${record.section?.name} - ${record.section?.code}`}
+                            >
                               {record.section?.name} - {record.section?.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{record.title}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div 
+                              className="font-medium truncate max-w-[200px]" 
+                              title={record.title}
+                            >
+                              {record.title}
+                            </div>
+                            <div 
+                              className="text-sm text-muted-foreground truncate max-w-[200px]" 
+                              title={record.description}
+                            >
                               {record.description}
                             </div>
                           </div>

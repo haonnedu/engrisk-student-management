@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -153,9 +159,8 @@ export function EnrollmentDialog({
         onSaved?.();
       },
       onError: (error: any) => {
-        toast.error(
-          error.response?.data?.message || "Failed to create enrollment"
-        );
+        const errorMessage = error.response?.data?.message || error.message || "Failed to create enrollment";
+        toast.error(errorMessage);
       },
     });
   }
@@ -184,9 +189,27 @@ export function EnrollmentDialog({
                 value={watch("studentId") || ""}
                 onValueChange={(value) => setValue("studentId", value)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SelectTrigger className="w-full truncate">
+                      <SelectValue placeholder="Select student" />
+                    </SelectTrigger>
+                  </TooltipTrigger>
+                  {watch("studentId") && (
+                    <TooltipContent>
+                      {(() => {
+                        const student = studentsData?.data?.find(
+                          (s: any) => s.id === watch("studentId")
+                        );
+                        return student
+                          ? `${student.engName} - ${student.firstName} ${student.lastName}${
+                              student.studentId ? ` (${student.studentId})` : ""
+                            }`
+                          : "";
+                      })()}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
                 <SelectContent className="max-h-[300px]">
                   <div className="p-2">
                     <Input
@@ -226,9 +249,23 @@ export function EnrollmentDialog({
                   setValue("sectionId", "none"); // Reset section when course changes
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select course" />
-                </SelectTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SelectTrigger className="w-full truncate">
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                  </TooltipTrigger>
+                  {watch("courseId") && (
+                    <TooltipContent>
+                      {(() => {
+                        const course = coursesData?.data?.find(
+                          (c: Course) => c.id === watch("courseId")
+                        );
+                        return course ? `${course.title} (${course.courseCode})` : "";
+                      })()}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
                 <SelectContent>
                   {coursesData?.data?.map((course: Course) => (
                     <SelectItem key={course.id} value={course.id}>
@@ -251,9 +288,23 @@ export function EnrollmentDialog({
               value={watch("sectionId") || "none"}
               onValueChange={(value) => setValue("sectionId", value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select class" />
-              </SelectTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectTrigger className="w-full truncate">
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                </TooltipTrigger>
+                {watch("sectionId") && watch("sectionId") !== "none" && (
+                  <TooltipContent>
+                    {(() => {
+                      const section = filteredSections.find(
+                        (s: any) => s.id === watch("sectionId")
+                      );
+                      return section ? `${section.name} (${section.code})` : "";
+                    })()}
+                  </TooltipContent>
+                )}
+              </Tooltip>
               <SelectContent>
                 <SelectItem value="none">No class</SelectItem>
                 {filteredSections.map((section: any) => (

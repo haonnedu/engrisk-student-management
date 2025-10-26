@@ -19,6 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -155,9 +160,23 @@ export function ClassDialog({
               value={watch("courseId") || ""}
               onValueChange={(value) => setValue("courseId", value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select course" />
-              </SelectTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectTrigger className="w-full truncate">
+                    <SelectValue placeholder="Select course" />
+                  </SelectTrigger>
+                </TooltipTrigger>
+                {watch("courseId") && (
+                  <TooltipContent>
+                    {(() => {
+                      const course = coursesData?.data?.find(
+                        (c: Course) => c.id === watch("courseId")
+                      );
+                      return course ? `${course.title} (${course.courseCode})` : "";
+                    })()}
+                  </TooltipContent>
+                )}
+              </Tooltip>
               <SelectContent>
                 {coursesData?.data?.map((course: Course) => (
                   <SelectItem key={course.id} value={course.id}>
@@ -210,7 +229,7 @@ export function ClassDialog({
                   setValue("day1", value === "none" ? undefined : Number(value))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,7 +259,7 @@ export function ClassDialog({
                   setValue("day2", value === "none" ? undefined : Number(value))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
