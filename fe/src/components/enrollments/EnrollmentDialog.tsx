@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +31,7 @@ import { useClasses } from "@/hooks/useClasses";
 import { useStudents } from "@/hooks/useStudents";
 import { useCourses, type Course } from "@/hooks/useCourses";
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
 const enrollmentSchema = z.object({
@@ -56,6 +57,7 @@ export function EnrollmentDialog({
   onSaved,
 }: EnrollmentDialogProps) {
   const [open, setOpen] = useState(false);
+  const [studentFilter, setStudentFilter] = useState("");
 
   const defaultValues: Partial<EnrollmentFormValues> =
     mode === "edit" && enrollment
@@ -102,6 +104,19 @@ export function EnrollmentDialog({
     classesData?.data?.filter(
       (section: any) => section.courseId === watchedCourseId
     ) || [];
+
+  // Filter students based on search input
+  const filteredStudents = useMemo(() => {
+    if (!studentsData?.data) return [];
+    if (!studentFilter.trim()) return studentsData.data;
+    
+    const filterLower = studentFilter.toLowerCase();
+    return studentsData.data.filter((student) => {
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+      const studentId = student.studentId?.toLowerCase() || "";
+      return fullName.includes(filterLower) || studentId.includes(filterLower);
+    });
+  }, [studentsData?.data, studentFilter]);
 
   function onSubmit(values: EnrollmentFormValues) {
     // Convert "none" to undefined for API
@@ -171,13 +186,28 @@ export function EnrollmentDialog({
                 <SelectTrigger>
                   <SelectValue placeholder="Select student" />
                 </SelectTrigger>
-                <SelectContent>
-                  {studentsData?.data?.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.firstName} {student.lastName} (
-                      {student.studentId})
+                <SelectContent className="max-h-[300px]">
+                  <div className="p-2">
+                    <Input
+                      placeholder="Search students..."
+                      value={studentFilter}
+                      onChange={(e) => setStudentFilter(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-8"
+                    />
+                  </div>
+                  {filteredStudents.length === 0 ? (
+                    <SelectItem value="no-results" disabled>
+                      No students found
                     </SelectItem>
-                  ))}
+                  ) : (
+                    filteredStudents.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.firstName} {student.lastName} (
+                        {student.studentId})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               {errors.studentId && (
