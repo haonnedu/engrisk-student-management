@@ -28,7 +28,7 @@ const gradeTypeFormSchema = z.object({
   code: z
     .string()
     .min(1, "Code is required")
-    .regex(/^[A-Z_]+$/, "Code must be uppercase letters and underscores only"),
+    .max(10, "Code must not exceed 10 characters"),
   description: z.string().optional(),
   weight: z
     .number()
