@@ -425,7 +425,7 @@ export function HomeworkDialog({
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="min-w-[110rem] max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-[98vw] min-w-[1400px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
