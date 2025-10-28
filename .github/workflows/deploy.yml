@@ -214,24 +214,37 @@ jobs:
             echo "→ Checking container status..."
             docker compose -f "$COMPOSE_FILE" --env-file .env ps
             
-            echo "→ Waiting for services to be ready..."
-            sleep 12
+            echo "→ Waiting for services to be ready (this may take 30-60s for migrations)..."
+            sleep 15
             
-            echo "→ Testing backend health..."
-            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null || {
-              echo "❌ Backend health check failed!"
-              docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=200 backend
-              exit 1
-            }
-            echo "✓ Backend is healthy"
+            echo "→ Testing backend health (with retries)..."
+            MAX_ATTEMPTS=12
+            ATTEMPT=1
+            while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+              echo "  Attempt $ATTEMPT/$MAX_ATTEMPTS..."
+              if curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null 2>&1; then
+                echo "✓ Backend is healthy"
+                break
+              fi
+              
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "❌ Backend health check failed after $MAX_ATTEMPTS attempts!"
+                echo "→ Backend logs:"
+                docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=200 backend
+                exit 1
+              fi
+              
+              sleep 5
+              ATTEMPT=$((ATTEMPT + 1))
+            done
             
             echo "→ Testing frontend..."
-            curl -fsS -k "https://${DOMAIN}/" >/dev/null || {
+            if ! curl -fsS -k "https://${DOMAIN}/" >/dev/null 2>&1; then
               echo "❌ Frontend health check failed!"
               docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 nginx
               docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 frontend
               exit 1
-            }
+            fi
             echo "✓ Frontend is healthy"
             
             echo ""
@@ -253,6 +266,10 @@ jobs:
 
       - name: Production Health Check (external)
         run: |
-          sleep 20
+          echo "→ Final verification from GitHub Actions runner..."
+          sleep 10
+          echo "→ Checking API health..."
           curl -f -k https://msjenny.io.vn/api/v1/health
+          echo "→ Checking frontend..."
           curl -f -k https://msjenny.io.vn/
+          echo "✓ External health checks passed!"
