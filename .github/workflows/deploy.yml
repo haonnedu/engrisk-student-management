@@ -116,7 +116,7 @@ jobs:
               [ -f "deploy/docker-compose.prod.yml" ] && COMPOSE_FILE="deploy/docker-compose.prod.yml"
               
               echo "--- Container Status ---"
-              docker compose -f "$COMPOSE_FILE" ps -a || docker ps -a
+              docker ps -a
               
               echo "--- Backend Logs ---"
               docker compose -f "$COMPOSE_FILE" logs --tail=100 backend 2>&1 || docker logs engrisk-backend --tail=100 2>&1 || echo "No backend logs"
@@ -212,7 +212,7 @@ jobs:
             docker compose -f "$COMPOSE_FILE" --env-file .env up -d
             
             echo "→ Checking container status..."
-            docker compose -f "$COMPOSE_FILE" ps
+            docker compose -f "$COMPOSE_FILE" --env-file .env ps
             
             echo "→ Waiting for services to be ready..."
             sleep 12
@@ -220,7 +220,7 @@ jobs:
             echo "→ Testing backend health..."
             curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null || {
               echo "❌ Backend health check failed!"
-              docker compose -f "$COMPOSE_FILE" logs --tail=200 backend
+              docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=200 backend
               exit 1
             }
             echo "✓ Backend is healthy"
@@ -228,8 +228,8 @@ jobs:
             echo "→ Testing frontend..."
             curl -fsS -k "https://${DOMAIN}/" >/dev/null || {
               echo "❌ Frontend health check failed!"
-              docker compose -f "$COMPOSE_FILE" logs --tail=100 nginx
-              docker compose -f "$COMPOSE_FILE" logs --tail=100 frontend
+              docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 nginx
+              docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 frontend
               exit 1
             }
             echo "✓ Frontend is healthy"
@@ -239,7 +239,7 @@ jobs:
             echo "✓ DEPLOYMENT SUCCESSFUL!"
             echo "════════════════════════════════════════"
             echo "→ Running containers:"
-            docker compose -f "$COMPOSE_FILE" ps
+            docker compose -f "$COMPOSE_FILE" --env-file .env ps
             echo ""
             echo "→ Deployed version: $TAG"
             echo "→ Site: https://${DOMAIN}"
