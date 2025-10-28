@@ -14,10 +14,7 @@ RUN npm ci --no-optional && npm cache clean --force
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build application
+# Build application (Prisma generate happens during build via postinstall or prebuild)
 RUN npm run build
 
 # Remove unnecessary files after build to reduce image size
@@ -25,13 +22,16 @@ RUN rm -rf node_modules && \
     npm ci --only=production --no-optional && \
     npm cache clean --force
 
+# Generate Prisma client again after reinstalling production deps
+RUN npx prisma generate
+
 # Production stage
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper signal handling and openssl for Prisma
+RUN apk add --no-cache dumb-init openssl
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
