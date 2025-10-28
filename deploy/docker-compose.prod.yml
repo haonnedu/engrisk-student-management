@@ -98,7 +98,9 @@ services:
 networks:
   engrisk:
     name: engrisk-network
+    external: true
 
 volumes:
   postgres_data:
     name: postgres_data
+    external: true
