@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialogConfirm } from "@/components/ui/alert-dialog-confirm";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -96,6 +97,7 @@ export function HomeworkDialog({
   const [open, setOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+  const [cancelDialog, setCancelDialog] = useState(false);
 
   // Helper function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => new Date().toISOString().split("T")[0];
@@ -314,25 +316,20 @@ export function HomeworkDialog({
         watch("dueDate") !== (editingHomework.dueDate || "");
 
       if (hasChanges) {
-        if (
-          confirm("You have unsaved changes. Are you sure you want to cancel?")
-        ) {
-          setEditingHomework(null);
-          reset({
-            points: 0,
-            maxPoints: 100,
-            dueDate: new Date().toISOString().split("T")[0], // Today's date
-          });
-        }
+        setCancelDialog(true);
       } else {
-        setEditingHomework(null);
-        reset({
-          points: 0,
-          maxPoints: 100,
-          dueDate: new Date().toISOString().split("T")[0], // Today's date
-        });
+        handleCancelConfirm();
       }
     }
+  };
+
+  const handleCancelConfirm = () => {
+    setEditingHomework(null);
+    reset({
+      points: 0,
+      maxPoints: 100,
+      dueDate: new Date().toISOString().split("T")[0],
+    });
   };
 
   const deleteRecord = async (id: string) => {
@@ -427,6 +424,7 @@ export function HomeworkDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-[98vw] min-w-[1400px] max-h-[95vh] overflow-y-auto">
@@ -1046,5 +1044,18 @@ export function HomeworkDialog({
         </div>
       </DialogContent>
     </Dialog>
+    
+    {/* Cancel Edit Confirmation Dialog */}
+    <AlertDialogConfirm
+      open={cancelDialog}
+      onOpenChange={setCancelDialog}
+      onConfirm={handleCancelConfirm}
+      title="Unsaved Changes"
+      description="You have unsaved changes. Are you sure you want to cancel?"
+      confirmText="Discard Changes"
+      cancelText="Keep Editing"
+      variant="destructive"
+    />
+    </>
   );
 }

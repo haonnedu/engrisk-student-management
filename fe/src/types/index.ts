@@ -10,10 +10,6 @@ export type LoginDto = components["schemas"]["LoginDto"];
 export type RegisterDto = components["schemas"]["RegisterDto"];
 export type CreateStudentDto = components["schemas"]["CreateStudentDto"];
 export type UpdateStudentDto = components["schemas"]["UpdateStudentDto"];
-export type CreateCourseDto = components["schemas"]["CreateCourseDto"];
-export type UpdateCourseDto = components["schemas"]["UpdateCourseDto"];
-export type CreateEnrollmentDto = components["schemas"]["CreateEnrollmentDto"];
-export type UpdateEnrollmentDto = components["schemas"]["UpdateEnrollmentDto"];
 export type CreateGradeDto = components["schemas"]["CreateGradeDto"];
 export type UpdateGradeDto = components["schemas"]["UpdateGradeDto"];
 
@@ -22,8 +18,9 @@ export type User = {
   id: string;
   email?: string;
   phone?: string;
-  role: "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+  role: "STUDENT" | "TEACHER" | "ADMIN" | "SUPER_ADMIN";
   student?: any;
+  teacher?: any;
   admin?: any;
 };
 

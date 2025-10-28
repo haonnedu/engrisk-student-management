@@ -2,9 +2,11 @@ import {
   BarChart3,
   BookMarked,
   BookOpen,
+  Clock,
   GraduationCap,
   Home,
   UserCheck,
+  UserCircle2,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -61,6 +63,16 @@ const items = [
     title: "Grade Types",
     url: "/grade-types",
     icon: BarChart3,
+  },
+  {
+    title: "Teachers",
+    url: "/teachers",
+    icon: UserCircle2,
+  },
+  {
+    title: "Timesheets",
+    url: "/timesheets",
+    icon: Clock,
   },
 ];
 

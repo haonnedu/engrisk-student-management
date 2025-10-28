@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -6,6 +6,13 @@ export class EnrollmentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: any) {
+    // Validate input
+    if (!data.studentId || !data.courseId) {
+      throw new BadRequestException(
+        "Student ID and Course ID are required"
+      );
+    }
+
     // Check if enrollment already exists
     const existingEnrollment = await this.prisma.enrollment.findFirst({
       where: {
@@ -15,7 +22,7 @@ export class EnrollmentsService {
     });
 
     if (existingEnrollment) {
-      throw new Error(
+      throw new ConflictException(
         "This student is already enrolled in this course."
       );
     }
@@ -219,7 +226,7 @@ export class EnrollmentsService {
     });
 
     if (!enrollment) {
-      throw new Error("Enrollment not found");
+      throw new NotFoundException("Enrollment not found");
     }
 
     // Delete all grades for this student and course combination

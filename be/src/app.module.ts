@@ -10,6 +10,8 @@ import { ClassesModule } from "./classes/sections.module";
 import { AttendanceModule } from "./attendance/attendance.module";
 import { HomeworkModule } from "./homework/homework.module";
 import { GradeTypesModule } from "./grade-types/grade-types.module";
+import { TeachersModule } from "./teachers/teachers.module";
+import { TimesheetsModule } from "./timesheets/timesheets.module";
 import { HealthModule } from "./health/health.module";
 
 @Module({
@@ -27,6 +29,8 @@ import { HealthModule } from "./health/health.module";
     AttendanceModule,
     HomeworkModule,
     GradeTypesModule,
+    TeachersModule,
+    TimesheetsModule,
     HealthModule,
   ],
 })

@@ -1,0 +1,78 @@
+{
+  "parent": {
+    "nav": {
+      "myGrades": "My Grades",
+      "myProfile": "My Profile"
+    },
+    "grades": {
+      "title": "My Grades",
+      "description": "View your academic performance and grades",
+      "studentName": "Student Name",
+      "studentId": "Student ID",
+      "averageGrade": "Average Grade",
+      "gradesRecorded": "{count} grade(s) recorded",
+      "gradeHistory": "Grade History",
+      "allGradesAcrossCourses": "All your grades across all courses",
+      "searchPlaceholder": "Search grades...",
+      "course": "Course",
+      "gradeType": "Grade Type",
+      "score": "Score",
+      "weight": "Weight",
+      "comments": "Comments",
+      "date": "Date",
+      "noGradesFound": "No grades found.",
+      "showing": "Showing {current} of {total} grades",
+      "previous": "Previous",
+      "next": "Next",
+      "errorLoading": "Unable to load grades",
+      "errorMessage": "An error occurred while loading data. Please try again later."
+    },
+    "profile": {
+      "title": "My Profile",
+      "description": "View and update your personal information",
+      "editProfile": "Edit Profile",
+      "personalInfo": "Personal Information",
+      "personalInfoDesc": "Your basic information and contact details",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "englishName": "English Name",
+      "phoneNumber": "Phone Number",
+      "email": "Email",
+      "address": "Address",
+      "emergencyContact": "Emergency Contact",
+      "classSchool": "Class/School",
+      "dateOfBirth": "Date of Birth",
+      "cannotBeChanged": "Cannot be changed",
+      "phonePlaceholder": "+84 XXX XXX XXX",
+      "addressPlaceholder": "Enter your address",
+      "emergencyContactPlaceholder": "Name - Phone",
+      "classSchoolPlaceholder": "12A1 - THPT Example",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "accountStatus": "Account Status",
+      "accountInfo": "Your account information",
+      "status": "Status",
+      "enrolledSince": "Enrolled Since",
+      "totalEnrollments": "Total Enrollments",
+      "myEnrollments": "My Enrollments",
+      "coursesEnrolled": "Courses you are currently enrolled in",
+      "section": "Section",
+      "updateSuccess": "Profile updated successfully!",
+      "updateFailed": "Failed to update profile",
+      "errorLoading": "Unable to load profile",
+      "noProfileData": "No profile data found.",
+      "active": "Active",
+      "inactive": "Inactive",
+      "enrolled": "Enrolled",
+      "completed": "Completed",
+      "dropped": "Dropped"
+    },
+    "common": {
+      "loading": "Loading...",
+      "error": "Error",
+      "redirecting": "Redirecting..."
+    }
+  }
+}
+

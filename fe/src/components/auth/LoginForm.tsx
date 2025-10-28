@@ -43,8 +43,19 @@ export function LoginForm() {
         toast.success("Login successful!");
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect based on user role
+        let redirectUrl = "/";
+        if (data.user.role === "STUDENT") {
+          redirectUrl = "/parent/grades";
+        } else if (data.user.role === "TEACHER") {
+          redirectUrl = "/teacher/dashboard";
+        } else if (data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN") {
+          redirectUrl = "/";
+        }
+        
         // Use window.location.href for successful login to ensure proper redirect
-        window.location.href = "/";
+        window.location.href = redirectUrl;
       },
       onError: (error: any) => {
         toast.error(error.response?.data?.message || "Login failed");

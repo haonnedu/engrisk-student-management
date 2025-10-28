@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateStudentDto, UpdateStudentDto } from "./dto";
 import { StudentStatus, UserRole } from "@prisma/client";
@@ -67,7 +67,7 @@ export class StudentsService {
         const statusStr = (row.status ?? row.Status) as string | null;
 
         if (!firstName || !lastName || !engName || !dateOfBirthRaw) {
-          throw new Error("Missing required fields: firstName, lastName, engName, dateOfBirth");
+          throw new BadRequestException("Missing required fields: firstName, lastName, engName, dateOfBirth");
         }
 
         let dateOfBirth: Date;
@@ -80,11 +80,11 @@ export class StudentsService {
         } else if (typeof dateOfBirthRaw === "string") {
           const parsed = new Date(dateOfBirthRaw);
           if (isNaN(parsed.getTime())) {
-            throw new Error("Invalid dateOfBirth format; expected YYYY-MM-DD or Excel date");
+            throw new BadRequestException("Invalid dateOfBirth format; expected YYYY-MM-DD or Excel date");
           }
           dateOfBirth = parsed;
         } else {
-          throw new Error("Unsupported dateOfBirth value");
+          throw new BadRequestException("Unsupported dateOfBirth value");
         }
 
         const status = (statusStr as string | null)?.toUpperCase?.() as keyof typeof StudentStatus | undefined;
@@ -214,6 +214,7 @@ export class StudentsService {
           select: {
             id: true,
             email: true,
+            phone: true,
             role: true,
           },
         },
@@ -225,6 +226,7 @@ export class StudentsService {
         grades: {
           include: {
             course: true,
+            gradeType: true,
           },
         },
       },
@@ -237,8 +239,59 @@ export class StudentsService {
     return student;
   }
 
+  async findByUserId(userId: string) {
+    if (!userId) {
+      throw new NotFoundException('User ID is required');
+    }
+
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            role: true,
+          },
+        },
+        enrollments: {
+          include: {
+            course: true,
+            section: true,
+          },
+        },
+        grades: {
+          include: {
+            course: true,
+            gradeType: true,
+          },
+          orderBy: {
+            gradedAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException(
+        'Student profile not found. Please ensure your account is properly registered as a student.'
+      );
+    }
+
+    return student;
+  }
+
   async update(id: string, updateStudentDto: UpdateStudentDto) {
     const student = await this.findOne(id);
+
+    // If phone is being updated, also update it in the user table
+    if (updateStudentDto.phone !== undefined) {
+      await this.prisma.user.update({
+        where: { id: student.userId },
+        data: { phone: updateStudentDto.phone },
+      });
+    }
 
     return this.prisma.student.update({
       where: { id },
@@ -248,6 +301,7 @@ export class StudentsService {
           select: {
             id: true,
             email: true,
+            phone: true,
             role: true,
           },
         },
@@ -258,6 +312,49 @@ export class StudentsService {
         },
       },
     });
+  }
+
+  async updateByUserId(userId: string, updateStudentDto: UpdateStudentDto) {
+    if (!userId) {
+      throw new NotFoundException('User ID is required');
+    }
+
+    const student = await this.findByUserId(userId);
+
+    try {
+      // If phone is being updated, also update it in the user table
+      if (updateStudentDto.phone !== undefined) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { phone: updateStudentDto.phone },
+        });
+      }
+
+      return await this.prisma.student.update({
+        where: { id: student.id },
+        data: updateStudentDto,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              role: true,
+            },
+          },
+          enrollments: {
+            include: {
+              course: true,
+              section: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException(
+        'Failed to update student profile. Please check your input and try again.'
+      );
+    }
   }
 
   async remove(id: string) {

@@ -11,6 +11,9 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
+  Request,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -68,12 +71,53 @@ export class StudentsController {
     return this.studentsService.findAll(page, limit, status);
   }
 
+  @ApiOperation({ summary: 'Get current student profile' })
+  @ApiResponse({ status: 200, description: 'Student profile retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @Get('me/profile')
+  async getMyProfile(@Request() req: any) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new NotFoundException('User ID not found in token');
+      }
+      return await this.studentsService.findByUserId(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException('Unable to retrieve student profile. Please contact administrator.');
+    }
+  }
+
   @ApiOperation({ summary: 'Get a student by ID' })
   @ApiResponse({ status: 200, description: 'Student retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Student not found' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.studentsService.findOne(id);
+  }
+
+  @ApiOperation({ summary: 'Update current student profile' })
+  @ApiResponse({ status: 200, description: 'Student profile updated successfully' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @Patch('me/profile')
+  async updateMyProfile(@Request() req: any, @Body() updateStudentDto: UpdateStudentDto) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new NotFoundException('User ID not found in token');
+      }
+      return await this.studentsService.updateByUserId(userId, updateStudentDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException('Unable to update student profile. Please contact administrator.');
+    }
   }
 
   @ApiOperation({ summary: 'Update a student' })

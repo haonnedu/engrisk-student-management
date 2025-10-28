@@ -21,6 +21,7 @@ import {
 } from "@/hooks/useStudents";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { AlertDialogConfirm } from "@/components/ui/alert-dialog-confirm";
 
 export default function StudentsPage() {
   const [globalFilter, setGlobalFilter] = useState("");
@@ -29,25 +30,32 @@ export default function StudentsPage() {
 
   const { data: studentsData, isLoading, error } = useStudents(page, limit);
   const deleteStudentMutation = useDeleteStudent();
+  
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; studentId: string }>({
+    open: false,
+    studentId: "",
+  });
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this student?")) {
-      deleteStudentMutation.mutate(id, {
-        onSuccess: () => {
-          toast.success("Student deleted successfully!");
-        },
-        onError: (error: any) => {
-          toast.error(
-            error.response?.data?.message || "Failed to delete student"
-          );
-        },
-      });
-    }
+  const handleDeleteClick = (id: string) => {
+    setDeleteDialog({ open: true, studentId: id });
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteStudentMutation.mutate(deleteDialog.studentId, {
+      onSuccess: () => {
+        toast.success("Student deleted successfully!");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error.response?.data?.message || "Failed to delete student"
+        );
+      },
+    });
   };
 
   const columns = useMemo<ColumnDef<Student>[]>(
-    () => buildStudentColumns(handleDelete),
-    [handleDelete]
+    () => buildStudentColumns(handleDeleteClick),
+    [handleDeleteClick]
   );
 
   const table = useReactTable({
@@ -107,6 +115,18 @@ export default function StudentsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialogConfirm
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Student"
+        description="Are you sure you want to delete this student? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 }

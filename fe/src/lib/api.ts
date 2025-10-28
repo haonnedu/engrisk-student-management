@@ -22,10 +22,11 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors and format error messages
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle authentication errors
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -34,6 +35,25 @@ api.interceptors.response.use(
         window.dispatchEvent(new CustomEvent("auth:logout"));
       }
     }
+
+    // Format error message
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      
+      // Handle array of messages
+      if (Array.isArray(errorData.message)) {
+        error.message = errorData.message.join(', ');
+      } 
+      // Handle single message
+      else if (typeof errorData.message === 'string') {
+        error.message = errorData.message;
+      }
+      // Fallback to error field
+      else if (errorData.error) {
+        error.message = errorData.error;
+      }
+    }
+
     return Promise.reject(error);
   }
 );

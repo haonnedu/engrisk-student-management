@@ -1,0 +1,78 @@
+{
+  "parent": {
+    "nav": {
+      "myGrades": "Bảng Điểm",
+      "myProfile": "Hồ Sơ"
+    },
+    "grades": {
+      "title": "Bảng Điểm Của Tôi",
+      "description": "Xem kết quả học tập và điểm số của bạn",
+      "studentName": "Tên Học Sinh",
+      "studentId": "Mã Học Sinh",
+      "averageGrade": "Điểm Trung Bình",
+      "gradesRecorded": "{count} điểm đã ghi nhận",
+      "gradeHistory": "Lịch Sử Điểm Số",
+      "allGradesAcrossCourses": "Tất cả điểm của bạn trên các khóa học",
+      "searchPlaceholder": "Tìm kiếm điểm...",
+      "course": "Khóa Học",
+      "gradeType": "Loại Điểm",
+      "score": "Điểm Số",
+      "weight": "Trọng Số",
+      "comments": "Nhận Xét",
+      "date": "Ngày",
+      "noGradesFound": "Không tìm thấy điểm.",
+      "showing": "Hiển thị {current} trong tổng số {total} điểm",
+      "previous": "Trước",
+      "next": "Tiếp",
+      "errorLoading": "Không thể tải bảng điểm",
+      "errorMessage": "Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau."
+    },
+    "profile": {
+      "title": "Hồ Sơ Của Tôi",
+      "description": "Xem và cập nhật thông tin cá nhân",
+      "editProfile": "Chỉnh Sửa Hồ Sơ",
+      "personalInfo": "Thông Tin Cá Nhân",
+      "personalInfoDesc": "Thông tin cơ bản và liên hệ của bạn",
+      "firstName": "Họ",
+      "lastName": "Tên",
+      "englishName": "Tên Tiếng Anh",
+      "phoneNumber": "Số Điện Thoại",
+      "email": "Email",
+      "address": "Địa Chỉ",
+      "emergencyContact": "Liên Hệ Khẩn Cấp",
+      "classSchool": "Lớp/Trường",
+      "dateOfBirth": "Ngày Sinh",
+      "cannotBeChanged": "Không thể thay đổi",
+      "phonePlaceholder": "+84 XXX XXX XXX",
+      "addressPlaceholder": "Nhập địa chỉ của bạn",
+      "emergencyContactPlaceholder": "Tên - Số điện thoại",
+      "classSchoolPlaceholder": "12A1 - THPT Example",
+      "saveChanges": "Lưu Thay Đổi",
+      "saving": "Đang Lưu...",
+      "cancel": "Hủy",
+      "accountStatus": "Trạng Thái Tài Khoản",
+      "accountInfo": "Thông tin tài khoản của bạn",
+      "status": "Trạng Thái",
+      "enrolledSince": "Ngày Đăng Ký",
+      "totalEnrollments": "Tổng Số Khóa Học",
+      "myEnrollments": "Khóa Học Của Tôi",
+      "coursesEnrolled": "Các khóa học bạn đang theo học",
+      "section": "Lớp Học",
+      "updateSuccess": "Cập nhật hồ sơ thành công!",
+      "updateFailed": "Không thể cập nhật hồ sơ",
+      "errorLoading": "Không thể tải hồ sơ",
+      "noProfileData": "Không tìm thấy dữ liệu hồ sơ.",
+      "active": "Hoạt động",
+      "inactive": "Không hoạt động",
+      "enrolled": "Đã đăng ký",
+      "completed": "Hoàn thành",
+      "dropped": "Đã bỏ"
+    },
+    "common": {
+      "loading": "Đang tải...",
+      "error": "Lỗi",
+      "redirecting": "Đang chuyển hướng..."
+    }
+  }
+}
+

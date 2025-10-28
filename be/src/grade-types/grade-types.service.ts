@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ConflictException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateGradeTypeDto } from "./dto/create-grade-type.dto";
 import { UpdateGradeTypeDto } from "./dto/update-grade-type.dto";
@@ -161,7 +161,7 @@ export class GradeTypesService {
     });
 
     if (gradeCount > 0) {
-      throw new Error(
+      throw new ConflictException(
         `Cannot delete grade type. It is being used by ${gradeCount} grades.`
       );
     }

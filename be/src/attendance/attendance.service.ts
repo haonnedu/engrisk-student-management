@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateAttendanceDto } from "./dto/create-attendance.dto";
 import { UpdateAttendanceDto } from "./dto/update-attendance.dto";
@@ -190,7 +190,7 @@ export class AttendanceService {
     });
 
     if (enrollments.length === 0) {
-      throw new Error("No enrolled students found for this section");
+      throw new NotFoundException("No enrolled students found for this section");
     }
 
     // Get class/section information to check day1 and day2
