@@ -1,6 +1,3 @@
-version: "3.9"
-
-name: engrisk-student-management
 services:
   db:
     image: postgres:15-alpine
