@@ -39,6 +39,12 @@ services:
       API_PREFIX: api/v1
     ports:
       - "${PORT_BE}:${PORT_BE}"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:${PORT_BE}/api/v1/health"]
       interval: 10s
@@ -62,6 +68,12 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     ports:
       - "${PORT_FE}:${PORT_FE}"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:${PORT_FE}"]
       interval: 10s

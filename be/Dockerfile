@@ -8,7 +8,8 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install ALL dependencies (including devDependencies needed for build)
-RUN npm ci
+# Clear npm cache to save space
+RUN npm ci --no-optional && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -18,6 +19,11 @@ RUN npx prisma generate
 
 # Build application
 RUN npm run build
+
+# Remove unnecessary files after build to reduce image size
+RUN rm -rf node_modules && \
+    npm ci --only=production --no-optional && \
+    npm cache clean --force
 
 # Production stage
 FROM node:18-alpine AS production
@@ -37,6 +43,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/healthcheck.js ./
+
+# Clean up unnecessary files to save space
+RUN rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /app/node_modules/.cache
 
 # Switch to non-root user
 USER nodejs
