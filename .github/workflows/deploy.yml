@@ -189,10 +189,19 @@ jobs:
               sleep 3
             fi
       
-            # Stop and remove old app containers only (keep database running)
-            echo "→ Stopping old app containers..."
-            docker compose -f "$COMPOSE_FILE" --env-file .env stop backend frontend nginx 2>&1 || true
-            docker compose -f "$COMPOSE_FILE" --env-file .env rm -f backend frontend nginx 2>&1 || true
+            # Remove old app containers (keeping database)
+            echo "→ Removing old app containers..."
+            # Stop and remove specific services (not db)
+            docker compose -f "$COMPOSE_FILE" --env-file .env rm -sf backend frontend nginx 2>&1 || true
+            
+            # Force remove by name to handle any stuck containers
+            for container in engrisk-backend engrisk-frontend engrisk-nginx; do
+              if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
+                echo "  Force removing stuck container: $container"
+                docker stop "$container" 2>&1 || true
+                docker rm -f "$container" 2>&1 || true
+              fi
+            done
             echo "✓ Old containers removed"
       
             echo "→ Pulling new images..."
