@@ -105,6 +105,34 @@ jobs:
           script_stop: true
           script: |
             set -Eeuo pipefail
+            
+            # Function to show all logs on error
+            show_all_logs() {
+              echo "════════════════════════════════════════"
+              echo "❌ DEPLOYMENT FAILED - Showing all logs:"
+              echo "════════════════════════════════════════"
+              cd /var/www/engrisk-student-management
+              COMPOSE_FILE="docker-compose.prod.yml"
+              [ -f "deploy/docker-compose.prod.yml" ] && COMPOSE_FILE="deploy/docker-compose.prod.yml"
+              
+              echo "--- Container Status ---"
+              docker compose -f "$COMPOSE_FILE" ps -a || docker ps -a
+              
+              echo "--- Backend Logs ---"
+              docker compose -f "$COMPOSE_FILE" logs --tail=100 backend 2>&1 || docker logs engrisk-backend --tail=100 2>&1 || echo "No backend logs"
+              
+              echo "--- Frontend Logs ---"
+              docker compose -f "$COMPOSE_FILE" logs --tail=50 frontend 2>&1 || docker logs engrisk-frontend --tail=50 2>&1 || echo "No frontend logs"
+              
+              echo "--- Nginx Logs ---"
+              docker compose -f "$COMPOSE_FILE" logs --tail=50 nginx 2>&1 || docker logs engrisk-nginx --tail=50 2>&1 || echo "No nginx logs"
+              
+              echo "--- Database Logs ---"
+              docker compose -f "$COMPOSE_FILE" logs --tail=30 db 2>&1 || docker logs esm_postgres --tail=30 2>&1 || echo "No db logs"
+            }
+            
+            # Trap any error and show logs
+            trap 'show_all_logs' ERR
             APP_DIR=/var/www/engrisk-student-management
             DOMAIN=msjenny.io.vn
       
@@ -146,32 +174,73 @@ jobs:
             if [ ! -f "$COMPOSE_FILE" ] && [ -f "deploy/docker-compose.prod.yml" ]; then
               COMPOSE_FILE="deploy/docker-compose.prod.yml"
             fi
+            echo "✓ Using compose file: $COMPOSE_FILE"
       
             # Create network and volume if they don't exist
+            echo "→ Checking network and volume..."
             docker network inspect engrisk-network >/dev/null 2>&1 || docker network create engrisk-network
             docker volume inspect postgres_data >/dev/null 2>&1 || docker volume create postgres_data
+            echo "✓ Network and volume ready"
       
             # Start database if it's stopped, or create if not exists
             if docker ps -a --format '{{.Names}}' | grep -q '^esm_postgres$'; then
-              echo "Database container exists, starting it..."
+              echo "→ Database container exists, ensuring it's running..."
               docker start esm_postgres || true
+              sleep 3
             fi
       
             # Stop and remove old app containers only (keep database running)
-            docker compose -f "$COMPOSE_FILE" --env-file .env stop backend frontend nginx || true
-            docker compose -f "$COMPOSE_FILE" --env-file .env rm -f backend frontend nginx || true
+            echo "→ Stopping old app containers..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env stop backend frontend nginx 2>&1 || true
+            docker compose -f "$COMPOSE_FILE" --env-file .env rm -f backend frontend nginx 2>&1 || true
+            echo "✓ Old containers removed"
       
+            echo "→ Pulling new images..."
             docker compose -f "$COMPOSE_FILE" --env-file .env pull backend frontend nginx
-            docker compose -f "$COMPOSE_FILE" --env-file .env up -d
+            echo "✓ Images pulled"
       
+            echo "→ Starting containers..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env up -d
+            
+            echo "→ Checking container status..."
+            docker compose -f "$COMPOSE_FILE" ps
+            
+            echo "→ Waiting for services to be ready..."
             sleep 12
             
-            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null || (docker compose -f "$COMPOSE_FILE" logs backend | tail -n 120; exit 1)
-            curl -fsS -k "https://${DOMAIN}/" >/dev/null || (docker compose -f "$COMPOSE_FILE" logs nginx | tail -n 120; exit 1)
+            echo "→ Testing backend health..."
+            curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null || {
+              echo "❌ Backend health check failed!"
+              docker compose -f "$COMPOSE_FILE" logs --tail=200 backend
+              exit 1
+            }
+            echo "✓ Backend is healthy"
+            
+            echo "→ Testing frontend..."
+            curl -fsS -k "https://${DOMAIN}/" >/dev/null || {
+              echo "❌ Frontend health check failed!"
+              docker compose -f "$COMPOSE_FILE" logs --tail=100 nginx
+              docker compose -f "$COMPOSE_FILE" logs --tail=100 frontend
+              exit 1
+            }
+            echo "✓ Frontend is healthy"
+            
+            echo ""
+            echo "════════════════════════════════════════"
+            echo "✓ DEPLOYMENT SUCCESSFUL!"
+            echo "════════════════════════════════════════"
+            echo "→ Running containers:"
+            docker compose -f "$COMPOSE_FILE" ps
+            echo ""
+            echo "→ Deployed version: $TAG"
+            echo "→ Site: https://${DOMAIN}"
+            echo "→ API Health: https://${DOMAIN}/api/v1/health"
             
             # Clean up old unused images to save disk space
-            echo "Cleaning up old Docker images..."
+            echo ""
+            echo "→ Cleaning up old Docker images..."
             docker image prune -af --filter "label!=keep" --filter "until=24h" || true
+            echo "✓ Cleanup complete"
 
       - name: Production Health Check (external)
         run: |
