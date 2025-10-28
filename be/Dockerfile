@@ -43,9 +43,14 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/healthcheck.js ./
+COPY --chown=nodejs:nodejs docker-entrypoint.sh ./
 
 # Clean up unnecessary files to save space
 RUN rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /app/node_modules/.cache
+
+# Make entrypoint executable (before switching user)
+USER root
+RUN chmod +x docker-entrypoint.sh
 
 # Switch to non-root user
 USER nodejs
@@ -57,6 +62,6 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
 
-# Start application
-ENTRYPOINT ["dumb-init", "--"]
+# Start application with entrypoint that runs migrations first
+ENTRYPOINT ["dumb-init", "--", "./docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]
