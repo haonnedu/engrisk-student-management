@@ -9,6 +9,7 @@ import {
   BookOpen,
   GraduationCap,
   UserCheck,
+  ClipboardList,
 } from "lucide-react";
 
 import {
@@ -42,6 +43,11 @@ const adminItems = [
     title: "Students",
     url: "/students",
     icon: Users,
+  },
+  {
+    title: "Enrollments",
+    url: "/enrollments",
+    icon: ClipboardList,
   },
   {
     title: "Courses",

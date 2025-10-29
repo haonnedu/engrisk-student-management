@@ -216,7 +216,20 @@ export function EnrollmentDialog({
                       placeholder="Search students..."
                       value={studentFilter}
                       onChange={(e) => setStudentFilter(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        // Prevent Select from closing on Enter/Space
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      autoFocus={false}
                       className="h-8"
                     />
                   </div>
