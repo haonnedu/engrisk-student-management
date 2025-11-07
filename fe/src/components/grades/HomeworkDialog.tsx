@@ -102,6 +102,54 @@ export function HomeworkDialog({
   // Helper function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => new Date().toISOString().split("T")[0];
 
+  // Helper function to format date consistently (avoid hydration mismatch)
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper function to format date for display (consistent format)
+  const formatDateDisplay = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to parse date string to Date object safely
+  const parseDateString = (dateString: string | null | undefined): Date | undefined => {
+    if (!dateString || dateString === '') return undefined;
+    
+    // Try parsing as YYYY-MM-DD format first
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // month is 0-indexed
+      const day = parseInt(parts[2], 10);
+      
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const date = new Date(year, month, day);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+    }
+    
+    // Fallback to standard Date parsing
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+    
+    return undefined;
+  };
+
   const {
     register,
     handleSubmit,
@@ -303,7 +351,11 @@ export function HomeworkDialog({
     setValue("description", homework.description);
     setValue("points", homework.points);
     setValue("maxPoints", homework.maxPoints);
-    setValue("dueDate", homework.dueDate || "");
+    // Ensure dueDate is in valid format or empty string
+    const dueDate = homework.dueDate && parseDateString(homework.dueDate) 
+      ? homework.dueDate 
+      : "";
+    setValue("dueDate", dueDate);
   };
 
   const handleCancelEdit = () => {
@@ -427,31 +479,37 @@ export function HomeworkDialog({
     <>
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-[98vw] min-w-[1400px] max-h-[95vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-[98vw] sm:max-w-[95vw] md:max-w-[90vw] lg:max-w-[85vw] xl:max-w-[1400px] max-h-[95vh] overflow-y-auto p-4 sm:p-6"
+        suppressHydrationWarning
+      >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Homework Management - {className}
+          <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="break-words">Homework Management</span>
+            </div>
+            <span className="text-sm sm:text-base text-muted-foreground sm:ml-2">- {className}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Manage homework assignments and view performance analytics
           </DialogDescription>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex-1">
-              <Label htmlFor="studentFilter">Filter by Student</Label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-4">
+            <div className="flex-1 w-full">
+              <Label htmlFor="studentFilter" className="text-xs sm:text-sm">Filter by Student</Label>
               <Select
                 value={selectedStudent}
                 onValueChange={setSelectedStudent}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 sm:h-10">
                   <SelectValue placeholder="All students" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All students</SelectItem>
                   {enrolledStudents.map((student: any) => (
                     <SelectItem key={student.id} value={student.id}>
-                      <div className="flex items-center gap-2">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <div className="font-medium">
                           {student.firstName} {student.lastName}
                         </div>
                         <div className="text-xs text-slate-500">
@@ -467,15 +525,17 @@ export function HomeworkDialog({
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Chart Section */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedStudent && selectedStudent !== "all"
-                ? "Homework Points Chart"
-                : "Student Performance Chart"}
+          <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+              <span className="block sm:inline">
+                {selectedStudent && selectedStudent !== "all"
+                  ? "Homework Points Chart"
+                  : "Student Performance Chart"}
+              </span>
               {selectedStudent && selectedStudent !== "all" && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="block sm:inline text-xs sm:text-sm font-normal text-muted-foreground sm:ml-2 mt-1 sm:mt-0">
                   -{" "}
                   {
                     enrolledStudents.find((s: any) => s.id === selectedStudent)
@@ -488,12 +548,22 @@ export function HomeworkDialog({
                 </span>
               )}
             </h3>
-            <div className="h-64">
+            <div className="h-48 sm:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    domain={[0, 100]} 
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
                   <Tooltip
                     formatter={(value: number, name: string, props: any) => [
                       `${value}${
@@ -510,13 +580,14 @@ export function HomeworkDialog({
                         ? `Homework: ${label}`
                         : `Student: ${label}`
                     }
+                    contentStyle={{ fontSize: '12px' }}
                   />
                   <Line
                     type="monotone"
                     dataKey="point"
                     stroke="#8884d8"
                     strokeWidth={2}
-                    dot={{ fill: "#8884d8", strokeWidth: 2, r: 4 }}
+                    dot={{ fill: "#8884d8", strokeWidth: 2, r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -524,31 +595,31 @@ export function HomeworkDialog({
           </div>
 
           {/* Add Homework Form */}
-          <div className="border rounded-lg p-6 bg-gradient-to-br from-slate-50 to-slate-100">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="border rounded-lg p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6">
               <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                   editingHomework ? "bg-orange-100" : "bg-blue-100"
                 }`}
               >
                 {editingHomework ? (
-                  <Edit className="w-4 h-4 text-orange-600" />
+                  <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600" />
                 ) : (
-                  <Plus className="w-4 h-4 text-blue-600" />
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
                 )}
               </div>
-              <h3 className="text-lg font-semibold text-slate-800">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-800 flex-1">
                 {editingHomework
                   ? "Edit Homework Record"
                   : "Add Homework Record"}
               </h3>
               {editingHomework && (
-                <span className="text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                <span className="text-xs sm:text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded flex-shrink-0">
                   Editing
                 </span>
               )}
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
               {/* Student Selection */}
               <div className="space-y-2">
                 <Label
@@ -616,7 +687,7 @@ export function HomeworkDialog({
               </div>
 
               {/* Homework Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="title"
@@ -669,17 +740,9 @@ export function HomeworkDialog({
                   Due Date (Optional)
                 </Label>
                 <DatePicker
-                  value={
-                    watch("dueDate") && watch("dueDate") !== ""
-                      ? (() => {
-                          const dateStr = watch("dueDate")!;
-                          const [year, month, day] = dateStr.split('-').map(Number);
-                          return new Date(year, month - 1, day);
-                        })()
-                      : undefined
-                  }
+                  value={parseDateString(watch("dueDate"))}
                   onChange={(date) => {
-                    if (date) {
+                    if (date && !isNaN(date.getTime())) {
                       const year = date.getFullYear();
                       const month = String(date.getMonth() + 1).padStart(2, "0");
                       const day = String(date.getDate()).padStart(2, "0");
@@ -703,11 +766,11 @@ export function HomeworkDialog({
               </div>
 
               {/* Points Section */}
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
-                <h4 className="text-sm font-medium text-slate-700 mb-4">
+              <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200">
+                <h4 className="text-xs sm:text-sm font-medium text-slate-700 mb-3 sm:mb-4">
                   Scoring
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="points"
@@ -791,20 +854,20 @@ export function HomeworkDialog({
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
                 {editingHomework && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
-                    className="h-11 px-6"
+                    className="h-10 sm:h-11 px-4 sm:px-6 w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
                 )}
                 <Button
                   type="submit"
-                  className={`h-11 px-8 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl ${
+                  className={`h-10 sm:h-11 px-6 sm:px-8 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl w-full sm:w-auto ${
                     editingHomework
                       ? "bg-orange-600 hover:bg-orange-700 text-white"
                       : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -818,7 +881,8 @@ export function HomeworkDialog({
                   updateHomeworkMutation.isPending ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      {editingHomework ? "Updating..." : "Adding..."}
+                      <span className="hidden sm:inline">{editingHomework ? "Updating..." : "Adding..."}</span>
+                      <span className="sm:hidden">{editingHomework ? "Update..." : "Add..."}</span>
                     </>
                   ) : (
                     <>
@@ -827,7 +891,8 @@ export function HomeworkDialog({
                       ) : (
                         <Plus className="mr-2 h-4 w-4" />
                       )}
-                      {editingHomework ? "Update Record" : "Add Record"}
+                      <span className="hidden sm:inline">{editingHomework ? "Update Record" : "Add Record"}</span>
+                      <span className="sm:hidden">{editingHomework ? "Update" : "Add"}</span>
                     </>
                   )}
                 </Button>
@@ -837,29 +902,28 @@ export function HomeworkDialog({
 
           {/* Homework Records Table */}
           <div className="border rounded-lg">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Homework Records</h3>
-                <div className="text-sm text-muted-foreground">
-                  Showing {filteredRecords.length} of {homeworkRecords.length}{" "}
-                  records
+            <div className="p-3 sm:p-4 border-b">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <h3 className="text-base sm:text-lg font-semibold">Homework Records</h3>
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="block sm:inline">Showing {filteredRecords.length} of {homeworkRecords.length} records</span>
                   {selectedStudent && selectedStudent !== "all" && (
-                    <span className="ml-2 text-blue-600">
+                    <span className="block sm:inline sm:ml-2 text-blue-600">
                       (filtered by student)
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-1 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Homework</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="min-w-[120px] sm:min-w-[150px]">Student</TableHead>
+                    <TableHead className="min-w-[150px] sm:min-w-[200px]">Homework</TableHead>
+                    <TableHead className="min-w-[80px]">Score</TableHead>
+                    <TableHead className="min-w-[100px]">Date</TableHead>
+                    <TableHead className="min-w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -886,17 +950,17 @@ export function HomeworkDialog({
                         <TableCell>
                           <div>
                             <div 
-                              className="font-medium truncate max-w-[150px]" 
+                              className="font-medium truncate max-w-[100px] sm:max-w-[150px]" 
                               title={`${record.student?.firstName} ${record.student?.lastName}`}
                             >
                               {record.student?.firstName}{" "}
                               {record.student?.lastName}
                             </div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[100px] sm:max-w-[150px]">
                               {record.student?.studentId}
                             </div>
                             <div 
-                              className="text-xs text-slate-500 mt-1 truncate max-w-[150px]"
+                              className="text-xs text-slate-500 mt-1 truncate max-w-[100px] sm:max-w-[150px]"
                               title={`${record.section?.name} - ${record.section?.code}`}
                             >
                               {record.section?.name} - {record.section?.code}
@@ -906,13 +970,13 @@ export function HomeworkDialog({
                         <TableCell>
                           <div>
                             <div 
-                              className="font-medium truncate max-w-[200px]" 
+                              className="font-medium truncate max-w-[120px] sm:max-w-[200px]" 
                               title={record.title}
                             >
                               {record.title}
                             </div>
                             <div 
-                              className="text-sm text-muted-foreground truncate max-w-[200px]" 
+                              className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-[200px]" 
                               title={record.description}
                             >
                               {record.description}
@@ -941,11 +1005,11 @@ export function HomeworkDialog({
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {new Date(record.createdAt).toLocaleDateString()}
+                        <TableCell className="text-xs sm:text-sm" suppressHydrationWarning>
+                          {formatDateDisplay(record.createdAt)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -992,11 +1056,11 @@ export function HomeworkDialog({
 
           {/* Student Averages */}
           <div className="border rounded-lg">
-            <div className="p-4 border-b">
-              <h3 className="text-lg font-semibold">Student Averages</h3>
+            <div className="p-3 sm:p-4 border-b">
+              <h3 className="text-base sm:text-lg font-semibold">Student Averages</h3>
             </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-3 sm:p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {(selectedStudent && selectedStudent !== "all"
                   ? studentAverages.filter(
                       (s: any) => s.studentId === selectedStudent
@@ -1005,11 +1069,11 @@ export function HomeworkDialog({
                 ).map((student: any) => (
                   <div
                     key={student.studentId}
-                    className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                    className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 rounded"
                   >
-                    <div>
-                      <div className="font-medium">{student.studentName}</div>
-                      <div className="text-xs text-slate-500">
+                    <div className="flex-1 min-w-0 mr-2">
+                      <div className="font-medium text-sm sm:text-base truncate">{student.studentName}</div>
+                      <div className="text-xs text-slate-500 truncate">
                         {classData?.name} - {classData?.code}
                       </div>
                     </div>
@@ -1021,6 +1085,7 @@ export function HomeworkDialog({
                           ? "secondary"
                           : "destructive"
                       }
+                      className="flex-shrink-0"
                     >
                       {student.average}%
                     </Badge>
@@ -1031,12 +1096,16 @@ export function HomeworkDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Current Grade: <span className="font-medium">{currentGrade}</span>
             </div>
-            <div className="space-x-2">
-              <Button variant="outline" onClick={() => setOpen(false)}>
+            <div className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setOpen(false)}
+                className="w-full sm:w-auto h-10 sm:h-11 px-6"
+              >
                 Close
               </Button>
             </div>
