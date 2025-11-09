@@ -174,12 +174,17 @@ export function ClassAttendancePage({
 
       {attendanceData && attendanceData.length > 0 ? (
         <div className="rounded-md border overflow-x-auto">
-          <div className="min-w-full">
+          <div className="min-w-full inline-block">
             {/* Header with dates */}
-            <div className="grid grid-cols-[200px_repeat(auto-fit,minmax(120px,1fr))] gap-2 p-4 border-b bg-muted/50">
-              <div className="font-medium">Student</div>
+            <div 
+              className="grid gap-3 sm:gap-4 p-4 sm:p-5 border-b bg-muted/50"
+              style={{
+                gridTemplateColumns: `minmax(150px, 200px) repeat(${dates.length}, minmax(90px, 1fr))`
+              }}
+            >
+              <div className="font-medium sticky left-0 bg-muted/50 z-10">Eng Name</div>
               {dates.map((date) => (
-                <div key={date as string} className="text-center font-medium text-sm">
+                <div key={date as string} className="text-center font-medium text-sm min-w-[90px]">
                   {new Date(date as string).getDate()}
                 </div>
               ))}
@@ -194,7 +199,7 @@ export function ClassAttendancePage({
             )
               .filter(({ student }) =>
                 globalFilter
-                  ? `${student?.firstName || ""} ${student?.lastName || ""}`
+                  ? `${student?.engName || ""} ${student?.firstName || ""} ${student?.lastName || ""}`
                       .toLowerCase()
                       .includes(globalFilter.toLowerCase())
                   : true
@@ -202,11 +207,14 @@ export function ClassAttendancePage({
               .map(({ student, records }) => (
                 <div
                   key={student?.id}
-                  className="grid grid-cols-[200px_repeat(auto-fit,minmax(120px,1fr))] gap-2 p-4 border-b hover:bg-muted/50"
+                  className="grid gap-3 sm:gap-4 p-4 sm:p-5 border-b hover:bg-muted/50"
+                  style={{
+                    gridTemplateColumns: `minmax(150px, 200px) repeat(${dates.length}, minmax(90px, 1fr))`
+                  }}
                 >
-                  <div>
+                  <div className="sticky left-0 bg-background z-10 pr-2">
                     <div className="font-medium">
-                      {student?.firstName} {student?.lastName}
+                      {student?.engName || "-"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {student?.studentId}
@@ -217,11 +225,11 @@ export function ClassAttendancePage({
                     return (
                       <div
                         key={date as string}
-                        className="flex flex-col items-center gap-1"
+                        className="flex flex-col items-center gap-2 min-w-[90px] px-1"
                       >
                         {record ? (
                           <>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 justify-center">
                               {getStatusIcon(record.status)}
                               <Select
                                 value={record.status}
@@ -241,7 +249,7 @@ export function ClassAttendancePage({
                               </Select>
                             </div>
                             {record.note && (
-                              <div className="text-xs text-muted-foreground truncate max-w-[100px]">
+                              <div className="text-xs text-muted-foreground truncate max-w-full text-center">
                                 {record.note}
                               </div>
                             )}

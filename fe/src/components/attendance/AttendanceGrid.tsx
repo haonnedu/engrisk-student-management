@@ -78,12 +78,17 @@ export function AttendanceGrid({
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <div className="min-w-full">
+      <div className="min-w-full inline-block">
         {/* Header */}
-        <div className="grid grid-cols-12 gap-1 bg-muted/50 p-2 text-sm font-medium">
-          <div className="col-span-3">Student</div>
+        <div 
+          className="grid bg-muted/50 p-3 sm:p-4 text-sm font-medium gap-2 sm:gap-3"
+          style={{
+            gridTemplateColumns: `minmax(150px, 200px) repeat(${dates.length}, minmax(90px, 1fr))`
+          }}
+        >
+          <div className="sticky left-0 bg-muted/50 z-10">Eng Name</div>
           {dates.map((date) => (
-            <div key={date} className="text-center">
+            <div key={date} className="text-center min-w-[90px]">
               {new Date(date).toLocaleDateString("vi-VN", {
                 day: "2-digit",
                 month: "2-digit",
@@ -97,11 +102,14 @@ export function AttendanceGrid({
           ([studentId, { student, dates: studentDates }]) => (
             <div
               key={studentId}
-              className="grid grid-cols-12 gap-1 p-2 border-b last:border-b-0"
+              className="grid p-3 sm:p-4 border-b last:border-b-0 gap-2 sm:gap-3"
+              style={{
+                gridTemplateColumns: `minmax(150px, 200px) repeat(${dates.length}, minmax(90px, 1fr))`
+              }}
             >
-              <div className="col-span-3">
+              <div className="sticky left-0 bg-background z-10 pr-2">
                 <div className="font-medium">
-                  {student?.firstName} {student?.lastName}
+                  {student?.engName || "-"}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {student?.studentId}
@@ -113,8 +121,8 @@ export function AttendanceGrid({
                 const isEditingNote = editingNote === `${studentId}-${date}`;
 
                 return (
-                  <div key={date} className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-1">
+                  <div key={date} className="flex flex-col items-center gap-2 min-w-[90px] px-1">
+                    <div className="flex items-center gap-1.5 justify-center">
                       {attendance ? statusIcons[attendance.status] : null}
                       <Select
                         value={attendance?.status || "PRESENT"}
@@ -164,7 +172,7 @@ export function AttendanceGrid({
                         </div>
                       ) : (
                         <div
-                          className="h-6 text-xs cursor-pointer hover:bg-muted rounded px-1 flex items-center"
+                          className="h-6 text-xs cursor-pointer hover:bg-muted rounded px-1 flex items-center justify-center"
                           onClick={() =>
                             handleNoteEdit(
                               studentId,
