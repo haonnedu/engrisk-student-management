@@ -110,6 +110,26 @@ export function HomeworkDialog({
   const [bulkDueDate, setBulkDueDate] = useState<string>(getTodayDate());
   const [bulkPointsByStudent, setBulkPointsByStudent] = useState<Record<string, number>>({});
 
+  const getStudentDisplayName = (student: any): string => {
+    if (!student) return "";
+    if (student.engName && student.engName.trim()) {
+      return student.engName.trim();
+    }
+    const parts = [student.firstName, student.lastName].filter(Boolean);
+    return parts.join(" ").trim();
+  };
+
+  const getStudentInitials = (student: any): string => {
+    const displayName = getStudentDisplayName(student);
+    if (!displayName) return "";
+    const words = displayName.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return "";
+    if (words.length === 1) {
+      return words[0].slice(0, 2).toUpperCase();
+    }
+    return `${words[0][0] ?? ""}${words[words.length - 1][0] ?? ""}`.toUpperCase();
+  };
+
   // Helper function to format date consistently (avoid hydration mismatch)
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
@@ -282,7 +302,7 @@ export function HomeworkDialog({
           : 0;
       return {
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: getStudentDisplayName(student),
         average: Math.round(average * 10) / 10,
       };
     });
@@ -302,7 +322,7 @@ export function HomeworkDialog({
     }
     // For all students, show average points
     return studentAverages.map((student: any, index: number) => ({
-      name: student.studentName.split(" ").pop(), // Last name only
+      name: student.studentName || `Student ${index + 1}`,
       point: student.average,
     }));
   }, [filteredRecords, selectedStudent, studentAverages]);
@@ -562,9 +582,7 @@ export function HomeworkDialog({
                   {enrolledStudents.map((student: any) => (
                     <SelectItem key={student.id} value={student.id}>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                        <div className="font-medium">
-                          {student.firstName} {student.lastName}
-                        </div>
+                        <div className="font-medium">{getStudentDisplayName(student)}</div>
                         <div className="text-xs text-slate-500">
                           ({student.studentId}) • {classData?.name} -{" "}
                           {classData?.code}
@@ -601,14 +619,9 @@ export function HomeworkDialog({
               {selectedStudent && selectedStudent !== "all" && (
                 <span className="block sm:inline text-xs sm:text-sm font-normal text-muted-foreground sm:ml-2 mt-1 sm:mt-0">
                   -{" "}
-                  {
+                  {getStudentDisplayName(
                     enrolledStudents.find((s: any) => s.id === selectedStudent)
-                      ?.firstName
-                  }{" "}
-                  {
-                    enrolledStudents.find((s: any) => s.id === selectedStudent)
-                      ?.lastName
-                  }
+                  )}
                 </span>
               )}
             </h3>
@@ -716,7 +729,7 @@ export function HomeworkDialog({
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {s.firstName} {s.lastName}
+                                {getStudentDisplayName(s)}
                               </span>
                               <span className="text-xs text-muted-foreground">{s.studentId}</span>
                             </div>
@@ -830,13 +843,10 @@ export function HomeworkDialog({
                       >
                         <div className="flex items-center gap-2 w-full">
                           <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
-                            {student.firstName[0]}
-                            {student.lastName[0]}
+                            {getStudentInitials(student)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium">
-                              {student.firstName} {student.lastName}
-                            </div>
+                            <div className="font-medium">{getStudentDisplayName(student)}</div>
                             <div className="text-xs text-slate-500">
                               {student.studentId} • {classData?.name} -{" "}
                               {classData?.code}
@@ -1120,10 +1130,9 @@ export function HomeworkDialog({
                           <div>
                             <div 
                               className="font-medium truncate max-w-[100px] sm:max-w-[150px]" 
-                              title={`${record.student?.firstName} ${record.student?.lastName}`}
+                              title={getStudentDisplayName(record.student)}
                             >
-                              {record.student?.firstName}{" "}
-                              {record.student?.lastName}
+                              {getStudentDisplayName(record.student)}
                             </div>
                             <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[100px] sm:max-w-[150px]">
                               {record.student?.studentId}
