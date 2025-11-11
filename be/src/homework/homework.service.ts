@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateHomeworkDto, UpdateHomeworkDto } from "./dto";
+import { BulkCreateHomeworkDto } from "./dto/bulk-create-homework.dto";
 
 @Injectable()
 export class HomeworkService {
@@ -33,6 +34,38 @@ export class HomeworkService {
         },
       },
     });
+  }
+
+  async createBulk(payload: BulkCreateHomeworkDto) {
+    const { sectionId, title, description, maxPoints = 100, dueDate, items } =
+      payload;
+
+    const due = dueDate ? new Date(dueDate) : null;
+
+    // Create many
+    await this.prisma.homework.createMany({
+      data: items.map((it) => ({
+        sectionId,
+        studentId: it.studentId,
+        title,
+        description,
+        points: it.points,
+        maxPoints,
+        dueDate: due,
+      })),
+    });
+
+    // Return created records for the given students (latest by createdAt)
+    const created = await this.prisma.homework.findMany({
+      where: {
+        sectionId,
+        title,
+        studentId: { in: items.map((i) => i.studentId) },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { count: items.length, data: created };
   }
 
   async findAll(sectionId?: string, studentId?: string, page = 1, limit = 10) {

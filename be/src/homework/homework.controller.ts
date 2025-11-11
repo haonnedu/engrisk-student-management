@@ -11,6 +11,7 @@ import {
 } from "@nestjs/common";
 import { HomeworkService } from "./homework.service";
 import { CreateHomeworkDto, UpdateHomeworkDto } from "./dto";
+import { BulkCreateHomeworkDto } from "./dto/bulk-create-homework.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 
 @Controller("homework")
@@ -21,6 +22,11 @@ export class HomeworkController {
   @Post()
   create(@Body() createHomeworkDto: CreateHomeworkDto) {
     return this.homeworkService.create(createHomeworkDto);
+  }
+
+  @Post("bulk")
+  createBulk(@Body() body: BulkCreateHomeworkDto) {
+    return this.homeworkService.createBulk(body);
   }
 
   @Get()

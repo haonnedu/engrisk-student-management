@@ -6,6 +6,15 @@ import type {
   UpdateHomeworkDto,
 } from "@/lib/api-types";
 
+export interface BulkCreateHomeworkDto {
+  sectionId: string;
+  title: string;
+  description?: string;
+  maxPoints?: number;
+  dueDate?: string;
+  items: { studentId: string; points: number }[];
+}
+
 export interface HomeworkResponse {
   data: Homework[];
   meta: {
@@ -67,6 +76,22 @@ export function useCreateHomework() {
   return useMutation({
     mutationFn: async (data: CreateHomeworkDto): Promise<Homework> => {
       const response = await api.post("/homework", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["homework"] });
+      queryClient.invalidateQueries({ queryKey: ["homework-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["grades"] });
+    },
+  });
+}
+
+export function useCreateHomeworkBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: BulkCreateHomeworkDto): Promise<{ count: number }> => {
+      const response = await api.post("/homework/bulk", data);
       return response.data;
     },
     onSuccess: () => {

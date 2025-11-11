@@ -43,6 +43,7 @@ import {
   useCreateHomework,
   useUpdateHomework,
   useDeleteHomework,
+  useCreateHomeworkBulk,
 } from "@/hooks/useHomework";
 import { api } from "@/lib/api";
 import type {
@@ -59,6 +60,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+function getTodayDate(): string {
+  return new Date().toISOString().split("T")[0];
+}
 
 const homeworkSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -98,9 +103,12 @@ export function HomeworkDialog({
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [cancelDialog, setCancelDialog] = useState(false);
-
-  // Helper function to get today's date in YYYY-MM-DD format
-  const getTodayDate = () => new Date().toISOString().split("T")[0];
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkTitle, setBulkTitle] = useState<string>("");
+  const [bulkDescription, setBulkDescription] = useState<string>("");
+  const [bulkMaxPoints, setBulkMaxPoints] = useState<number>(100);
+  const [bulkDueDate, setBulkDueDate] = useState<string>(getTodayDate());
+  const [bulkPointsByStudent, setBulkPointsByStudent] = useState<Record<string, number>>({});
 
   // Helper function to format date consistently (avoid hydration mismatch)
   const formatDate = (dateString: string | Date) => {
@@ -182,6 +190,7 @@ export function HomeworkDialog({
     100
   );
   const createHomeworkMutation = useCreateHomework();
+  const createHomeworkBulk = useCreateHomeworkBulk();
   const updateHomeworkMutation = useUpdateHomework();
   const deleteHomeworkMutation = useDeleteHomework();
 
@@ -375,6 +384,50 @@ export function HomeworkDialog({
     }
   };
 
+  // Bulk submit handler
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!bulkTitle) {
+        toast.error("Title is required");
+        return;
+      }
+      const items = Object.entries(bulkPointsByStudent)
+        .filter(([, val]) => val !== undefined && val !== null && !isNaN(Number(val)))
+        .map(([sid, p]) => ({ studentId: sid, points: Number(p) }));
+      if (items.length === 0) {
+        toast.error("Please enter points for at least one student");
+        return;
+      }
+      await createHomeworkBulk.mutateAsync({
+        sectionId: classId,
+        title: bulkTitle,
+        description: bulkDescription || undefined,
+        maxPoints: bulkMaxPoints,
+        dueDate: bulkDueDate || undefined,
+        items,
+      });
+      toast.success("Bulk homework created successfully!");
+      await refetchHomework();
+      await refetchGrades();
+      for (const it of items) {
+        // eslint-disable-next-line no-await-in-loop
+        await updateHWGradeInTable(it.studentId);
+      }
+      // reset
+      setBulkTitle("");
+      setBulkDescription("");
+      setBulkMaxPoints(100);
+      setBulkDueDate(getTodayDate());
+      setBulkPointsByStudent({});
+      setBulkMode(false);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "An error occurred";
+      toast.error(errorMessage);
+    }
+  };
+
   const handleCancelConfirm = () => {
     setEditingHomework(null);
     reset({
@@ -522,6 +575,17 @@ export function HomeworkDialog({
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex-none">
+              <Button
+                type="button"
+                variant={bulkMode ? "default" : "secondary"}
+                size="sm"
+                onClick={() => setBulkMode((v) => !v)}
+                className="w-full sm:w-auto"
+              >
+                {bulkMode ? "Single entry" : "Class list entry"}
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
@@ -593,6 +657,111 @@ export function HomeworkDialog({
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* Bulk Add (Class List) */}
+          {bulkMode && (
+            <div className="border rounded-lg p-4 sm:p-6 bg-white">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-semibold">Bulk add homework (by class)</h3>
+              </div>
+              <form onSubmit={handleBulkSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Title *</Label>
+                    <Input
+                      value={bulkTitle}
+                      onChange={(e) => setBulkTitle(e.target.value)}
+                      placeholder="e.g., Workbook Unit 3"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Max Points</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={bulkMaxPoints}
+                      onChange={(e) => setBulkMaxPoints(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Due Date</Label>
+                    <Input
+                      type="date"
+                      value={bulkDueDate}
+                      onChange={(e) => setBulkDueDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={bulkDescription}
+                    onChange={(e) => setBulkDescription(e.target.value)}
+                    rows={3}
+                    placeholder="Optional description"
+                  />
+                </div>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead className="w-36">Points</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {enrolledStudents.map((s: any) => (
+                        <TableRow key={s.id}>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {s.firstName} {s.lastName}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{s.studentId}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step="0.5"
+                              value={
+                                typeof bulkPointsByStudent[s.id] === "number"
+                                  ? String(bulkPointsByStudent[s.id])
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setBulkPointsByStudent((prev) => ({
+                                  ...prev,
+                                  [s.id]:
+                                    val === "" ? (undefined as unknown as number) : Number(val),
+                                }));
+                              }}
+                              placeholder=""
+                              className="h-9"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="submit">Save Bulk Homework</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setBulkMode(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* Add Homework Form */}
           <div className="border rounded-lg p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100">
