@@ -279,6 +279,37 @@ export class StudentsService {
       );
     }
 
+    // Filter grades to only show those from active section grade types
+    // Get all section IDs from enrollments
+    const sectionIds = student.enrollments
+      .filter((e) => e.sectionId)
+      .map((e) => e.sectionId as string);
+
+    if (sectionIds.length > 0) {
+      // Get all active grade type IDs from section_grade_types
+      const sectionGradeTypes = await this.prisma.sectionGradeType.findMany({
+        where: {
+          sectionId: { in: sectionIds },
+          isActive: true,
+        },
+        select: {
+          gradeTypeId: true,
+        },
+      });
+
+      const allowedGradeTypeIds = new Set(
+        sectionGradeTypes.map((sgt) => sgt.gradeTypeId)
+      );
+
+      // Filter grades to only include those with gradeTypeId in allowed list
+      student.grades = student.grades.filter((grade) =>
+        allowedGradeTypeIds.has(grade.gradeTypeId)
+      );
+    } else {
+      // If no sections, return empty grades array
+      student.grades = [];
+    }
+
     return student;
   }
 
