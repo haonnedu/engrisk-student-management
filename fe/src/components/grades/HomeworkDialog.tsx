@@ -203,11 +203,12 @@ export function HomeworkDialog({
   );
 
   // Homework hooks - fetch all homework for the class first
+  // Use a high limit to get all records
   const { data: homeworkData, refetch: refetchHomework } = useHomework(
     classId,
     undefined, // Don't filter by student initially
     1,
-    100
+    1000 // Increased limit to ensure all records are fetched
   );
   const createHomeworkMutation = useCreateHomework();
   const createHomeworkBulk = useCreateHomeworkBulk();
@@ -252,11 +253,14 @@ export function HomeworkDialog({
     return homeworkRecords;
   }, [homeworkRecords, selectedStudent]);
 
-  // Auto-select student when dialog opens
+  // Auto-select student when dialog opens (only if studentId is provided)
   useEffect(() => {
     if (open && studentId) {
       console.log("Auto-selecting student:", studentId);
       setSelectedStudent(studentId);
+    } else if (open && !studentId) {
+      // If no specific student, show all students
+      setSelectedStudent("all");
     }
   }, [open, studentId]);
 
@@ -302,7 +306,7 @@ export function HomeworkDialog({
           : 0;
       return {
         studentId: student.id,
-        studentName: getStudentDisplayName(student),
+        studentName: `${student.firstName} ${student.lastName}`,
         average: Math.round(average * 10) / 10,
       };
     });
@@ -322,7 +326,7 @@ export function HomeworkDialog({
     }
     // For all students, show average points
     return studentAverages.map((student: any, index: number) => ({
-      name: student.studentName || `Student ${index + 1}`,
+      name: student.studentName.split(" ").pop(), // Last name only
       point: student.average,
     }));
   }, [filteredRecords, selectedStudent, studentAverages]);
@@ -361,8 +365,10 @@ export function HomeworkDialog({
         dueDate: getTodayDate(), // Today's date
       });
       setEditingHomework(null);
-      refetchHomework();
-      refetchGrades();
+      
+      // Wait for refetch to complete before updating grade
+      await refetchHomework();
+      await refetchGrades();
 
       // Update HW grade in the main grades table
       await updateHWGradeInTable(values.studentId);
@@ -582,7 +588,9 @@ export function HomeworkDialog({
                   {enrolledStudents.map((student: any) => (
                     <SelectItem key={student.id} value={student.id}>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                        <div className="font-medium">{getStudentDisplayName(student)}</div>
+                        <div className="font-medium">
+                          {student.firstName} {student.lastName}
+                        </div>
                         <div className="text-xs text-slate-500">
                           ({student.studentId}) • {classData?.name} -{" "}
                           {classData?.code}
@@ -619,9 +627,14 @@ export function HomeworkDialog({
               {selectedStudent && selectedStudent !== "all" && (
                 <span className="block sm:inline text-xs sm:text-sm font-normal text-muted-foreground sm:ml-2 mt-1 sm:mt-0">
                   -{" "}
-                  {getStudentDisplayName(
+                  {
                     enrolledStudents.find((s: any) => s.id === selectedStudent)
-                  )}
+                      ?.firstName
+                  }{" "}
+                  {
+                    enrolledStudents.find((s: any) => s.id === selectedStudent)
+                      ?.lastName
+                  }
                 </span>
               )}
             </h3>
@@ -729,7 +742,7 @@ export function HomeworkDialog({
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {getStudentDisplayName(s)}
+                                {s.firstName} {s.lastName}
                               </span>
                               <span className="text-xs text-muted-foreground">{s.studentId}</span>
                             </div>
@@ -843,10 +856,13 @@ export function HomeworkDialog({
                       >
                         <div className="flex items-center gap-2 w-full">
                           <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
-                            {getStudentInitials(student)}
+                            {student.firstName[0]}
+                            {student.lastName[0]}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium">{getStudentDisplayName(student)}</div>
+                            <div className="font-medium">
+                              {student.firstName} {student.lastName}
+                            </div>
                             <div className="text-xs text-slate-500">
                               {student.studentId} • {classData?.name} -{" "}
                               {classData?.code}
@@ -1130,9 +1146,10 @@ export function HomeworkDialog({
                           <div>
                             <div 
                               className="font-medium truncate max-w-[100px] sm:max-w-[150px]" 
-                              title={getStudentDisplayName(record.student)}
+                              title={`${record.student?.firstName} ${record.student?.lastName}`}
                             >
-                              {getStudentDisplayName(record.student)}
+                              {record.student?.firstName}{" "}
+                              {record.student?.lastName}
                             </div>
                             <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[100px] sm:max-w-[150px]">
                               {record.student?.studentId}

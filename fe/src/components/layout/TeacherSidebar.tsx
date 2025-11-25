@@ -10,6 +10,7 @@ import {
   GraduationCap,
   UserCheck,
   ClipboardList,
+  BarChart3,
 } from "lucide-react";
 
 import {
@@ -68,6 +69,11 @@ const adminItems = [
     title: "Attendance",
     url: "/attendance",
     icon: UserCheck,
+  },
+  {
+    title: "Grade Types",
+    url: "/grade-types",
+    icon: BarChart3,
   },
 ];
 

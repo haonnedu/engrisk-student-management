@@ -32,14 +32,29 @@ export function buildEnrollmentColumns(
       accessorFn: (row) =>
         `${row.student?.firstName || ""} ${row.student?.lastName || ""}`,
       id: "studentName",
-      cell: (info) => (
-        <div>
-          <div className="font-medium">{info.getValue() as string}</div>
-          <div className="text-sm text-muted-foreground">
-            {info.row.original.student?.studentId || "-"}
+      cell: (info) => {
+        const student = info.row.original.student;
+        const engName = student?.engName?.trim();
+        const fullName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim();
+        
+        return (
+          <div>
+            <div className="font-medium">
+              {engName ? (
+                <span>
+                  {engName}
+                  {fullName && <span className="text-muted-foreground ml-2">({fullName})</span>}
+                </span>
+              ) : (
+                fullName || "-"
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {student?.studentId || "-"}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Course",

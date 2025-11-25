@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useClass } from "@/hooks/useClasses";
 import { useGrades, useGradesByClass } from "@/hooks/useGrades";
 import { useActiveGradeTypes } from "@/hooks/useGradeTypes";
+import { useSectionGradeTypes } from "@/hooks/useSectionGradeTypes";
 import type { GradeType } from "@/lib/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { EditableGradeCell } from "@/components/grades/EditableGradeCell";
 import { HomeworkGradeCell } from "@/components/grades/HomeworkGradeCell";
+import { SectionGradeTypesDialog } from "@/components/grades/SectionGradeTypesDialog";
 
 export default function ClassGradesPage() {
   const params = useParams();
@@ -47,7 +49,21 @@ export default function ClassGradesPage() {
     error,
     refetch,
   } = useGradesByClass(classId, page, pageSize);
+  const { data: sectionGradeTypes } = useSectionGradeTypes(classId);
   const { data: activeGradeTypes } = useActiveGradeTypes();
+
+  // Get grade types for this section, or fallback to all active grade types
+  // This must be before any early returns to maintain hook order
+  const gradeTypes: GradeType[] = useMemo(() => {
+    if (sectionGradeTypes && sectionGradeTypes.length > 0) {
+      // Use section-specific grade types, filter active ones and sort by sortOrderInSection
+      return sectionGradeTypes
+        .filter((gt: any) => gt.isActiveInSection !== false)
+        .sort((a: any, b: any) => a.sortOrderInSection - b.sortOrderInSection);
+    }
+    // Fallback to all active grade types if section has no specific configuration
+    return activeGradeTypes?.sort((a, b) => a.sortOrder - b.sortOrder) || [];
+  }, [sectionGradeTypes, activeGradeTypes]);
 
   const totalStudents = gradesData?.meta?.total || 0;
   const totalPages = gradesData?.meta?.totalPages || 0;
@@ -151,9 +167,6 @@ export default function ClassGradesPage() {
     );
   }
 
-  // Get grade types from database, ordered by sortOrder
-  const gradeTypes: GradeType[] = activeGradeTypes || [];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -177,12 +190,31 @@ export default function ClassGradesPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <SectionGradeTypesDialog
+            sectionId={classId}
+            sectionName={classInfo.name}
+          />
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
         </div>
       </div>
+
+      {/* Info banner if using default grade types */}
+      {(!sectionGradeTypes || sectionGradeTypes.length === 0) && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-blue-800">
+              This section is using all active grade types.{" "}
+              <span className="font-medium">
+                Configure specific grade types for this section
+              </span>{" "}
+              to customize which types are available.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex items-center gap-4">

@@ -7,6 +7,7 @@ import { CoursesModule } from "./courses/courses.module";
 import { EnrollmentsModule } from "./enrollments/enrollments.module";
 import { GradesModule } from "./grades/grades.module";
 import { ClassesModule } from "./classes/sections.module";
+import { SectionsModule } from "./sections/sections.module";
 import { AttendanceModule } from "./attendance/attendance.module";
 import { HomeworkModule } from "./homework/homework.module";
 import { GradeTypesModule } from "./grade-types/grade-types.module";
@@ -26,6 +27,7 @@ import { HealthModule } from "./health/health.module";
     EnrollmentsModule,
     GradesModule,
     ClassesModule,
+    SectionsModule,
     AttendanceModule,
     HomeworkModule,
     GradeTypesModule,

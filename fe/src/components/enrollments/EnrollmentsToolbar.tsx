@@ -1,4 +1,5 @@
 "use client";
+import { useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EnrollmentDialog } from "@/components/enrollments/EnrollmentDialog";
@@ -24,6 +25,18 @@ export function EnrollmentsToolbar({
 }) {
   const { data: classesData } = useClasses(1, 100);
 
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange(e.target.value);
+    },
+    [onChange]
+  );
+
+  const classesList = useMemo(
+    () => classesData?.data || [],
+    [classesData?.data]
+  );
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 className="text-xl font-semibold">Enrollments</h1>
@@ -34,7 +47,7 @@ export function EnrollmentsToolbar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Classes</SelectItem>
-            {classesData?.data?.map((classItem) => (
+            {classesList.map((classItem) => (
               <SelectItem key={classItem.id} value={classItem.id}>
                 {classItem.name} ({classItem.code})
               </SelectItem>
@@ -42,9 +55,10 @@ export function EnrollmentsToolbar({
           </SelectContent>
         </Select>
         <Input
+          key="enrollment-search-input"
           placeholder="Search enrollments..."
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleInputChange}
           className="w-56"
         />
         <EnrollmentDialog />

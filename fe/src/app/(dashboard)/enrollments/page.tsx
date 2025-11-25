@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ColumnDef,
   getCoreRowModel,
@@ -21,10 +21,32 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 
 export default function EnrollmentsPage() {
-  const [globalFilter, setGlobalFilter] = useState("");
+  // Local state for input (updates immediately)
+  const [searchInput, setSearchInput] = useState("");
+  // Debounced state for query (updates after user stops typing)
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sectionId, setSectionId] = useState<string>("all");
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1); // Reset to page 1 when search changes
+    }, 1000); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const handleFilterChange = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
+
+  const handleSectionChange = useCallback((value: string) => {
+    setSectionId(value);
+    setPage(1); // Reset to page 1 when section changes
+  }, []);
 
   const {
     data: enrollmentsData,
@@ -33,34 +55,37 @@ export default function EnrollmentsPage() {
   } = useEnrollments(
     page,
     limit,
-    globalFilter,
+    debouncedSearch, // Use debounced value for query
     sectionId === "all" ? undefined : sectionId
   );
   const deleteEnrollmentMutation = useDeleteEnrollment();
 
-  const handleDelete = (id: string) => {
-    deleteEnrollmentMutation.mutate(id, {
-      onSuccess: () => {
-        toast.success("Enrollment deleted successfully!");
-      },
-      onError: (error: any) => {
-        toast.error(
-          error.response?.data?.message || "Failed to delete enrollment"
-        );
-      },
-    });
-  };
+  const handleDeleteCallback = useCallback(
+    (id: string) => {
+      deleteEnrollmentMutation.mutate(id, {
+        onSuccess: () => {
+          toast.success("Enrollment deleted successfully!");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error.response?.data?.message || "Failed to delete enrollment"
+          );
+        },
+      });
+    },
+    [deleteEnrollmentMutation]
+  );
 
   const columns = useMemo<ColumnDef<Enrollment>[]>(
-    () => buildEnrollmentColumns(handleDelete),
-    [handleDelete]
+    () => buildEnrollmentColumns(handleDeleteCallback),
+    [handleDeleteCallback]
   );
 
   const table = useReactTable({
     data: enrollmentsData?.data || [],
     columns,
-    state: { globalFilter },
-    onGlobalFilterChange: setGlobalFilter,
+    state: { globalFilter: debouncedSearch },
+    onGlobalFilterChange: setDebouncedSearch,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -85,10 +110,10 @@ export default function EnrollmentsPage() {
   return (
     <div className="space-y-4">
       <EnrollmentsToolbar
-        value={globalFilter ?? ""}
-        onChange={setGlobalFilter}
+        value={searchInput}
+        onChange={handleFilterChange}
         sectionId={sectionId}
-        onSectionChange={setSectionId}
+        onSectionChange={handleSectionChange}
       />
 
       <EnrollmentsTable table={table as any} columns={columns} />

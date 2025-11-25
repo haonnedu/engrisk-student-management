@@ -21,7 +21,8 @@ import {
 import { ClassDialog } from "@/components/classes/ClassDialog";
 import { ClassGradeDialog } from "@/components/classes/ClassGradeDialog";
 import { ClassAttendanceDialog } from "@/components/classes/ClassAttendanceDialog";
-import { Edit, MoreHorizontal, Trash2, Users, BookOpen } from "lucide-react";
+import { SectionGradeTypesDialog } from "@/components/grades/SectionGradeTypesDialog";
+import { Edit, MoreHorizontal, Trash2, Users, BookOpen, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ClassSection } from "@/hooks/useClasses";
@@ -145,6 +146,20 @@ export function buildClassColumns(
             >
               <Users className="mr-2 h-4 w-4" />
               Attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+              <div>
+                <SectionGradeTypesDialog
+                  sectionId={row.original.id}
+                  sectionName={row.original.name}
+                  trigger={
+                    <button className="flex w-full items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Manage Grade Types
+                    </button>
+                  }
+                />
+              </div>
             </DropdownMenuItem>
             <AlertDialog>
               <AlertDialogTrigger asChild>

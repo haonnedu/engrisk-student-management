@@ -101,6 +101,16 @@ export class EnrollmentsService {
           },
         },
         {
+          student: {
+            engName: { contains: search, mode: "insensitive" as const },
+          },
+        },
+        {
+          student: {
+            studentId: { contains: search, mode: "insensitive" as const },
+          },
+        },
+        {
           course: {
             title: { contains: search, mode: "insensitive" as const },
           },

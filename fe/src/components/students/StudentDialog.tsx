@@ -161,7 +161,9 @@ export function StudentDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">
+                First name <span className="text-red-500">*</span>
+              </Label>
               <Input id="firstName" {...register("firstName")} />
               {errors.firstName && (
                 <p className="text-sm text-red-500">
@@ -170,7 +172,9 @@ export function StudentDialog({
               )}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName">
+                Last name <span className="text-red-500">*</span>
+              </Label>
               <Input id="lastName" {...register("lastName")} />
               {errors.lastName && (
                 <p className="text-sm text-red-500">
@@ -181,7 +185,9 @@ export function StudentDialog({
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="engName">English name</Label>
+            <Label htmlFor="engName">
+              English name <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="engName"
               {...register("engName")}
@@ -194,7 +200,9 @@ export function StudentDialog({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="dateOfBirth">Date of birth</Label>
+              <Label htmlFor="dateOfBirth">
+                Date of birth <span className="text-red-500">*</span>
+              </Label>
               <DatePicker
                 value={
                   watch("dateOfBirth")
