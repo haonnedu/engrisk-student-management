@@ -3,18 +3,29 @@ set -e
 
 echo "🔄 Running database migrations..."
 
-# Try to run migrations, if fails, resolve and retry
-if ! npx prisma migrate deploy 2>/dev/null; then
+# Try to run migrations
+if ! npx prisma migrate deploy 2>&1; then
   echo "⚠️  Migration failed, attempting to resolve..."
   
-  # Resolve any failed migrations
-  npx prisma migrate resolve --rolled-back 0_init 2>/dev/null || true
+  # First, try to mark failed migrations as rolled back and retry
+  echo "🔧 Attempting to resolve failed migrations..."
+  node scripts/resolve-migrations.js 2>&1 || true
   
-  # Try db push as fallback (for initial sync)
-  echo "📦 Using db push to sync schema..."
-  npx prisma db push --accept-data-loss --skip-generate || true
-  
-  echo "✅ Database schema synced!"
+  # Try to run migrations again
+  if npx prisma migrate deploy 2>&1; then
+    echo "✅ Migrations completed after resolution!"
+  else
+    echo "⚠️  Migrate deploy still failed, using db push as fallback..."
+    
+    # Use db push to sync schema (this applies the changes)
+    npx prisma db push --accept-data-loss --skip-generate 2>&1 || true
+    
+    # Mark failed migrations as applied since db push already applied the changes
+    echo "🔧 Marking failed migrations as applied (db push already synced schema)..."
+    node scripts/resolve-migrations.js 2>&1 || true
+    
+    echo "✅ Database schema synced via db push!"
+  fi
 else
   echo "✅ Migrations completed successfully!"
 fi

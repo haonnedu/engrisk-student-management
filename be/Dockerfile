@@ -43,6 +43,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nodejs:nodejs /app/healthcheck.js ./
+COPY --from=builder --chown=nodejs:nodejs /app/scripts ./scripts
 COPY --chown=nodejs:nodejs docker-entrypoint.sh ./
 
 # Clean up unnecessary files to save space
