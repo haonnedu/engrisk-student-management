@@ -306,7 +306,7 @@ export function HomeworkDialog({
           : 0;
       return {
         studentId: student.id,
-        studentName: `${student.firstName} ${student.lastName}`,
+        studentName: `${student.firstName} ${student.lastName}${student.engName ? ` (${student.engName})` : ''}`,
         average: Math.round(average * 10) / 10,
       };
     });
@@ -590,6 +590,9 @@ export function HomeworkDialog({
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                         <div className="font-medium">
                           {student.firstName} {student.lastName}
+                          {student.engName && (
+                            <span className="text-slate-500 ml-1">({student.engName})</span>
+                          )}
                         </div>
                         <div className="text-xs text-slate-500">
                           ({student.studentId}) • {classData?.name} -{" "}
@@ -624,19 +627,17 @@ export function HomeworkDialog({
                   ? "Homework Points Chart"
                   : "Student Performance Chart"}
               </span>
-              {selectedStudent && selectedStudent !== "all" && (
-                <span className="block sm:inline text-xs sm:text-sm font-normal text-muted-foreground sm:ml-2 mt-1 sm:mt-0">
-                  -{" "}
-                  {
-                    enrolledStudents.find((s: any) => s.id === selectedStudent)
-                      ?.firstName
-                  }{" "}
-                  {
-                    enrolledStudents.find((s: any) => s.id === selectedStudent)
-                      ?.lastName
-                  }
-                </span>
-              )}
+              {selectedStudent && selectedStudent !== "all" && (() => {
+                const student = enrolledStudents.find((s: any) => s.id === selectedStudent);
+                return (
+                  <span className="block sm:inline text-xs sm:text-sm font-normal text-muted-foreground sm:ml-2 mt-1 sm:mt-0">
+                    - {student?.firstName} {student?.lastName}
+                    {student?.engName && (
+                      <span className="ml-1">({student.engName})</span>
+                    )}
+                  </span>
+                );
+              })()}
             </h3>
             <div className="h-48 sm:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -743,6 +744,9 @@ export function HomeworkDialog({
                             <div className="flex flex-col">
                               <span className="font-medium">
                                 {s.firstName} {s.lastName}
+                                {s.engName && (
+                                  <span className="text-slate-500 ml-1">({s.engName})</span>
+                                )}
                               </span>
                               <span className="text-xs text-muted-foreground">{s.studentId}</span>
                             </div>
@@ -862,6 +866,9 @@ export function HomeworkDialog({
                           <div className="flex-1 min-w-0">
                             <div className="font-medium">
                               {student.firstName} {student.lastName}
+                              {student.engName && (
+                                <span className="text-slate-500 ml-1">({student.engName})</span>
+                              )}
                             </div>
                             <div className="text-xs text-slate-500">
                               {student.studentId} • {classData?.name} -{" "}
@@ -1146,10 +1153,13 @@ export function HomeworkDialog({
                           <div>
                             <div 
                               className="font-medium truncate max-w-[100px] sm:max-w-[150px]" 
-                              title={`${record.student?.firstName} ${record.student?.lastName}`}
+                              title={`${record.student?.firstName} ${record.student?.lastName}${record.student?.engName ? ` (${record.student?.engName})` : ''}`}
                             >
                               {record.student?.firstName}{" "}
                               {record.student?.lastName}
+                              {record.student?.engName && (
+                                <span className="text-slate-500 ml-1">({record.student?.engName})</span>
+                              )}
                             </div>
                             <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[100px] sm:max-w-[150px]">
                               {record.student?.studentId}

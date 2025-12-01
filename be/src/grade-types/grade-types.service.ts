@@ -34,23 +34,36 @@ export class GradeTypesService {
       distinct: ["studentId", "courseId"],
     });
 
-    // Check which grades already exist to avoid duplicates
-    const existingGrades = await this.prisma.grade.findMany({
-      where: {
-        gradeTypeId: gradeTypeId,
-        studentId: { in: enrollments.map((e) => e.studentId) },
-        courseId: { in: enrollments.map((e) => e.courseId) },
-      },
-      select: {
-        studentId: true,
-        courseId: true,
-      },
-    });
+    if (enrollments.length === 0) {
+      return;
+    }
 
-    // Create a set of existing grade combinations for quick lookup
-    const existingGradeKeys = new Set(
-      existingGrades.map((g) => `${g.studentId}-${g.courseId}`)
-    );
+    // Check which grades already exist to avoid duplicates
+    // Use OR condition to check for each specific (studentId, courseId) combination
+    // Batch the checks if there are many enrollments to avoid query size limits
+    const BATCH_SIZE = 500;
+    const existingGradeKeys = new Set<string>();
+
+    for (let i = 0; i < enrollments.length; i += BATCH_SIZE) {
+      const batch = enrollments.slice(i, i + BATCH_SIZE);
+      const existingGrades = await this.prisma.grade.findMany({
+        where: {
+          gradeTypeId: gradeTypeId,
+          OR: batch.map((e) => ({
+            studentId: e.studentId,
+            courseId: e.courseId,
+          })),
+        },
+        select: {
+          studentId: true,
+          courseId: true,
+        },
+      });
+
+      existingGrades.forEach((g) => {
+        existingGradeKeys.add(`${g.studentId}-${g.courseId}`);
+      });
+    }
 
     // Filter out enrollments that already have grades for this grade type
     const newGrades = enrollments.filter(
