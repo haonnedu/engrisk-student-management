@@ -108,18 +108,39 @@ export function useGradesByClass(classId: string, page = 1, limit = 10) {
         };
       }
 
-      // Get all student IDs from paginated enrollments
+      // Get all student IDs and course IDs from paginated enrollments
       const studentIds = enrollments.map(
         (enrollment: any) => enrollment.studentId
       );
+      const courseIds = enrollments.map(
+        (enrollment: any) => enrollment.courseId
+      );
+      // Get unique course IDs
+      const uniqueCourseIds = [...new Set(courseIds)];
 
       // Get grades for these specific students
       const gradesResponse = await api.get(
-        `/grades?studentIds=${studentIds.join(",")}&limit=100`
+        `/grades?studentIds=${studentIds.join(",")}&limit=1000`
       );
 
+      // Filter grades to only include those for courses in this section
+      const allGrades = gradesResponse.data.data || [];
+      const filteredGrades = allGrades.filter(
+        (grade: any) => uniqueCourseIds.includes(grade.courseId)
+      );
+
+      // Debug logging
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔍 Filtering grades:", {
+          totalGrades: allGrades.length,
+          filteredGrades: filteredGrades.length,
+          courseIds: uniqueCourseIds,
+          sampleGrade: filteredGrades[0]
+        });
+      }
+
       return {
-        data: gradesResponse.data.data,
+        data: filteredGrades,
         meta: {
           total: totalStudents,
           page,

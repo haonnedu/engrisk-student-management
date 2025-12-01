@@ -84,6 +84,13 @@ export default function ClassGradesPage() {
       }
     > = {};
 
+    // Debug: Log grades to see what we're working with
+    if (process.env.NODE_ENV === 'development') {
+      console.log("📊 Class grades data:", classGrades);
+      console.log("📋 Grade types to display:", gradeTypes);
+      console.log("📈 Total grades received:", classGrades.length);
+    }
+
     classGrades.forEach((grade: any) => {
       const studentId = grade.studentId;
       if (!grouped[studentId]) {
@@ -97,6 +104,21 @@ export default function ClassGradesPage() {
       }
       grouped[studentId].grades.push(grade);
     });
+
+    // Debug: Log grouped grades
+    if (process.env.NODE_ENV === 'development') {
+      console.log("👥 Grouped student grades:", Object.keys(grouped).map(key => ({
+        studentId: key,
+        studentName: grouped[key].student?.firstName + ' ' + grouped[key].student?.lastName,
+        gradesCount: grouped[key].grades.length,
+        grades: grouped[key].grades.map((g: any) => ({
+          gradeTypeId: g.gradeTypeId,
+          gradeTypeIdFromObject: g.gradeType?.id,
+          gradeTypeCode: g.gradeType?.code,
+          grade: g.grade
+        }))
+      })));
+    }
 
     // Calculate averages and grade levels
     Object.values(grouped).forEach((studentData) => {
@@ -305,8 +327,12 @@ export default function ClassGradesPage() {
                       </Badge>
                     </TableCell>
                     {gradeTypes.map((gradeType) => {
+                      // Try multiple ways to match grade with gradeType
                       const grade = studentData.grades.find(
-                        (g) => g.gradeType?.id === gradeType.id
+                        (g) => 
+                          g.gradeType?.id === gradeType.id || 
+                          g.gradeTypeId === gradeType.id ||
+                          (g.gradeType && g.gradeType.code === gradeType.code)
                       );
                       return (
                         <TableCell key={gradeType.id} className="text-center">
