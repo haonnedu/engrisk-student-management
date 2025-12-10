@@ -78,12 +78,12 @@ export function StudentGradeChartDialog({
     return sum / gradesWithValues.length;
   }, [grades]);
 
-  // Color function for bars
+  // Color function for bars (based on 100-point scale)
   const getColor = (grade: number, hasGrade: boolean) => {
     if (!hasGrade) return "#e5e7eb"; // Gray for no grade
-    if (grade >= 8.5) return "#10b981"; // Green
-    if (grade >= 7.0) return "#3b82f6"; // Blue
-    if (grade >= 5.5) return "#f59e0b"; // Yellow
+    if (grade >= 85) return "#10b981"; // Green
+    if (grade >= 70) return "#3b82f6"; // Blue
+    if (grade >= 55) return "#f59e0b"; // Yellow
     return "#ef4444"; // Red
   };
 
@@ -176,20 +176,20 @@ export function StudentGradeChartDialog({
                         {item.hasGrade ? (
                           <span
                             className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                              item.grade >= 8.5
+                              item.grade >= 85
                                 ? "bg-green-100 text-green-800"
-                                : item.grade >= 7.0
+                                : item.grade >= 70
                                 ? "bg-blue-100 text-blue-800"
-                                : item.grade >= 5.5
+                                : item.grade >= 55
                                 ? "bg-yellow-100 text-yellow-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {item.grade >= 8.5
+                            {item.grade >= 85
                               ? "Excellent"
-                              : item.grade >= 7.0
+                              : item.grade >= 70
                               ? "Good"
-                              : item.grade >= 5.5
+                              : item.grade >= 55
                               ? "Average"
                               : "Needs Improvement"}
                           </span>

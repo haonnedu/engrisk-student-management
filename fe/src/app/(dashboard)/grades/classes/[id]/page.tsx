@@ -127,12 +127,12 @@ export default function ClassGradesPage() {
           ? scores.reduce((sum, score) => sum + score, 0) / scores.length
           : 0;
 
-      // Determine grade level
-      if (studentData.average >= 8.5) {
+      // Determine grade level (based on 100-point scale)
+      if (studentData.average >= 85) {
         studentData.gradeLevel = "Excellent";
-      } else if (studentData.average >= 7.0) {
+      } else if (studentData.average >= 70) {
         studentData.gradeLevel = "Good";
-      } else if (studentData.average >= 5.5) {
+      } else if (studentData.average >= 55) {
         studentData.gradeLevel = "Average";
       } else {
         studentData.gradeLevel = "Needs Improvement";
@@ -332,11 +332,11 @@ export default function ClassGradesPage() {
                     <TableCell>
                       <Badge
                         variant={
-                          studentData.average >= 8.5
+                          studentData.average >= 85
                             ? "default"
-                            : studentData.average >= 7.0
+                            : studentData.average >= 70
                             ? "secondary"
-                            : studentData.average >= 5.5
+                            : studentData.average >= 55
                             ? "outline"
                             : "destructive"
                         }
