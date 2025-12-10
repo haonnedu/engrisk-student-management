@@ -286,9 +286,9 @@ export default function ClassGradesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">No</TableHead>
-                  <TableHead className="min-w-[150px]">Name</TableHead>
-                  <TableHead className="min-w-[120px]">English Name</TableHead>
+                  <TableHead className="w-12 sticky left-0 z-10 bg-background border-r border-border">No</TableHead>
+                  <TableHead className="min-w-[150px] sticky left-[33px] z-10 bg-background border-r border-border">Name</TableHead>
+                  <TableHead className="min-w-[120px] sticky left-[182px] z-10 bg-background border-r border-border">English Name</TableHead>
                   <TableHead className="min-w-[100px]">Class</TableHead>
                   <TableHead className="min-w-[80px]">Grade</TableHead>
                   {gradeTypes.map((gradeType) => (
@@ -313,8 +313,8 @@ export default function ClassGradesPage() {
               <TableBody>
                 {filteredStudents.map((studentData, index) => (
                   <TableRow key={studentData.student.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium sticky left-0 z-10 bg-background border-r border-border">{index + 1}</TableCell>
+                    <TableCell className="sticky left-[33px] z-10 bg-background border-r border-border">
                       <div>
                         <div className="font-medium">
                           {studentData.student.firstName}{" "}
@@ -325,7 +325,7 @@ export default function ClassGradesPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{studentData.student.engName || "-"}</TableCell>
+                    <TableCell className="sticky left-[182px] z-10 bg-background border-r border-border">{studentData.student.engName || "-"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{classInfo.code}</Badge>
                     </TableCell>
