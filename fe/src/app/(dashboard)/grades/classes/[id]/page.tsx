@@ -31,6 +31,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { EditableGradeCell } from "@/components/grades/EditableGradeCell";
 import { HomeworkGradeCell } from "@/components/grades/HomeworkGradeCell";
 import { SectionGradeTypesDialog } from "@/components/grades/SectionGradeTypesDialog";
+import { StudentGradeChartDialog } from "@/components/grades/StudentGradeChartDialog";
 
 export default function ClassGradesPage() {
   const params = useParams();
@@ -80,7 +81,6 @@ export default function ClassGradesPage() {
         grades: any[];
         average: number;
         gradeLevel: string;
-        warnings: string[];
       }
     > = {};
 
@@ -99,7 +99,6 @@ export default function ClassGradesPage() {
           grades: [],
           average: 0,
           gradeLevel: "",
-          warnings: [],
         };
       }
       grouped[studentId].grades.push(grade);
@@ -138,22 +137,33 @@ export default function ClassGradesPage() {
       } else {
         studentData.gradeLevel = "Needs Improvement";
       }
-
-      // Generate warnings
-      studentData.grades.forEach((grade: any) => {
-        if (grade.grade < 5) {
-          studentData.warnings.push(`${grade.gradeType}: ${grade.grade}`);
-        }
-      });
     });
 
     return grouped;
   }, [classGrades]);
 
-  // Filter by grade type
+  // Filter by grade type and search, then sort by student name for consistent ordering
   const filteredStudents = useMemo(() => {
     let filtered = Object.values(studentGrades);
 
+    // Filter by search term
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter((studentData) => {
+        const firstName = studentData.student?.firstName || "";
+        const lastName = studentData.student?.lastName || "";
+        const engName = studentData.student?.engName || "";
+        const studentId = studentData.student?.studentId || "";
+        const fullName = `${firstName} ${lastName}`.toLowerCase();
+        return (
+          fullName.includes(searchLower) ||
+          engName.toLowerCase().includes(searchLower) ||
+          studentId.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // Filter by grade type
     if (gradeTypeFilter !== "all") {
       filtered = filtered.filter((studentData) =>
         studentData.grades.some(
@@ -162,8 +172,16 @@ export default function ClassGradesPage() {
       );
     }
 
+    // Sort by student name (firstName + lastName) to maintain consistent order
+    // This prevents rows from jumping around when grades are updated
+    filtered.sort((a, b) => {
+      const nameA = `${a.student?.firstName || ""} ${a.student?.lastName || ""}`.trim().toLowerCase();
+      const nameB = `${b.student?.firstName || ""} ${b.student?.lastName || ""}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
     return filtered;
-  }, [studentGrades, gradeTypeFilter]);
+  }, [studentGrades, gradeTypeFilter, search]);
 
   if (isLoading) {
     return (
@@ -288,7 +306,7 @@ export default function ClassGradesPage() {
                     Grade Level
                   </TableHead>
                   <TableHead className="min-w-[100px] text-center">
-                    Warnings
+                    Chart
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -375,14 +393,11 @@ export default function ClassGradesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      {studentData.warnings.length > 0 ? (
-                        <Badge variant="destructive" className="text-xs">
-                          {studentData.warnings.length} warning
-                          {studentData.warnings.length > 1 ? "s" : ""}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
+                      <StudentGradeChartDialog
+                        student={studentData.student}
+                        grades={studentData.grades}
+                        gradeTypes={gradeTypes}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
