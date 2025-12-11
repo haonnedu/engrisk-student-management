@@ -2,7 +2,8 @@
   "parent": {
     "nav": {
       "myGrades": "Bảng Điểm",
-      "myProfile": "Hồ Sơ"
+      "myProfile": "Hồ Sơ",
+      "changePassword": "Đổi Mật Khẩu"
     },
     "grades": {
       "title": "Bảng Điểm Của Tôi",
@@ -72,6 +73,25 @@
       "loading": "Đang tải...",
       "error": "Lỗi",
       "redirecting": "Đang chuyển hướng..."
+    },
+    "changePassword": {
+      "title": "Đổi Mật Khẩu",
+      "description": "Thay đổi mật khẩu tài khoản của bạn",
+      "changePassword": "Đổi Mật Khẩu",
+      "enterPasswords": "Nhập mật khẩu hiện tại và mật khẩu mới",
+      "currentPassword": "Mật Khẩu Hiện Tại",
+      "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+      "newPassword": "Mật Khẩu Mới",
+      "newPasswordPlaceholder": "Nhập mật khẩu mới",
+      "confirmPassword": "Xác Nhận Mật Khẩu",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+      "passwordRequirement": "Mật khẩu phải có ít nhất 6 ký tự",
+      "changePasswordBtn": "Đổi Mật Khẩu",
+      "changing": "Đang đổi...",
+      "success": "Đổi mật khẩu thành công!",
+      "failed": "Không thể đổi mật khẩu",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp",
+      "passwordTooShort": "Mật khẩu mới phải có ít nhất 6 ký tự"
     }
   }
 }

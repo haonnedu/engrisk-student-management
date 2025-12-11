@@ -3,6 +3,7 @@
 import {
   GraduationCap,
   UserCircle,
+  KeyRound,
 } from "lucide-react";
 
 import {
@@ -32,6 +33,11 @@ export function ParentSidebar() {
       title: t('myProfile'),
       url: "/parent/profile",
       icon: UserCircle,
+    },
+    {
+      title: t('changePassword'),
+      url: "/parent/change-password",
+      icon: KeyRound,
     },
   ];
 

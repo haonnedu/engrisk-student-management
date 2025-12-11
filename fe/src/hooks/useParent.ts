@@ -88,3 +88,18 @@ export function useUpdateMyProfile() {
   });
 }
 
+// Change password
+export type ChangePasswordDto = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: ChangePasswordDto): Promise<{ message: string }> => {
+      const response = await api.post("/auth/change-password", data);
+      return response.data;
+    },
+  });
+}
+

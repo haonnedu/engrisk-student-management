@@ -2,7 +2,8 @@
   "parent": {
     "nav": {
       "myGrades": "My Grades",
-      "myProfile": "My Profile"
+      "myProfile": "My Profile",
+      "changePassword": "Change Password"
     },
     "grades": {
       "title": "My Grades",
@@ -72,6 +73,25 @@
       "loading": "Loading...",
       "error": "Error",
       "redirecting": "Redirecting..."
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Change your account password",
+      "changePassword": "Change Password",
+      "enterPasswords": "Enter your current password and new password",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter new password",
+      "passwordRequirement": "Password must be at least 6 characters",
+      "changePasswordBtn": "Change Password",
+      "changing": "Changing...",
+      "success": "Password changed successfully!",
+      "failed": "Failed to change password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "New password must be at least 6 characters"
     }
   }
 }
