@@ -301,14 +301,17 @@ export class StudentsService {
         sectionGradeTypes.map((sgt) => sgt.gradeTypeId)
       );
 
-      // Filter grades to only include those with gradeTypeId in allowed list
-      student.grades = student.grades.filter((grade) =>
-        allowedGradeTypeIds.has(grade.gradeTypeId)
-      );
-    } else {
-      // If no sections, return empty grades array
-      student.grades = [];
+      // Only filter if we have section grade types configured
+      // If no section grade types configured, show all grades
+      if (allowedGradeTypeIds.size > 0) {
+        // Filter grades to only include those with gradeTypeId in allowed list
+        student.grades = student.grades.filter((grade) =>
+          allowedGradeTypeIds.has(grade.gradeTypeId)
+        );
+      }
+      // If no section grade types configured, keep all grades (don't filter)
     }
+    // If no sections/enrollments, still return all grades (don't clear them)
 
     return student;
   }

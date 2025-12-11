@@ -46,16 +46,17 @@ export default function ParentGradesPage() {
   const [globalFilter, setGlobalFilter] = useState("");
 
   const gradesData: GradeRow[] = useMemo(() => {
-    if (!profile?.grades) return [];
+    if (!profile) return [];
+    if (!profile.grades || !Array.isArray(profile.grades)) return [];
     
     return profile.grades.map((grade) => ({
       id: grade.id,
-      courseName: grade.course.title,
-      courseCode: grade.course.courseCode,
-      gradeTypeName: grade.gradeType.name,
-      gradeTypeCode: grade.gradeType.code,
-      grade: grade.grade,
-      weight: grade.gradeType.weight,
+      courseName: grade.course?.title || "Unknown Course",
+      courseCode: grade.course?.courseCode || "N/A",
+      gradeTypeName: grade.gradeType?.name || "Unknown",
+      gradeTypeCode: grade.gradeType?.code || "N/A",
+      grade: grade.grade || 0,
+      weight: grade.gradeType?.weight || 1,
       comments: grade.comments,
       gradedAt: grade.gradedAt,
     }));
@@ -180,6 +181,7 @@ export default function ParentGradesPage() {
     const errorMessage = (error as any).message || 
                         (error as any).response?.data?.message || 
                         t('errorMessage');
+    
     return (
       <div className="flex h-64 flex-col items-center justify-center text-red-500 gap-2">
         <p className="font-semibold">{t('errorLoading')}</p>

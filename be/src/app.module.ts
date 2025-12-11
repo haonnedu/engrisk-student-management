@@ -14,6 +14,7 @@ import { GradeTypesModule } from "./grade-types/grade-types.module";
 import { TeachersModule } from "./teachers/teachers.module";
 import { TimesheetsModule } from "./timesheets/timesheets.module";
 import { HealthModule } from "./health/health.module";
+import { GoogleDriveModule } from "./google-drive/google-drive.module";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HealthModule } from "./health/health.module";
     TeachersModule,
     TimesheetsModule,
     HealthModule,
+    GoogleDriveModule,
   ],
 })
 export class AppModule {}

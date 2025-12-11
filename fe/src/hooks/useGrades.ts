@@ -129,16 +129,6 @@ export function useGradesByClass(classId: string, page = 1, limit = 10) {
         (grade: any) => uniqueCourseIds.includes(grade.courseId)
       );
 
-      // Debug logging
-      if (process.env.NODE_ENV === 'development') {
-        console.log("🔍 Filtering grades:", {
-          totalGrades: allGrades.length,
-          filteredGrades: filteredGrades.length,
-          courseIds: uniqueCourseIds,
-          sampleGrade: filteredGrades[0]
-        });
-      }
-
       return {
         data: filteredGrades,
         meta: {

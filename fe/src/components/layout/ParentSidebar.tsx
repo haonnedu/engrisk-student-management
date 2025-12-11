@@ -4,6 +4,7 @@ import {
   GraduationCap,
   UserCircle,
   KeyRound,
+  BookOpen,
 } from "lucide-react";
 
 import {
@@ -28,6 +29,11 @@ export function ParentSidebar() {
       title: t('myGrades'),
       url: "/parent/grades",
       icon: GraduationCap,
+    },
+    {
+      title: "Homework",
+      url: "/parent/homework",
+      icon: BookOpen,
     },
     {
       title: t('myProfile'),

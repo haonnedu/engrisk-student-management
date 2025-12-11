@@ -34,7 +34,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Trash2, BarChart3, Edit } from "lucide-react";
+import { Plus, Trash2, BarChart3, Edit, FileText, Video, Image as ImageIcon, Eye } from "lucide-react";
 import { useStudents } from "@/hooks/useStudents";
 import { useClass } from "@/hooks/useClasses";
 import { useGradesByClass } from "@/hooks/useGrades";
@@ -45,6 +45,7 @@ import {
   useDeleteHomework,
   useCreateHomeworkBulk,
 } from "@/hooks/useHomework";
+import { useHomeworkSubmissions } from "@/hooks/useHomeworkSubmissions";
 import { api } from "@/lib/api";
 import type {
   Homework,
@@ -90,6 +91,110 @@ type HomeworkDialogProps = {
   trigger: React.ReactNode;
   studentId?: string;
 };
+
+// Component to view homework submission files
+function HomeworkFilesViewer({ homeworkId, studentId }: { homeworkId: string; studentId: string }) {
+  const { data: submissions } = useHomeworkSubmissions(homeworkId, studentId);
+  const submission = submissions?.[0];
+  const files = submission?.files || [];
+  const [open, setOpen] = useState(false);
+
+  if (files.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+        title={`View ${files.length} uploaded file${files.length > 1 ? 's' : ''}`}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Uploaded Files</DialogTitle>
+            <DialogDescription>
+              Files submitted for this homework assignment
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {files.map((file) => {
+              const isVideo = file.mimeType?.startsWith('video/');
+              const isImage = file.mimeType?.startsWith('image/');
+              const fileSize = file.fileSize 
+                ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
+                : 'Unknown size';
+              
+              // Create view URL from downloadUrl or googleDriveFileId
+              const viewUrl = file.downloadUrl 
+                ? file.downloadUrl 
+                : file.googleDriveFileId 
+                  ? `https://drive.google.com/file/d/${file.googleDriveFileId}/view`
+                  : file.fileName
+                    ? `https://drive.google.com/file/d/${file.fileName}/view`
+                    : null;
+              
+              return (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between rounded-md border p-3 hover:bg-accent transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {isVideo ? (
+                      <Video className="h-5 w-5 text-red-500 flex-shrink-0" />
+                    ) : isImage ? (
+                      <ImageIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                    ) : (
+                      <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.originalFileName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {fileSize}
+                      </p>
+                    </div>
+                  </div>
+                  {viewUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="flex-shrink-0"
+                      title="View file"
+                    >
+                      <a
+                        href={viewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {submission?.comment && (
+            <div className="mt-4 p-3 bg-muted rounded-md">
+              <p className="text-sm font-medium mb-1">Student Comment:</p>
+              <p className="text-sm text-muted-foreground">{submission.comment}</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 export function HomeworkDialog({
   classId,
@@ -232,31 +337,17 @@ export function HomeworkDialog({
 
   // Filter records by selected student on frontend
   const filteredRecords = useMemo(() => {
-    console.log("Filtering homework records:", {
-      selectedStudent,
-      totalRecords: homeworkRecords.length,
-      records: homeworkRecords.map((r) => ({
-        id: r.id,
-        studentId: r.studentId,
-        title: r.title,
-      })),
-    });
-
     if (selectedStudent && selectedStudent !== "all") {
-      const filtered = homeworkRecords.filter(
+      return homeworkRecords.filter(
         (record) => record.studentId === selectedStudent
       );
-      console.log("Filtered records:", filtered.length);
-      return filtered;
     }
-    console.log("Showing all records:", homeworkRecords.length);
     return homeworkRecords;
   }, [homeworkRecords, selectedStudent]);
 
   // Auto-select student when dialog opens (only if studentId is provided)
   useEffect(() => {
     if (open && studentId) {
-      console.log("Auto-selecting student:", studentId);
       setSelectedStudent(studentId);
     } else if (open && !studentId) {
       // If no specific student, show all students
@@ -284,11 +375,6 @@ export function HomeworkDialog({
       setValue("studentId", selectedStudent);
     }
   }, [selectedStudent, setValue]);
-
-  // Debug selectedStudent changes
-  useEffect(() => {
-    console.log("Selected student changed:", selectedStudent);
-  }, [selectedStudent]);
 
   // Calculate average homework grade for each student
   const studentAverages = useMemo(() => {
@@ -513,14 +599,12 @@ export function HomeworkDialog({
 
       if (hwGradeRecord) {
         // Update existing HW grade
-        const response = await api.patch(`/grades/${hwGradeRecord.id}`, {
+        await api.patch(`/grades/${hwGradeRecord.id}`, {
           grade: Math.round(averageScore * 10) / 10,
         });
-
-        console.log("Updated HW grade:", response.data);
       }
     } catch (error) {
-      console.error("Error updating HW grade:", error);
+      // Error updating HW grade - silently fail
     }
   };
 
@@ -536,10 +620,9 @@ export function HomeworkDialog({
         await api.patch(`/grades/${hwGradeRecord.id}`, {
           grade: 0,
         });
-        console.log("Set HW grade to 0 for student:", studentId);
       }
     } catch (error) {
-      console.error("Error setting HW grade to 0:", error);
+      // Error setting HW grade to 0 - silently fail
     }
   };
 
@@ -1215,6 +1298,7 @@ export function HomeworkDialog({
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 flex-wrap">
+                            <HomeworkFilesViewer homeworkId={record.id} studentId={record.studentId} />
                             <Button
                               variant="ghost"
                               size="sm"
