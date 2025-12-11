@@ -117,14 +117,7 @@ export default function ParentGradesPage() {
           return <div className={color}>{grade.toFixed(1)}</div>;
         },
       },
-      {
-        header: t('weight'),
-        accessorKey: "weight",
-        cell: (info) => {
-          const weight = info.getValue() as number;
-          return <span className="text-sm">{(weight * 100).toFixed(0)}%</span>;
-        },
-      },
+
       {
         header: t('comments'),
         accessorKey: "comments",
