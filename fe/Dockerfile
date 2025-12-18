@@ -12,8 +12,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 # Clear any existing build cache to ensure clean build
-RUN rm -rf .next
+RUN rm -rf .next .next/cache node_modules/.cache
+# Clear npm cache and ensure clean environment
+RUN npm cache clean --force || true
 # Build with clean cache - this ensures clientReferenceManifest is generated correctly
+# The build must happen in Linux environment (Docker) to avoid Windows path issues
 RUN npm run build
 
 FROM node:18-alpine AS frontend-runner
