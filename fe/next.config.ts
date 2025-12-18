@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "2mb",
     },
   },
+  // Ensure consistent build ID to prevent manifest issues
+  // Remove generateBuildId to use Next.js default (based on git commit or timestamp)
+  // Custom build IDs can cause clientReferenceManifest issues
 };
 
 export default nextConfig;
