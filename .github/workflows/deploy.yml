@@ -67,6 +67,8 @@ jobs:
           # Limit build resources to avoid "no space left on device" errors
           platforms: linux/amd64
           no-cache-filter: ""
+          # For frontend, disable cache to ensure clean build
+          no-cache: ${{ matrix.name == 'frontend' && false }}
 
   deploy:
     runs-on: ubuntu-latest
