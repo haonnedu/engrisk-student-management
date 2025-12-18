@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         ? "https://msjenny.io.vn/api/v1"
         : "http://localhost:3001/api/v1",
   },
+  // Ensure proper handling of client components
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+  },
 };
 
 export default nextConfig;
