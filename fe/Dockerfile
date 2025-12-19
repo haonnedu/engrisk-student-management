@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Next.js app
+# Multi-stage Dockerfile for Next.js app with standalone output
 
 FROM node:18-alpine AS frontend-deps
 WORKDIR /app
@@ -15,25 +15,39 @@ ENV NODE_ENV=production
 RUN rm -rf .next .next/cache node_modules/.cache .turbo
 # Clear npm cache and ensure clean environment
 RUN npm cache clean --force || true
-# Ensure clean build environment - remove any potential conflicts
+# Ensure clean build environment
 RUN find . -name ".next" -type d -exec rm -rf {} + 2>/dev/null || true
-# Build with clean cache - this ensures clientReferenceManifest is generated correctly
-# The build must happen in Linux environment (Docker) to avoid Windows path issues
+# Build with clean cache - standalone mode
 RUN npm run build
-# Verify that client reference manifest files exist
-RUN ls -la .next/server/app/*/page_client-reference-manifest.js 2>/dev/null || echo "Warning: Manifest files check"
+# Verify build output
+RUN ls -la .next/ && ls -la .next/standalone/ 2>/dev/null || echo "Checking build output..."
 
 FROM node:18-alpine AS frontend-runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# Copy the complete .next directory including all manifests
-# Copy recursively to ensure all subdirectories and files are included
-COPY --from=frontend-builder /app/.next ./.next
-COPY --from=frontend-builder /app/node_modules ./node_modules
-COPY --from=frontend-builder /app/package*.json ./
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy necessary files for standalone mode
 COPY --from=frontend-builder /app/public ./public
-# Verify critical manifest files exist before starting
-RUN test -d .next/server || (echo "ERROR: .next/server directory missing" && exit 1)
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Use standalone server instead of npm start for better performance
+CMD ["node", "server.js"]

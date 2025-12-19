@@ -70,26 +70,27 @@ services:
     networks: [engrisk]
     environment:
       NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT_FE}
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       # Limit Node.js CPU usage
-      NODE_OPTIONS: "--max-old-space-size=768"
+      NODE_OPTIONS: "--max-old-space-size=512"
     ports:
-      - "${PORT_FE}:${PORT_FE}"
+      - "${PORT_FE}:3000"
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: '1.0'  # 50% of 2 cores (tăng lại để tận dụng tốt hơn)
+          memory: 768M
+          cpus: '0.8'  # Reduced CPU limit - standalone is more efficient
         reservations:
-          memory: 512M
-          cpus: '0.5'  # 25% of 2 cores reserved
+          memory: 384M
+          cpus: '0.3'
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:${PORT_FE}"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 30s
 
   nginx:
     image: ghcr.io/${IMAGE_NAME}-nginx:${TAG}

@@ -1,8 +1,4 @@
-import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
-import { QueryProvider } from "@/components/providers/QueryProvider";
-import { ToastProvider } from "@/components/providers/ToastProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { LocaleProvider } from "@/contexts/LocaleContext";
+import { Providers } from "@/components/providers/Providers";
 import { Metadata } from "next";
 import "./globals.css";
 
@@ -14,18 +10,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html>
-      <body>
-        <LocaleProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
-              <ToastProvider />
-            </QueryProvider>
-          </AuthProvider>
-        </LocaleProvider>
+    <html lang="vi" suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
