@@ -194,7 +194,7 @@ export default function ClassGradesPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/grades/classes")}
+            onClick={() => router.push("/dashboard/grades/classes")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Classes

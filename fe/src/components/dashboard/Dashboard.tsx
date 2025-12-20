@@ -46,7 +46,7 @@ export function Dashboard() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate("/courses")}
+            onClick={() => navigate("/dashboard/courses")}
             disabled={isNavigating}
           >
             {isNavigating ? (
@@ -58,7 +58,7 @@ export function Dashboard() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate("/grades/classes")}
+            onClick={() => navigate("/dashboard/grades/classes")}
             disabled={isNavigating}
           >
             {isNavigating ? (

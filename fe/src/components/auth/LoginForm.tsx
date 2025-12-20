@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,53 +16,53 @@ import { z } from "zod";
 import { useLogin } from "../../hooks/useAuth";
 import type { LoginResponse } from "@/types";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
-  emailOrPhone: z.string().min(1, "Email or phone is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  emailOrPhone: z.string().min(1, "Required"),
+  password: z.string().min(1, "Required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
+  const { login } = useAuth();
   const loginMutation = useLogin();
 
   const {
     register,
     handleSubmit,
-    reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      emailOrPhone: "",
+      password: "",
+    },
   });
 
-  const onSubmit = (values: LoginFormValues): void => {
-    loginMutation.mutate(values, {
-      onSuccess: (data: LoginResponse) => {
-        toast.success("Login successful!");
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        
-        // Redirect based on user role
-        let redirectUrl = "/";
-        if (data.user.role === "STUDENT") {
-          redirectUrl = "/parent/grades";
-        } else if (data.user.role === "TEACHER") {
-          redirectUrl = "/teacher/dashboard";
-        } else if (data.user.role === "ADMIN" || data.user.role === "SUPER_ADMIN") {
-          redirectUrl = "/";
-        }
-        
-        // Use window.location.href for successful login to ensure proper redirect
-        window.location.href = redirectUrl;
-      },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.message || "Login failed");
-        reset(); // Clear form fields after failed login
-      },
-    });
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      const data = await loginMutation.mutateAsync(values);
+      
+      // Use AuthContext login to save user data
+      login(data.user, data.access_token);
+      
+      toast.success("Login successful!");
+      
+      // Redirect based on user role
+      let redirectUrl = "/dashboard";
+      if (data.user.role === "STUDENT") {
+        redirectUrl = "/parent/grades";
+      } else if (data.user.role === "TEACHER") {
+        redirectUrl = "/teacher/dashboard";
+      }
+      
+      // Use window.location for full page reload to ensure auth state is refreshed
+      window.location.href = redirectUrl;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -82,13 +83,7 @@ export function LoginForm() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit(onSubmit)(e);
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label
                   htmlFor="emailOrPhone"
@@ -100,8 +95,9 @@ export function LoginForm() {
                   id="emailOrPhone"
                   type="text"
                   placeholder="admin@example.com or +84123456789"
+                  autoComplete="username"
                   {...register("emailOrPhone")}
-                  disabled={loginMutation.isPending}
+                  disabled={loginMutation.isPending || isSubmitting}
                   className="h-11 border-gray-300 focus:border-black focus:ring-black"
                 />
                 {errors.emailOrPhone && (
@@ -121,8 +117,9 @@ export function LoginForm() {
                   id="password"
                   type="password"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   {...register("password")}
-                  disabled={loginMutation.isPending}
+                  disabled={loginMutation.isPending || isSubmitting}
                   className="h-11 border-gray-300 focus:border-black focus:ring-black"
                 />
                 {errors.password && (
@@ -134,9 +131,9 @@ export function LoginForm() {
               <Button
                 type="submit"
                 className="w-full h-11 bg-black hover:bg-gray-800 text-white font-medium"
-                disabled={loginMutation.isPending}
+                disabled={loginMutation.isPending || isSubmitting}
               >
-                {loginMutation.isPending ? "Signing in..." : "Sign in"}
+                {loginMutation.isPending || isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
             <div className="mt-6 text-center text-sm text-gray-500">

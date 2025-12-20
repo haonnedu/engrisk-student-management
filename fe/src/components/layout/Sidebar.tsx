@@ -56,12 +56,12 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         title: "Students",
-        url: "/students",
+        url: "/dashboard/students",
         icon: Users,
       },
       {
         title: "Enrollments",
-        url: "/enrollments",
+        url: "/dashboard/enrollments",
         icon: UserPlus,
       },
     ],
@@ -72,12 +72,12 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         title: "Courses",
-        url: "/courses",
+        url: "/dashboard/courses",
         icon: BookMarked,
       },
       {
         title: "Classes",
-        url: "/classes",
+        url: "/dashboard/classes",
         icon: BookOpen,
       },
     ],
@@ -88,12 +88,12 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         title: "Grades",
-        url: "/grades/classes",
+        url: "/dashboard/grades/classes",
         icon: GraduationCap,
       },
       {
         title: "Grade Types",
-        url: "/grade-types",
+        url: "/dashboard/grade-types",
         icon: BarChart3,
       },
     ],
@@ -104,12 +104,12 @@ const menuGroups: MenuGroup[] = [
     items: [
       {
         title: "Teachers",
-        url: "/teachers",
+        url: "/dashboard/teachers",
         icon: UserCircle2,
       },
       {
         title: "Timesheets",
-        url: "/timesheets",
+        url: "/dashboard/timesheets",
         icon: Clock,
       },
     ],
@@ -121,12 +121,12 @@ const menuGroups: MenuGroup[] = [
 const standaloneItems: MenuItem[] = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: Home,
   },
   {
     title: "Attendance",
-    url: "/attendance",
+    url: "/dashboard/attendance",
     icon: UserCheck,
   },
 ];

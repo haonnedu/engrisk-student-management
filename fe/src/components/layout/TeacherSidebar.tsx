@@ -42,37 +42,37 @@ const teacherItems = [
 const adminItems = [
   {
     title: "Students",
-    url: "/students",
+    url: "/dashboard/students",
     icon: Users,
   },
   {
     title: "Enrollments",
-    url: "/enrollments",
+    url: "/dashboard/enrollments",
     icon: ClipboardList,
   },
   {
     title: "Courses",
-    url: "/courses",
+    url: "/dashboard/courses",
     icon: BookMarked,
   },
   {
     title: "Classes",
-    url: "/classes",
+    url: "/dashboard/classes",
     icon: BookOpen,
   },
   {
     title: "Grades",
-    url: "/grades/classes",
+    url: "/dashboard/grades/classes",
     icon: GraduationCap,
   },
   {
     title: "Attendance",
-    url: "/attendance",
+    url: "/dashboard/attendance",
     icon: UserCheck,
   },
   {
     title: "Grade Types",
-    url: "/grade-types",
+    url: "/dashboard/grade-types",
     icon: BarChart3,
   },
 ];
@@ -122,4 +122,3 @@ export function TeacherSidebar() {
     </Sidebar>
   );
 }
-

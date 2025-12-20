@@ -16,12 +16,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/students/StudentDialog";
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Student } from "@/hooks/useStudents";
+import { useState } from "react";
 
 export function buildStudentColumns(
   handleDelete: (id: string) => void
@@ -139,40 +139,59 @@ export function buildStudentColumns(
     },
     {
       header: "Actions",
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-              <div>
-                <StudentDialog
-                  mode="edit"
-                  student={row.original}
-                  trigger={
-                    <button className="flex w-full items-center">
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </button>
-                  }
-                  onSaved={undefined}
-                />
-              </div>
-            </DropdownMenuItem>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+      id: "actions",
+      cell: ({ row }) => {
+        const [editDialogOpen, setEditDialogOpen] = useState(false);
+        const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+        return (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+                >
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end"
+                className="z-[100] min-w-[160px]"
+                sideOffset={4}
+              >
+                <DropdownMenuItem 
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-red-600"
-                  onSelect={(e) => e.preventDefault()}
+                  className="text-red-600 focus:text-red-600"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setDeleteDialogOpen(true);
+                  }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
-              </AlertDialogTrigger>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <StudentDialog
+              mode="edit"
+              student={row.original}
+              open={editDialogOpen}
+              onOpenChange={setEditDialogOpen}
+              onSaved={undefined}
+            />
+
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete student?</AlertDialogTitle>
@@ -182,19 +201,24 @@ export function buildStudentColumns(
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+                    Cancel
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-red-600 hover:bg-red-700"
-                    onClick={() => handleDelete(row.original.id)}
+                    onClick={() => {
+                      handleDelete(row.original.id);
+                      setDeleteDialogOpen(false);
+                    }}
                   >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
+          </>
+        );
+      },
     },
   ];
 }

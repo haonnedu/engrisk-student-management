@@ -25,8 +25,10 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   // Check if current route is a parent route
   const isParentRoute = pathname?.startsWith("/parent");
-  // Teacher portal routes (not /teachers which is admin page for managing teachers)
+  // Teacher portal routes (not /dashboard/teachers which is admin page for managing teachers)
   const isTeacherRoute = pathname === "/teacher" || pathname?.startsWith("/teacher/");
+  // Dashboard routes (admin routes)
+  const isDashboardRoute = pathname?.startsWith("/dashboard");
 
   // Redirect to login if not authenticated and not on auth route
   useEffect(() => {
@@ -39,6 +41,18 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   useEffect(() => {
     if (!isLoading && isAuthenticated && user && !isAuthRoute) {
       const currentPath = pathname || "/";
+      
+      // Redirect root to dashboard
+      if (currentPath === "/") {
+        if (user.role === "STUDENT") {
+          router.push("/parent/grades");
+        } else if (user.role === "TEACHER") {
+          router.push("/teacher/dashboard");
+        } else {
+          router.push("/dashboard");
+        }
+        return;
+      }
       
       // Students can only access parent portal
       if (user.role === "STUDENT") {
@@ -56,11 +70,11 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       // Admins and Super Admins have access to everything except student portal
       else if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
         if (isParentRoute) {
-          router.push("/");
+          router.push("/dashboard");
         }
       }
     }
-  }, [isLoading, isAuthenticated, user, isParentRoute, isTeacherRoute, isAuthRoute, router, pathname]);
+  }, [isLoading, isAuthenticated, user, isParentRoute, isTeacherRoute, isDashboardRoute, isAuthRoute, router, pathname]);
 
   // If it's an auth route, render children directly without sidebar
   if (isAuthRoute) {

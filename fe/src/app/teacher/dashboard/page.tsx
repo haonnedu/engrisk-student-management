@@ -106,7 +106,7 @@ export default function TeacherDashboardPage() {
             <CardDescription>View and manage students</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/students">
+            <Link href="/dashboard/students">
               <Button className="w-full" variant="outline">
                 <Users className="mr-2 h-4 w-4" />
                 View Students
@@ -121,7 +121,7 @@ export default function TeacherDashboardPage() {
             <CardDescription>Enter and manage grades</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/grades/classes">
+            <Link href="/dashboard/grades/classes">
               <Button className="w-full" variant="outline">
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Manage Grades

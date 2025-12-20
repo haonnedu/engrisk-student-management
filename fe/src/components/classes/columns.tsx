@@ -113,10 +113,13 @@ export function buildClassColumns(
       cell: ({ row }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <button 
+              type="button"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+            >
               <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
@@ -134,14 +137,14 @@ export function buildClassColumns(
               </div>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => router?.push(`/classes/${row.original.id}/grades`)}
+              onClick={() => router?.push(`/dashboard/classes/${row.original.id}/grades`)}
             >
               <BookOpen className="mr-2 h-4 w-4" />
               Grades
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() =>
-                router?.push(`/classes/${row.original.id}/attendance`)
+                router?.push(`/dashboard/classes/${row.original.id}/attendance`)
               }
             >
               <Users className="mr-2 h-4 w-4" />
