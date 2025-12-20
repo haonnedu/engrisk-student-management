@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Next.js app
+# Multi-stage Dockerfile for Next.js 14 app
 
 FROM node:18-alpine AS deps
 WORKDIR /app
@@ -13,10 +13,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Clean previous build
+# Clean and build
 RUN rm -rf .next
-
-# Build
 RUN npm run build
 
 FROM node:18-alpine AS runner
@@ -25,22 +23,22 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
-# Set proper ownership
-RUN chown -R nextjs:nodejs /app
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

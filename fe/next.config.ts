@@ -7,13 +7,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable source maps in production
   productionBrowserSourceMaps: false,
-  // Basic optimizations
   compress: true,
   poweredByHeader: false,
-  // Disable strict mode to reduce double-renders
   reactStrictMode: false,
+  // Standalone output for Docker
+  output: "standalone",
 };
 
 export default nextConfig;
