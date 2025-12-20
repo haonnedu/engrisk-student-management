@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useState } from "react";
-import { useClasses } from "@/hooks/useClasses";
+import { useClasses, type ClassSection } from "@/hooks/useClasses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,11 +53,11 @@ export default function GradesClassesPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {classesData?.data?.map((classItem) => (
+        {classesData?.data?.map((classItem: ClassSection) => (
           <Card
             key={classItem.id}
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push(`/grades/classes/${classItem.id}`)}
+            onClick={() => router.push(`/dashboard/grades/classes/${classItem.id}`)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -100,7 +100,7 @@ export default function GradesClassesPage() {
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/grades/classes/${classItem.id}`);
+                    router.push(`/dashboard/grades/classes/${classItem.id}`);
                   }}
                 >
                   <GraduationCap className="mr-2 h-4 w-4" />
