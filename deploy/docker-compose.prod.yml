@@ -71,26 +71,25 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: 3000
-      HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      # Limit Node.js CPU usage
+      # Limit Node.js memory usage
       NODE_OPTIONS: "--max-old-space-size=512"
     ports:
       - "${PORT_FE}:3000"
     deploy:
       resources:
         limits:
-          memory: 768M
-          cpus: '0.8'  # Reduced CPU limit - standalone is more efficient
+          memory: 1G
+          cpus: '1.0'
         reservations:
-          memory: 384M
-          cpus: '0.3'
+          memory: 512M
+          cpus: '0.5'
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
 
   nginx:
     image: ghcr.io/${IMAGE_NAME}-nginx:${TAG}
