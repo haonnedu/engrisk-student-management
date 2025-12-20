@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:prod": "cross-env NODE_ENV=production next build",
+    "start:prod": "cross-env NODE_ENV=production next start",
+    "test:prod": "npm run build:prod && npm run start:prod",
     "lint": "eslint",
     "openapi:gen": "openapi-typescript http://localhost:3001/api/docs-json -o src/types/api.d.ts"
   },
@@ -49,6 +52,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "14.2.15",
     "openapi-typescript": "^7.4.1",
