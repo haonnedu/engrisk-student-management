@@ -1,14 +1,8 @@
-import { Providers } from "@/components/providers/Providers";
-import { Metadata } from "next";
-import "./globals.css";
+"use client";
 
-export const metadata: Metadata = {
-  title: "EngRisk Student Management",
-  description: "Student Management System",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
+import { Providers } from "@/components/providers/Providers";
+import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
+import "./globals.css";
 
 export default function RootLayout({
   children,
@@ -18,7 +12,9 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <Providers>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </Providers>
       </body>
     </html>
   );
