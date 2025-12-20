@@ -4,7 +4,7 @@ export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string } | null;
   reset: () => void;
 }) {
   return (
@@ -21,6 +21,11 @@ export default function GlobalError({
           <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
             Something went wrong!
           </h2>
+          {error && error.message && (
+            <p style={{ marginBottom: "1rem", color: "#666" }}>
+              {error.message}
+            </p>
+          )}
           <button
             onClick={() => reset()}
             style={{

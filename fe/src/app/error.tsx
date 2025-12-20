@@ -6,18 +6,20 @@ export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string } | null;
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Application error:", error);
+    if (error) {
+      console.error("Application error:", error);
+    }
   }, [error]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
       <p className="text-muted-foreground mb-4">
-        {error.message || "An unexpected error occurred"}
+        {error?.message || "An unexpected error occurred"}
       </p>
       <button
         onClick={() => reset()}
