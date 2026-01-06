@@ -69,7 +69,7 @@ function getTodayDate(): string {
 const homeworkSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(),
   points: z
     .number()
     .min(0, "Points must be at least 0")
@@ -999,7 +999,7 @@ export function HomeworkDialog({
                     htmlFor="description"
                     className="text-sm font-medium text-slate-700"
                   >
-                    Description *
+                    Description
                   </Label>
                   <Textarea
                     id="description"

@@ -162,9 +162,10 @@ export default function AttendancePage() {
 
   if (error) {
     console.error("Attendance error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return (
       <div className="flex h-64 items-center justify-center text-red-500">
-        Error loading attendance data: {error.message}
+        Error loading attendance data: {errorMessage}
       </div>
     );
   }
