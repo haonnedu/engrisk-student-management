@@ -32,6 +32,8 @@ import { EditableGradeCell } from "@/components/grades/EditableGradeCell";
 import { HomeworkGradeCell } from "@/components/grades/HomeworkGradeCell";
 import { SectionGradeTypesDialog } from "@/components/grades/SectionGradeTypesDialog";
 import { StudentGradeChartDialog } from "@/components/grades/StudentGradeChartDialog";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 export default function ClassGradesPage() {
   const params = useParams();
@@ -42,6 +44,7 @@ export default function ClassGradesPage() {
   const [gradeTypeFilter, setGradeTypeFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: classData } = useClass(classId);
   const {
@@ -162,6 +165,34 @@ export default function ClassGradesPage() {
     return filtered;
   }, [studentGrades, gradeTypeFilter, search]);
 
+  // Export grades to Excel
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const response = await api.get(`/grades/export/${classId}`, {
+        responseType: "blob",
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `grades-${classInfo?.code || classId}-${timestamp}.xlsx`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Grades exported successfully!");
+    } catch (error: any) {
+      console.error("Export error:", error);
+      toast.error(error.response?.data?.message || "Failed to export grades");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -213,9 +244,9 @@ export default function ClassGradesPage() {
             sectionId={classId}
             sectionName={classInfo.name}
           />
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportExcel} disabled={isExporting}>
             <Download className="mr-2 h-4 w-4" />
-            Export
+            {isExporting ? "Exporting..." : "Export Excel"}
           </Button>
         </div>
       </div>
