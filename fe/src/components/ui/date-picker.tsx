@@ -35,11 +35,17 @@ export function DatePicker({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <button
           type="button"
           disabled={disabled}
+          onClick={(e) => {
+            e.preventDefault();
+            if (!disabled) {
+              setOpen(!open);
+            }
+          }}
           className={cn(
             "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground w-full justify-start text-left font-normal",
             !value && "text-muted-foreground",
@@ -50,7 +56,7 @@ export function DatePicker({
           {value ? format(value, "PPP") : <span>{placeholder}</span>}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
         <Calendar
           mode="single"
           selected={value}

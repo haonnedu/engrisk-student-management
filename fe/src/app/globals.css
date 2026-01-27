@@ -118,3 +118,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile touch improvements for date picker */
+@layer utilities {
+  @media (max-width: 768px) {
+    [data-slot="popover-content"] {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      max-height: 90vh;
+      overflow-y: auto;
+      z-index: 9999 !important;
+    }
+    
+    /* Ensure dialog content allows touch through for popovers */
+    [data-slot="dialog-content"] {
+      overflow: visible;
+    }
+    
+    /* Better touch targets for calendar */
+    .rdp-button {
+      min-height: 44px !important;
+      min-width: 44px !important;
+      touch-action: manipulation;
+    }
+  }
+}
