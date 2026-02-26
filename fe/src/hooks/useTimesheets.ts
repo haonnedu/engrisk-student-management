@@ -51,10 +51,17 @@ export function useMyTimesheets(page = 1, limit = 10) {
   });
 }
 
-// Get all timesheets (for admins)
-export function useTimesheets(page = 1, limit = 10, status?: string, teacherId?: string) {
+// Get all timesheets (for admins). When month/year set, fetches all for that month (no paging).
+export function useTimesheets(
+  page = 1,
+  limit = 10,
+  status?: string,
+  teacherId?: string,
+  month?: string,
+  year?: string
+) {
   return useQuery({
-    queryKey: ["timesheets", page, limit, status, teacherId],
+    queryKey: ["timesheets", page, limit, status, teacherId, month, year],
     queryFn: async (): Promise<TimesheetsResponse> => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -62,7 +69,9 @@ export function useTimesheets(page = 1, limit = 10, status?: string, teacherId?:
       });
       if (status) params.append("status", status);
       if (teacherId) params.append("teacherId", teacherId);
-      
+      if (month && month !== "all") params.append("month", month);
+      if (year && year !== "all") params.append("year", year);
+
       const response = await api.get(`/timesheets?${params}`);
       return response.data;
     },

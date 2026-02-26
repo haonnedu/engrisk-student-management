@@ -46,14 +46,20 @@ export class TimesheetsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: TimesheetStatus })
   @ApiQuery({ name: 'teacherId', required: false, type: String })
+  @ApiQuery({ name: 'month', required: false, type: Number, description: 'Filter by month (1-12)' })
+  @ApiQuery({ name: 'year', required: false, type: Number, description: 'Filter by year' })
   @Get()
   findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('status') status?: TimesheetStatus,
     @Query('teacherId') teacherId?: string,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
   ) {
-    return this.timesheetsService.findAll(page, limit, status, teacherId);
+    const monthNum = month != null && month !== '' ? parseInt(month, 10) : undefined;
+    const yearNum = year != null && year !== '' ? parseInt(year, 10) : undefined;
+    return this.timesheetsService.findAll(page, limit, status, teacherId, monthNum, yearNum);
   }
 
   @ApiOperation({ summary: 'Get my timesheets' })

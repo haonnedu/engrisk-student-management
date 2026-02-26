@@ -40,29 +40,43 @@ import { toast } from "sonner";
 import { Check, X, Calendar, Clock } from "lucide-react";
 import { AlertDialogConfirm } from "@/components/ui/alert-dialog-confirm";
 
+const LIMIT_ALL = 5000;
+
+const MONTH_NAMES: Record<string, string> = {
+  "1": "January", "2": "February", "3": "March", "4": "April",
+  "5": "May", "6": "June", "7": "July", "8": "August",
+  "9": "September", "10": "October", "11": "November", "12": "December",
+};
+
+function getMonthYearLabel(month: string, year: string): string {
+  const name = MONTH_NAMES[month] || month;
+  return `${name} ${year}`;
+}
+
 export default function TimesheetsManagementPage() {
-  const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
-  const limit = 10;
-  
+
   const [approveDialog, setApproveDialog] = useState<{ open: boolean; timesheetId: string }>({
     open: false,
     timesheetId: "",
   });
-  
+
+  // Fetch all (no paging): when month/year selected backend returns all for that month
   const { data: timesheetsData, isLoading, error } = useTimesheets(
-    page,
-    limit,
+    1,
+    LIMIT_ALL,
     statusFilter === "all" ? undefined : statusFilter,
-    teacherFilter === "all" ? undefined : teacherFilter
+    teacherFilter === "all" ? undefined : teacherFilter,
+    monthFilter === "all" ? undefined : monthFilter,
+    yearFilter === "all" ? undefined : yearFilter
   );
-  
+
   // Fetch teachers for filter dropdown
   const { data: teachers, isLoading: isLoadingTeachers } = useTeachers(1, 1000);
-  
+
   const approveMutation = useApproveTimesheet();
   const rejectMutation = useRejectTimesheet();
 
@@ -70,37 +84,18 @@ export default function TimesheetsManagementPage() {
   const [selectedTimesheetId, setSelectedTimesheetId] = useState<string>("");
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Filter timesheets by month/year (client-side filtering)
-  const filteredTimesheets = useMemo(() => {
-    const timesheets = timesheetsData?.data || [];
-    
-    if (monthFilter === "all" && yearFilter === "all") {
-      return timesheets;
-    }
-    
-    return timesheets.filter((timesheet) => {
-      const date = new Date(timesheet.date);
-      const month = date.getMonth() + 1; // 1-12
-      const year = date.getFullYear();
-      
-      const matchMonth = monthFilter === "all" || month === parseInt(monthFilter);
-      const matchYear = yearFilter === "all" || year === parseInt(yearFilter);
-      
-      return matchMonth && matchYear;
-    });
-  }, [timesheetsData?.data, monthFilter, yearFilter]);
+  // All displayed rows (from API; when month/year set, API already filtered)
+  const displayedTimesheets = timesheetsData?.data ?? [];
 
-  // Calculate total hours and minutes
+  // Total hours for displayed data (full month when month filter set, or all fetched)
   const totals = useMemo(() => {
-    const totalMinutes = filteredTimesheets.reduce((sum, timesheet) => {
-      return sum + (timesheet.hoursWorked * 60) + timesheet.minutesWorked;
+    const totalMinutes = displayedTimesheets.reduce((sum, timesheet) => {
+      return sum + timesheet.hoursWorked * 60 + timesheet.minutesWorked;
     }, 0);
-    
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    
     return { hours, minutes };
-  }, [filteredTimesheets]);
+  }, [displayedTimesheets]);
 
   const handleApproveClick = (id: string) => {
     setApproveDialog({ open: true, timesheetId: id });
@@ -285,10 +280,11 @@ export default function TimesheetsManagementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-auto max-h-[calc(100vh-20rem)]">
+              <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="sticky top-0 bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/60 z-10 border-b">
                   <TableHead>Teacher</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Hours</TableHead>
@@ -299,8 +295,8 @@ export default function TimesheetsManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTimesheets.length > 0 ? (
-                  filteredTimesheets.map((timesheet) => (
+                {displayedTimesheets.length > 0 ? (
+                  displayedTimesheets.map((timesheet) => (
                     <TableRow key={timesheet.id}>
                       <TableCell>
                         <div>
@@ -392,11 +388,13 @@ export default function TimesheetsManagementPage() {
                   </TableRow>
                 )}
               </TableBody>
-              {filteredTimesheets.length > 0 && (
+              {displayedTimesheets.length > 0 && (
                 <TableFooter>
                   <TableRow>
                     <TableCell colSpan={2} className="font-bold">
-                      Total (Current Page)
+                      {monthFilter !== "all" && yearFilter !== "all"
+                        ? `Total (${getMonthYearLabel(monthFilter, yearFilter)})`
+                        : "Total"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -410,34 +408,16 @@ export default function TimesheetsManagementPage() {
                   </TableRow>
                 </TableFooter>
               )}
-            </Table>
+              </Table>
+            </div>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {timesheetsData?.meta.page || 1} of{" "}
-              {timesheetsData?.meta.totalPages || 1} pages
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= (timesheetsData?.meta.totalPages || 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          {displayedTimesheets.length > 0 && (
+            <p className="text-sm text-muted-foreground pt-4">
+              Showing {displayedTimesheets.length} timesheet
+              {displayedTimesheets.length !== 1 ? "s" : ""}
+            </p>
+          )}
         </CardContent>
       </Card>
 

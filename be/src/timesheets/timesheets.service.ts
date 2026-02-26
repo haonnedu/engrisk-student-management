@@ -52,8 +52,14 @@ export class TimesheetsService {
     });
   }
 
-  async findAll(page = 1, limit = 10, status?: TimesheetStatus, teacherId?: string) {
-    const skip = (page - 1) * limit;
+  async findAll(
+    page = 1,
+    limit = 10,
+    status?: TimesheetStatus,
+    teacherId?: string,
+    month?: number,
+    year?: number,
+  ) {
     const where: any = {};
 
     if (status) {
@@ -64,32 +70,53 @@ export class TimesheetsService {
       where.teacherId = teacherId;
     }
 
-    const [timesheets, total] = await Promise.all([
-      this.prisma.timesheet.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { date: 'desc' },
-        include: {
-          teacher: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+    // Filter by year (and optionally month) — return all matching (no paging)
+    const yearValid = year != null && !Number.isNaN(year);
+    const monthValid =
+      month != null && !Number.isNaN(month) && month >= 1 && month <= 12;
+
+    if (yearValid) {
+      const rangeStart = monthValid
+        ? new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0))   // first day of selected month
+        : new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));          // Jan 1 when only year
+      const rangeEnd = monthValid
+        ? new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))   // last day of selected month
+        : new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));    // Dec 31 when only year
+      where.date = { gte: rangeStart, lte: rangeEnd };
+    }
+
+    const total = await this.prisma.timesheet.count({ where });
+
+    // When filtering by year (with or without month), fetch all; otherwise paginate
+    const filterByDate = yearValid;
+    const take = filterByDate ? Math.min(total, 5000) : limit;
+    const skip = filterByDate ? 0 : (page - 1) * limit;
+
+    const timesheets = await this.prisma.timesheet.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { date: 'desc' },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
         },
-      }),
-      this.prisma.timesheet.count({ where }),
-    ]);
+      },
+    });
+
+    const totalPages = filterByDate ? 1 : Math.ceil(total / limit);
 
     return {
       data: timesheets,
       meta: {
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: filterByDate ? 1 : page,
+        limit: filterByDate ? total : limit,
+        totalPages,
       },
     };
   }
