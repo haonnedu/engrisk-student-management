@@ -121,7 +121,14 @@ export class TimesheetsService {
     };
   }
 
-  async findMyTimesheets(userId: string, page = 1, limit = 10) {
+  async findMyTimesheets(
+    userId: string,
+    page = 1,
+    limit = 10,
+    month?: number,
+    year?: number,
+    status?: TimesheetStatus,
+  ) {
     const teacher = await this.prisma.teacher.findUnique({
       where: { userId },
     });
@@ -130,7 +137,7 @@ export class TimesheetsService {
       throw new NotFoundException('Teacher profile not found');
     }
 
-    return this.findAll(page, limit, undefined, teacher.id);
+    return this.findAll(page, limit, status, teacher.id, month, year);
   }
 
   async findOne(id: string) {

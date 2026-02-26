@@ -40,12 +40,22 @@ export type CreateTimesheetData = {
   description?: string;
 };
 
-// Get my timesheets (for teachers)
-export function useMyTimesheets(page = 1, limit = 10) {
+// Get my timesheets (for teachers). Pass month/year to get all for that month (no paging). Optional status.
+export function useMyTimesheets(
+  page = 1,
+  limit = 10,
+  month?: string,
+  year?: string,
+  status?: string,
+) {
   return useQuery({
-    queryKey: ["timesheets", "my", page, limit],
+    queryKey: ["timesheets", "my", page, limit, month, year, status],
     queryFn: async (): Promise<TimesheetsResponse> => {
-      const response = await api.get(`/timesheets/my?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+      if (month && month !== "all") params.append("month", month);
+      if (year && year !== "all") params.append("year", year);
+      if (status && status !== "all") params.append("status", status);
+      const response = await api.get(`/timesheets/my?${params}`);
       return response.data;
     },
   });

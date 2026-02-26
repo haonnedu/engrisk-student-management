@@ -66,14 +66,22 @@ export class TimesheetsController {
   @ApiResponse({ status: 200, description: 'Timesheets retrieved successfully' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'month', required: false, type: Number })
+  @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, enum: TimesheetStatus })
   @Get('my')
   findMyTimesheets(
     @Request() req: any,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+    @Query('status') status?: TimesheetStatus,
   ) {
     const userId = req.user.id;
-    return this.timesheetsService.findMyTimesheets(userId, page, limit);
+    const monthNum = month != null && month !== '' ? parseInt(month, 10) : undefined;
+    const yearNum = year != null && year !== '' ? parseInt(year, 10) : undefined;
+    return this.timesheetsService.findMyTimesheets(userId, page, limit, monthNum, yearNum, status);
   }
 
   @ApiOperation({ summary: 'Get a timesheet by ID' })

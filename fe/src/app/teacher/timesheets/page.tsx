@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState, useMemo } from "react";
-import { useMyTimesheets, useCreateTimesheet, useSubmitTimesheet, useDeleteTimesheet } from "@/hooks/useTimesheets";
+import { useMyTimesheets, useCreateTimesheet, useSubmitTimesheet, useDeleteTimesheet, useUpdateTimesheet } from "@/hooks/useTimesheets";
 import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,15 +37,33 @@ import {
 import { toast } from "sonner";
 import { Plus, Send, Trash2, Calendar, Edit, Clock } from "lucide-react";
 import { AlertDialogConfirm } from "@/components/ui/alert-dialog-confirm";
-import { useUpdateTimesheet } from "@/hooks/useTimesheets";
+
+const LIMIT_ALL = 5000;
+
+const MONTH_NAMES: Record<string, string> = {
+  "1": "January", "2": "February", "3": "March", "4": "April",
+  "5": "May", "6": "June", "7": "July", "8": "August",
+  "9": "September", "10": "October", "11": "November", "12": "December",
+};
+
+function getMonthYearLabel(month: string, year: string): string {
+  const name = MONTH_NAMES[month] || month;
+  return `${name} ${year}`;
+}
 
 export default function TeacherTimesheetsPage() {
-  const [page, setPage] = useState(1);
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const limit = 10;
-  const { data: timesheetsData, isLoading, error } = useMyTimesheets(page, limit);
+
+  const { data: timesheetsData, isLoading, error } = useMyTimesheets(
+    1,
+    LIMIT_ALL,
+    monthFilter === "all" ? undefined : monthFilter,
+    yearFilter === "all" ? undefined : yearFilter,
+    statusFilter === "all" ? undefined : statusFilter,
+  );
+
   const createMutation = useCreateTimesheet();
   const updateMutation = useUpdateTimesheet();
   const submitMutation = useSubmitTimesheet();
@@ -68,34 +86,16 @@ export default function TeacherTimesheetsPage() {
     description: "",
   });
 
-  // Filter timesheets by month/year/status (client-side filtering)
-  const filteredTimesheets = useMemo(() => {
-    const timesheets = timesheetsData?.data || [];
-    
-    return timesheets.filter((timesheet) => {
-      const date = new Date(timesheet.date);
-      const month = date.getMonth() + 1; // 1-12
-      const year = date.getFullYear();
-      
-      const matchMonth = monthFilter === "all" || month === parseInt(monthFilter);
-      const matchYear = yearFilter === "all" || year === parseInt(yearFilter);
-      const matchStatus = statusFilter === "all" || timesheet.status === statusFilter;
-      
-      return matchMonth && matchYear && matchStatus;
-    });
-  }, [timesheetsData?.data, monthFilter, yearFilter, statusFilter]);
+  const displayedTimesheets = timesheetsData?.data ?? [];
 
-  // Calculate total hours and minutes
   const totals = useMemo(() => {
-    const totalMinutes = filteredTimesheets.reduce((sum, timesheet) => {
-      return sum + (timesheet.hoursWorked * 60) + timesheet.minutesWorked;
+    const totalMinutes = displayedTimesheets.reduce((sum, timesheet) => {
+      return sum + timesheet.hoursWorked * 60 + timesheet.minutesWorked;
     }, 0);
-    
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    
     return { hours, minutes };
-  }, [filteredTimesheets]);
+  }, [displayedTimesheets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -406,10 +406,11 @@ export default function TeacherTimesheetsPage() {
           <CardDescription>All your submitted timesheets</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-auto max-h-[calc(100vh-20rem)]">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="sticky top-0 bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/60 z-10 border-b">
                   <TableHead>Date</TableHead>
                   <TableHead>Hours</TableHead>
                   <TableHead>Description</TableHead>
@@ -418,8 +419,8 @@ export default function TeacherTimesheetsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTimesheets.length > 0 ? (
-                  filteredTimesheets.map((timesheet) => (
+                {displayedTimesheets.length > 0 ? (
+                  displayedTimesheets.map((timesheet) => (
                     <TableRow key={timesheet.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -490,11 +491,13 @@ export default function TeacherTimesheetsPage() {
                   </TableRow>
                 )}
               </TableBody>
-              {filteredTimesheets.length > 0 && (
+              {displayedTimesheets.length > 0 && (
                 <TableFooter>
                   <TableRow>
                     <TableCell className="font-bold">
-                      Total (Filtered)
+                      {monthFilter !== "all" && yearFilter !== "all"
+                        ? `Total (${getMonthYearLabel(monthFilter, yearFilter)})`
+                        : "Total"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -509,32 +512,15 @@ export default function TeacherTimesheetsPage() {
                 </TableFooter>
               )}
             </Table>
+            </div>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between pt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {timesheetsData?.meta.page || 1} of {timesheetsData?.meta.totalPages || 1} pages
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= (timesheetsData?.meta.totalPages || 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          {displayedTimesheets.length > 0 && (
+            <p className="text-sm text-muted-foreground pt-4">
+              Showing {displayedTimesheets.length} timesheet
+              {displayedTimesheets.length !== 1 ? "s" : ""}
+            </p>
+          )}
         </CardContent>
       </Card>
 
