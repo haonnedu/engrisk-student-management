@@ -38,16 +38,17 @@ export function buildStudentColumns(
       header: "Name",
       accessorFn: (row) => `${row.firstName} ${row.lastName}`,
       id: "name",
-      cell: (info) => (
-        <div>
-          <div className="font-medium">{info.getValue() as string}</div>
-          <div className="text-sm text-muted-foreground">
-            {info.row.original.user?.email ||
-              info.row.original.user?.phone ||
-              "-"}
+      cell: (info) => {
+        const contact = (info.row.original.user?.email || info.row.original.user?.phone || "").trim();
+        return (
+          <div>
+            <div className="font-medium">{info.getValue() as string}</div>
+            {contact ? (
+              <div className="text-sm text-muted-foreground">{contact}</div>
+            ) : null}
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "English Name",

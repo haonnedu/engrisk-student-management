@@ -220,21 +220,29 @@ export default function ClassGradesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/dashboard/grades/classes")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Classes
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{classInfo.name}</h1>
-            <p className="text-muted-foreground">
-              {classInfo.code} •{" "}
-              {classInfo.course?.title || "No course assigned"}
+      <div className="rounded-lg border bg-card overflow-hidden">
+        {classInfo.color && (
+          <div
+            className="h-2 w-full shrink-0"
+            style={{ backgroundColor: classInfo.color }}
+            aria-hidden
+          />
+        )}
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/dashboard/grades/classes")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Classes
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{classInfo.name}</h1>
+              <p className="text-muted-foreground">
+                {classInfo.code} •{" "}
+                {classInfo.course?.title || "No course assigned"}
             </p>
           </div>
         </div>
@@ -248,6 +256,7 @@ export default function ClassGradesPage() {
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? "Exporting..." : "Export Excel"}
           </Button>
+        </div>
         </div>
       </div>
 

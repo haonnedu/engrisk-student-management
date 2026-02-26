@@ -56,9 +56,16 @@ export default function GradesClassesPage() {
         {classesData?.data?.map((classItem: ClassSection) => (
           <Card
             key={classItem.id}
-            className="cursor-pointer hover:shadow-md transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
             onClick={() => router.push(`/dashboard/grades/classes/${classItem.id}`)}
           >
+            {classItem.color && (
+              <div
+                className="h-1.5 w-full shrink-0"
+                style={{ backgroundColor: classItem.color }}
+                aria-hidden
+              />
+            )}
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div>

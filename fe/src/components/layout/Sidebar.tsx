@@ -35,11 +35,26 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
+// Map Tailwind color name → CSS value (để icon con không bị sidebar override)
+const ICON_COLORS: Record<string, string> = {
+  "text-sky-500": "#0ea5e9",
+  "text-green-500": "#22c55e",
+  "text-emerald-500": "#10b981",
+  "text-teal-500": "#14b8a6",
+  "text-violet-500": "#8b5cf6",
+  "text-purple-500": "#a855f7",
+  "text-amber-500": "#f59e0b",
+  "text-orange-500": "#f97316",
+  "text-rose-500": "#f43f5e",
+  "text-pink-500": "#ec4899",
+};
+
 // Menu item type
 type MenuItem = {
   title: string;
   url: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  iconColor?: string; // key trong ICON_COLORS hoặc Tailwind class
 };
 
 // Menu group type
@@ -47,71 +62,44 @@ type MenuGroup = {
   title: string;
   items: MenuItem[];
   defaultOpen?: boolean;
+  groupIconColor?: string; // màu cho chevron header nhóm
 };
 
 // Menu groups organized by entity type
 const menuGroups: MenuGroup[] = [
   {
     title: "Student",
+    groupIconColor: "text-emerald-500",
     items: [
-      {
-        title: "Students",
-        url: "/dashboard/students",
-        icon: Users,
-      },
-      {
-        title: "Enrollments",
-        url: "/dashboard/enrollments",
-        icon: UserPlus,
-      },
+      { title: "Students", url: "/dashboard/students", icon: Users, iconColor: "text-emerald-500" },
+      { title: "Enrollments", url: "/dashboard/enrollments", icon: UserPlus, iconColor: "text-teal-500" },
     ],
     defaultOpen: true,
   },
   {
     title: "Course",
+    groupIconColor: "text-violet-500",
     items: [
-      {
-        title: "Courses",
-        url: "/dashboard/courses",
-        icon: BookMarked,
-      },
-      {
-        title: "Classes",
-        url: "/dashboard/classes",
-        icon: BookOpen,
-      },
+      { title: "Courses", url: "/dashboard/courses", icon: BookMarked, iconColor: "text-violet-500" },
+      { title: "Classes", url: "/dashboard/classes", icon: BookOpen, iconColor: "text-purple-500" },
     ],
     defaultOpen: true,
   },
   {
     title: "Grade",
+    groupIconColor: "text-amber-500",
     items: [
-      {
-        title: "Grades",
-        url: "/dashboard/grades/classes",
-        icon: GraduationCap,
-      },
-      {
-        title: "Grade Types",
-        url: "/dashboard/grade-types",
-        icon: BarChart3,
-      },
+      { title: "Grades", url: "/dashboard/grades/classes", icon: GraduationCap, iconColor: "text-amber-500" },
+      { title: "Grade Types", url: "/dashboard/grade-types", icon: BarChart3, iconColor: "text-orange-500" },
     ],
     defaultOpen: true,
   },
   {
     title: "Teacher",
+    groupIconColor: "text-rose-500",
     items: [
-      {
-        title: "Teachers",
-        url: "/dashboard/teachers",
-        icon: UserCircle2,
-      },
-      {
-        title: "Timesheets",
-        url: "/dashboard/timesheets",
-        icon: Clock,
-      },
+      { title: "Teachers", url: "/dashboard/teachers", icon: UserCircle2, iconColor: "text-rose-500" },
+      { title: "Timesheets", url: "/dashboard/timesheets", icon: Clock, iconColor: "text-pink-500" },
     ],
     defaultOpen: true,
   },
@@ -119,16 +107,8 @@ const menuGroups: MenuGroup[] = [
 
 // Standalone menu items
 const standaloneItems: MenuItem[] = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "Attendance",
-    url: "/dashboard/attendance",
-    icon: UserCheck,
-  },
+  { title: "Dashboard", url: "/dashboard", icon: Home, iconColor: "text-sky-500" },
+  { title: "Attendance", url: "/dashboard/attendance", icon: UserCheck, iconColor: "text-green-500" },
 ];
 
 export function AppSidebar() {
@@ -158,8 +138,11 @@ export function AppSidebar() {
               {standaloneItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
+                    <a href={item.url} className="[&>svg]:shrink-0">
+                      <item.icon
+                        className="size-4"
+                        style={item.iconColor ? { color: ICON_COLORS[item.iconColor] ?? item.iconColor } : undefined}
+                      />
                       <span>{item.title}</span>
                     </a>
                   </SidebarMenuButton>
@@ -175,12 +158,13 @@ export function AppSidebar() {
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton>
+                      <SidebarMenuButton className="[&>svg]:shrink-0">
                         <ChevronDown
                           className={cn(
-                            "transition-transform duration-200",
+                            "size-4 transition-transform duration-200",
                             openGroups[group.title] && "rotate-180"
                           )}
+                          style={group.groupIconColor ? { color: ICON_COLORS[group.groupIconColor] ?? undefined } : undefined}
                         />
                         <span>{group.title}</span>
                       </SidebarMenuButton>
@@ -190,8 +174,11 @@ export function AppSidebar() {
                         {group.items.map((item) => (
                           <SidebarMenuSubItem key={item.title}>
                             <SidebarMenuSubButton asChild>
-                              <a href={item.url}>
-                                <item.icon />
+                              <a href={item.url} className="[&>svg]:shrink-0">
+                                <item.icon
+                                  className="size-4"
+                                  style={item.iconColor ? { color: ICON_COLORS[item.iconColor] ?? item.iconColor } : undefined}
+                                />
                                 <span>{item.title}</span>
                               </a>
                             </SidebarMenuSubButton>

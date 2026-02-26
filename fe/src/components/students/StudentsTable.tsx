@@ -22,11 +22,11 @@ export function StudentsTable({
   columns: ColumnDef<Student>[];
 }) {
   return (
-    <div className="rounded-md border overflow-x-auto">
+    <div className="w-full min-w-0">
       <Table className="min-w-max text-sm">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="sticky top-0 bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/60 z-10 border-b">
               {headerGroup.headers.map((header) => (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
