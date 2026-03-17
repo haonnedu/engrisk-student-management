@@ -6,6 +6,13 @@ import * as XLSX from "xlsx";
 export class GradesService {
   constructor(private prisma: PrismaService) {}
 
+  private getGradeLabel(score: number): string {
+    if (score >= 80) return "Distinction";
+    if (score >= 70) return "Credit";
+    if (score >= 50) return "Pass";
+    return "Not pass";
+  }
+
   async create(data: {
     studentId: string;
     courseId: string;
@@ -240,9 +247,9 @@ export class GradesService {
       "Last Name",
       "English Name",
       "School Class",
+      "Grade",
       ...gradeTypesWithInfo.map((gt) => gt.gradeType.name),
       "Average",
-      "Grade Level",
     ];
 
     // Build data rows
@@ -256,25 +263,16 @@ export class GradesService {
         const grade = studentGrades.find(
           (g) => g.gradeTypeId === gt.gradeTypeId
         );
-        return grade ? grade.grade : 0;
+        return grade?.grade;
       });
 
-      // Calculate average
-      const sum = gradeValues.reduce((acc, val) => acc + val, 0);
+      const numericGradeValues = gradeValues.filter(
+        (value): value is number => typeof value === "number"
+      );
+      const sum = numericGradeValues.reduce((acc, val) => acc + val, 0);
       const average =
-        gradeValues.length > 0 ? sum / gradeValues.length : 0;
-
-      // Determine grade level
-      let gradeLevel = "";
-      if (average >= 85) {
-        gradeLevel = "Excellent";
-      } else if (average >= 70) {
-        gradeLevel = "Good";
-      } else if (average >= 55) {
-        gradeLevel = "Average";
-      } else {
-        gradeLevel = "Needs Improvement";
-      }
+        numericGradeValues.length > 0 ? sum / numericGradeValues.length : 0;
+      const gradeLabel = this.getGradeLabel(average);
 
       rows.push([
         index + 1,
@@ -283,9 +281,9 @@ export class GradesService {
         student.lastName || "",
         student.engName || "",
         student.classSchool || "",
+        gradeLabel,
         ...gradeValues,
         average.toFixed(1),
-        gradeLevel,
       ]);
     });
 
@@ -313,9 +311,9 @@ export class GradesService {
       { wch: 15 },  // Last Name
       { wch: 15 },  // English Name
       { wch: 15 },  // School Class
+      { wch: 14 },  // Grade
       ...gradeTypesWithInfo.map(() => ({ wch: 10 })), // Grade columns
       { wch: 10 },  // Average
-      { wch: 18 },  // Grade Level
     ];
     worksheet["!cols"] = colWidths;
 
