@@ -27,6 +27,17 @@ import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ClassSection } from "@/hooks/useClasses";
 
+function ClassColorStrip({ color }: { color?: string | null }) {
+  if (!color) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div
+      className="h-6 min-w-[48px] rounded-md border border-border"
+      style={{ backgroundColor: color }}
+      title={color}
+    />
+  );
+}
+
 export function buildClassColumns(
   handleDelete: (id: string) => void,
   router?: any
@@ -107,6 +118,13 @@ export function buildClassColumns(
           <span className="text-sm">{date.toLocaleDateString("vi-VN")}</span>
         );
       },
+    },
+    {
+      header: "Color",
+      accessorKey: "color",
+      cell: (info) => (
+        <ClassColorStrip color={info.getValue() as string | null} />
+      ),
     },
     {
       header: "Actions",

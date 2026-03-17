@@ -62,13 +62,15 @@ export class StudentsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: StudentStatus })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @Get()
   findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('status') status?: StudentStatus,
+    @Query('search') search?: string,
   ) {
-    return this.studentsService.findAll(page, limit, status);
+    return this.studentsService.findAll(page, limit, status, search);
   }
 
   @ApiOperation({ summary: 'Get current student profile' })

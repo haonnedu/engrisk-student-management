@@ -106,8 +106,8 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
             <Navbar />
           </header>
 
-          {/* MAIN */}
-          <main className="flex-1 p-4">{children}</main>
+          {/* MAIN: min-w-0 + overflow-x-hidden để content không tràn/đè lên sidebar, scroll ngang chỉ trong từng trang */}
+          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -125,7 +125,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           </header>
 
           {/* MAIN */}
-          <main className="flex-1 p-4">{children}</main>
+          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -143,7 +143,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           </header>
 
           {/* MAIN */}
-          <main className="flex-1 p-4">{children}</main>
+          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -160,8 +160,8 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           <Navbar />
         </header>
 
-        {/* MAIN: phần hiển thị children */}
-        <main className="flex-1 p-4">{children}</main>
+        {/* MAIN: min-w-0 + overflow-x-hidden để content không tràn/đè lên sidebar */}
+        <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -165,9 +165,21 @@ export class StudentsService {
     });
   }
 
-  async findAll(page = 1, limit = 10, status?: StudentStatus) {
+  async findAll(page = 1, limit = 10, status?: StudentStatus, search?: string) {
     const skip = (page - 1) * limit;
-    const where = status ? { status } : {};
+    const where: any = status ? { status } : {};
+
+    if (search && search.trim()) {
+      const term = search.trim();
+      where.OR = [
+        { firstName: { contains: term, mode: "insensitive" } },
+        { lastName: { contains: term, mode: "insensitive" } },
+        { studentId: { contains: term, mode: "insensitive" } },
+        { engName: { contains: term, mode: "insensitive" } },
+        { user: { email: { contains: term, mode: "insensitive" } } },
+        { user: { phone: { contains: term, mode: "insensitive" } } },
+      ];
+    }
 
     const [students, total] = await Promise.all([
       this.prisma.student.findMany({
@@ -179,6 +191,7 @@ export class StudentsService {
             select: {
               id: true,
               email: true,
+              phone: true,
               role: true,
             },
           },

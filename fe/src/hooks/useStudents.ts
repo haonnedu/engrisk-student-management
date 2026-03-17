@@ -37,15 +37,16 @@ export type StudentsResponse = {
 };
 
 // Hooks
-export function useStudents(page = 1, limit = 10, status?: string) {
+export function useStudents(page = 1, limit = 10, status?: string, search?: string) {
   return useQuery({
-    queryKey: ["students", page, limit, status],
+    queryKey: ["students", page, limit, status, search],
     queryFn: async (): Promise<StudentsResponse> => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        ...(status && { status }),
       });
+      if (status) params.append("status", status);
+      if (search?.trim()) params.append("search", search.trim());
       const response = await api.get(`/students?${params}`);
       return response.data;
     },

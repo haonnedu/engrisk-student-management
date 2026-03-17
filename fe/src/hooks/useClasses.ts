@@ -5,6 +5,7 @@ export type ClassSection = {
   id: string;
   name: string;
   code: string;
+  color?: string | null;
   timeDescription?: string;
   day1?: number;
   day2?: number;

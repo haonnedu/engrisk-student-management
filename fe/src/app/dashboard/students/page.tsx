@@ -1,16 +1,12 @@
 "use client";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   ColumnDef,
-  flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StudentsTable } from "@/components/students/StudentsTable";
 import { StudentsToolbar } from "@/components/students/StudentsToolbar";
 import { buildStudentColumns } from "@/components/students/columns";
@@ -23,13 +19,28 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertDialogConfirm } from "@/components/ui/alert-dialog-confirm";
 
+// Debounce search để tránh gọi API mỗi lần gõ
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 export default function StudentsPage() {
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 1000);
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data: studentsData, isLoading, error } = useStudents(page, limit);
+  const { data: studentsData, isLoading, error } = useStudents(page, limit, undefined, debouncedSearch);
   const deleteStudentMutation = useDeleteStudent();
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
   
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; studentId: string }>({
     open: false,
@@ -61,11 +72,7 @@ export default function StudentsPage() {
   const table = useReactTable({
     data: studentsData?.data || [],
     columns,
-    state: { globalFilter },
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   if (isLoading) {
@@ -85,10 +92,14 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <StudentsToolbar value={globalFilter ?? ""} onChange={setGlobalFilter} />
+    <div className="space-y-4 w-full min-w-0">
+      <StudentsToolbar value={searchInput} onChange={setSearchInput} />
 
-      <StudentsTable table={table as any} columns={columns} />
+      <div className="rounded-md border overflow-hidden w-full max-w-full min-w-0">
+        <div className="overflow-x-scroll overflow-y-auto max-h-[calc(100vh-16rem)] w-full max-w-full min-w-0">
+          <StudentsTable table={table as any} columns={columns} />
+        </div>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">

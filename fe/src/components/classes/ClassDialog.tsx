@@ -37,9 +37,15 @@ import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+const CLASS_COLOR_PRESETS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6",
+  "#3b82f6", "#8b5cf6", "#ec4899", "#64748b", "#0ea5e9",
+];
+
 const classSchema = z.object({
   name: z.string().min(1, "Class name is required"),
   code: z.string().min(1, "Class code is required"),
+  color: z.string().optional(),
   timeDescription: z.string().optional(),
   day1: z.number().min(0).max(6).optional(),
   day2: z.number().min(0).max(6).optional(),
@@ -70,6 +76,7 @@ export function ClassDialog({
       ? {
           name: classSection.name,
           code: classSection.code,
+          color: classSection.color ?? undefined,
           timeDescription: classSection.timeDescription ?? "",
           day1: classSection.day1 ?? undefined,
           day2: classSection.day2 ?? undefined,
@@ -203,6 +210,38 @@ export function ClassDialog({
               <Input id="code" {...register("code")} />
               {errors.code && (
                 <p className="text-sm text-red-500">{errors.code.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>Color</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {CLASS_COLOR_PRESETS.map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring ${
+                    watch("color") === hex
+                      ? "border-foreground ring-2 ring-offset-2 ring-foreground/30"
+                      : "border-muted-foreground/30"
+                  }`}
+                  style={{ backgroundColor: hex }}
+                  title={hex}
+                  onClick={() => setValue("color", hex)}
+                />
+              ))}
+              <input
+                type="color"
+                className="h-8 w-8 cursor-pointer rounded-full border-0 bg-transparent p-0"
+                value={watch("color") || "#3b82f6"}
+                onChange={(e) => setValue("color", e.target.value)}
+                title="Custom color"
+              />
+              {watch("color") && (
+                <span className="text-xs text-muted-foreground">
+                  {watch("color")}
+                </span>
               )}
             </div>
           </div>
