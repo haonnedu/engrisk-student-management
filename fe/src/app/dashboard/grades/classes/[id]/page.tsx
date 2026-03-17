@@ -1,16 +1,18 @@
 "use client";
-import * as React from "react";
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useClass } from "@/hooks/useClasses";
-import { useGrades, useGradesByClass } from "@/hooks/useGrades";
+import { type Grade, useGradesByClass } from "@/hooks/useGrades";
 import { useActiveGradeTypes } from "@/hooks/useGradeTypes";
-import { useSectionGradeTypes } from "@/hooks/useSectionGradeTypes";
+import {
+  type SectionGradeType,
+  useSectionGradeTypes,
+} from "@/hooks/useSectionGradeTypes";
 import type { GradeType } from "@/lib/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -33,7 +35,44 @@ import { HomeworkGradeCell } from "@/components/grades/HomeworkGradeCell";
 import { SectionGradeTypesDialog } from "@/components/grades/SectionGradeTypesDialog";
 import { StudentGradeChartDialog } from "@/components/grades/StudentGradeChartDialog";
 import api from "@/lib/api";
+import { AxiosError } from "axios";
 import { toast } from "sonner";
+
+type StudentInfo = NonNullable<Grade["student"]>;
+type ClassGrade = Grade & {
+  gradeType?: GradeType;
+  gradeTypeId?: string;
+  student: StudentInfo;
+};
+
+type StudentGradeSummary = {
+  student: StudentInfo;
+  grades: ClassGrade[];
+  average: number;
+  gradeLevel: string;
+};
+
+const getStudentGradeForType = (grades: ClassGrade[], gradeType: GradeType) =>
+  grades.find(
+    (g) =>
+      g.gradeType?.id === gradeType.id ||
+      g.gradeTypeId === gradeType.id ||
+      (g.gradeType && g.gradeType.code === gradeType.code)
+  );
+
+const getGradeLabel = (score: number) => {
+  if (score >= 80) return "Distinction";
+  if (score >= 70) return "Credit";
+  if (score >= 50) return "Pass";
+  return "Not pass";
+};
+
+const getGradeBadgeVariant = (score: number) => {
+  if (score >= 80) return "default" as const;
+  if (score >= 70) return "secondary" as const;
+  if (score >= 50) return "outline" as const;
+  return "destructive" as const;
+};
 
 export default function ClassGradesPage() {
   const params = useParams();
@@ -62,8 +101,11 @@ export default function ClassGradesPage() {
     if (sectionGradeTypes && sectionGradeTypes.length > 0) {
       // Use section-specific grade types, filter active ones and sort by sortOrderInSection
       return sectionGradeTypes
-        .filter((gt: any) => gt.isActiveInSection !== false)
-        .sort((a: any, b: any) => a.sortOrderInSection - b.sortOrderInSection);
+        .filter((gt: SectionGradeType) => gt.isActiveInSection !== false)
+        .sort(
+          (a: SectionGradeType, b: SectionGradeType) =>
+            a.sortOrderInSection - b.sortOrderInSection
+        );
     }
     // Fallback to all active grade types if section has no specific configuration
     return activeGradeTypes?.sort((a, b) => a.sortOrder - b.sortOrder) || [];
@@ -73,22 +115,13 @@ export default function ClassGradesPage() {
   const totalPages = gradesData?.meta?.totalPages || 0;
 
   const classInfo = classData;
-  const classGrades = gradesData?.data || [];
-
   // Group grades by student
   const studentGrades = useMemo(() => {
-    const grouped: Record<
-      string,
-      {
-        student: any;
-        grades: any[];
-        average: number;
-        gradeLevel: string;
-      }
-    > = {};
+    const grouped: Record<string, StudentGradeSummary> = {};
+    const classGrades: ClassGrade[] = gradesData?.data || [];
 
 
-    classGrades.forEach((grade: any) => {
+    classGrades.forEach((grade) => {
       const studentId = grade.studentId;
       if (!grouped[studentId]) {
         grouped[studentId] = {
@@ -101,28 +134,23 @@ export default function ClassGradesPage() {
       grouped[studentId].grades.push(grade);
     });
 
-    // Calculate averages and grade levels
+    // Calculate averages and grade levels based only on visible grade type columns
     Object.values(grouped).forEach((studentData) => {
-      const scores = studentData.grades.map((g) => g.grade);
+      const scores = gradeTypes
+        .map((gradeType) => getStudentGradeForType(studentData.grades, gradeType))
+        .filter((grade): grade is NonNullable<typeof grade> => Boolean(grade))
+        .map((grade) => grade.grade);
+
       studentData.average =
         scores.length > 0
           ? scores.reduce((sum, score) => sum + score, 0) / scores.length
           : 0;
 
-      // Determine grade level (based on 100-point scale)
-      if (studentData.average >= 85) {
-        studentData.gradeLevel = "Excellent";
-      } else if (studentData.average >= 70) {
-        studentData.gradeLevel = "Good";
-      } else if (studentData.average >= 55) {
-        studentData.gradeLevel = "Average";
-      } else {
-        studentData.gradeLevel = "Needs Improvement";
-      }
+      studentData.gradeLevel = getGradeLabel(studentData.average);
     });
 
     return grouped;
-  }, [classGrades]);
+  }, [gradesData?.data, gradeTypes]);
 
   // Filter by grade type and search, then sort by student name for consistent ordering
   const filteredStudents = useMemo(() => {
@@ -185,9 +213,12 @@ export default function ClassGradesPage() {
       window.URL.revokeObjectURL(url);
       
       toast.success("Grades exported successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       console.error("Export error:", error);
-      toast.error(error.response?.data?.message || "Failed to export grades");
+      toast.error(
+        axiosError.response?.data?.message || "Failed to export grades"
+      );
     } finally {
       setIsExporting(false);
     }
@@ -312,9 +343,6 @@ export default function ClassGradesPage() {
                   <TableHead className="min-w-[80px] text-center">
                     Average
                   </TableHead>
-                  <TableHead className="min-w-[120px] text-center">
-                    Grade Level
-                  </TableHead>
                   <TableHead className="min-w-[100px] text-center">
                     Chart
                   </TableHead>
@@ -341,26 +369,15 @@ export default function ClassGradesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={
-                          studentData.average >= 85
-                            ? "default"
-                            : studentData.average >= 70
-                            ? "secondary"
-                            : studentData.average >= 55
-                            ? "outline"
-                            : "destructive"
-                        }
+                        variant={getGradeBadgeVariant(studentData.average)}
                       >
-                        {studentData.average.toFixed(1)}
+                        {studentData.gradeLevel}
                       </Badge>
                     </TableCell>
                     {gradeTypes.map((gradeType) => {
-                      // Try multiple ways to match grade with gradeType
-                      const grade = studentData.grades.find(
-                        (g) => 
-                          g.gradeType?.id === gradeType.id || 
-                          g.gradeTypeId === gradeType.id ||
-                          (g.gradeType && g.gradeType.code === gradeType.code)
+                      const grade = getStudentGradeForType(
+                        studentData.grades,
+                        gradeType
                       );
                       return (
                         <TableCell key={gradeType.id} className="text-center">
@@ -386,21 +403,6 @@ export default function ClassGradesPage() {
                     })}
                     <TableCell className="text-center font-medium">
                       {studentData.average.toFixed(1)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={
-                          studentData.gradeLevel === "Excellent"
-                            ? "default"
-                            : studentData.gradeLevel === "Good"
-                            ? "secondary"
-                            : studentData.gradeLevel === "Average"
-                            ? "outline"
-                            : "destructive"
-                        }
-                      >
-                        {studentData.gradeLevel}
-                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <StudentGradeChartDialog
