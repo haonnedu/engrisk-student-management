@@ -95,7 +95,7 @@ export function StudentGradeChartDialog({
           <span className="sr-only">View grade chart</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             Grade Chart - {student.firstName} {student.lastName}
@@ -105,50 +105,50 @@ export function StudentGradeChartDialog({
             Student ID: {student.studentId} | Average: {average.toFixed(1)}
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4 space-y-4">
-          {/* Chart */}
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fontSize: 12 }}
-                  width={40}
-                />
-                <Tooltip
-                  formatter={(value: number, name: string, props: any) => {
-                    if (!props.payload.hasGrade) {
-                      return ["No grade", "N/A"];
-                    }
-                    return [`${value.toFixed(1)}`, "Grade"];
-                  }}
-                  labelFormatter={(label) => `Grade Type: ${label}`}
-                  contentStyle={{ fontSize: "12px" }}
-                />
-                <Bar dataKey="grade" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={getColor(entry.grade, entry.hasGrade)}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex gap-6 min-w-max p-4">
+            {/* Chart */}
+            <div className="h-80 w-96 flex-shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize: 12 }}
+                    width={40}
+                  />
+                  <Tooltip
+                    formatter={(value: number, name: string, props: any) => {
+                      if (!props.payload.hasGrade) {
+                        return ["No grade", "N/A"];
+                      }
+                      return [`${value.toFixed(1)}`, "Grade"];
+                    }}
+                    labelFormatter={(label) => `Grade Type: ${label}`}
+                    contentStyle={{ fontSize: "12px" }}
+                  />
+                  <Bar dataKey="grade" radius={[4, 4, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={getColor(entry.grade, entry.hasGrade)}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-          {/* Grade Summary Table */}
-          <div className="border rounded-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            {/* Grade Summary Table */}
+            <div className="border rounded-lg flex-shrink-0">
+              <table className="text-sm">
                 <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-2 text-left">Grade Type</th>
