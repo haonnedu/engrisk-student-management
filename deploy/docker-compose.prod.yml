@@ -55,7 +55,7 @@ services:
           memory: 512M
           cpus: "0.4"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:${PORT_BE}/api/v1/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${PORT_BE}/api/v1/health >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
