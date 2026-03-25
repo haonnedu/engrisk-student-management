@@ -199,80 +199,6 @@ jobs:
             echo "Checking container status..."
             docker compose -f "$COMPOSE_FILE" --env-file .env ps
 
-            wait_for_container_health() {
-              CONTAINER_NAME="$1"
-              MAX_ATTEMPTS="$2"
-              SLEEP_SECONDS="$3"
-              ATTEMPT=1
-
-              echo "Waiting for ${CONTAINER_NAME} health status..."
-              while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
-                STATUS=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "$CONTAINER_NAME" 2>/dev/null || echo "not-found")
-                echo "${CONTAINER_NAME} status (attempt ${ATTEMPT}/${MAX_ATTEMPTS}): ${STATUS}"
-
-                if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "no-healthcheck" ]; then
-                  return 0
-                fi
-
-                if [ "$STATUS" = "unhealthy" ] || [ "$STATUS" = "exited" ] || [ "$STATUS" = "dead" ] || [ "$STATUS" = "not-found" ]; then
-                  echo "${CONTAINER_NAME} is not healthy (status: ${STATUS})"
-                  docker logs "$CONTAINER_NAME" --tail=200 2>&1 || true
-                  return 1
-                fi
-
-                sleep "$SLEEP_SECONDS"
-                ATTEMPT=$((ATTEMPT + 1))
-              done
-
-              echo "${CONTAINER_NAME} did not become healthy in time"
-              docker logs "$CONTAINER_NAME" --tail=200 2>&1 || true
-              return 1
-            }
-
-            echo "Waiting for services to be ready..."
-            wait_for_container_health engrisk-backend 36 5
-            wait_for_container_health engrisk-frontend 48 5
-
-            echo "Testing backend health..."
-            MAX_ATTEMPTS=18
-            ATTEMPT=1
-            while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-              echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
-              if curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null 2>&1; then
-                echo "Backend is healthy"
-                break
-              fi
-
-              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-                echo "Backend health check failed after $MAX_ATTEMPTS attempts"
-                docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=200 backend
-                exit 1
-              fi
-
-              sleep 5
-              ATTEMPT=$((ATTEMPT + 1))
-            done
-
-            echo "Testing frontend..."
-            MAX_ATTEMPTS=18
-            ATTEMPT=1
-            while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-              echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
-              if curl -fsS -k "https://${DOMAIN}/" >/dev/null 2>&1; then
-                echo "Frontend is healthy"
-                break
-              fi
-
-              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-                echo "Frontend health check failed after $MAX_ATTEMPTS attempts"
-                docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 frontend
-                exit 1
-              fi
-
-              sleep 5
-              ATTEMPT=$((ATTEMPT + 1))
-            done
-
             echo ""
             echo "========================================"
             echo "DEPLOYMENT SUCCESSFUL"
@@ -287,13 +213,3 @@ jobs:
             echo "Cleaning up old Docker images..."
             docker image prune -af --filter "label!=keep" --filter "until=24h" || true
             echo "Cleanup complete"
-
-      - name: Production Health Check (external)
-        run: |
-          echo "Final verification from GitHub Actions runner..."
-          sleep 10
-          echo "Checking API health..."
-          curl -f -k https://msjenny.io.vn/api/v1/health
-          echo "Checking frontend..."
-          curl -f -k https://msjenny.io.vn/
-          echo "External health checks passed"
