@@ -114,6 +114,8 @@ services:
       - traefik.http.routers.engrisk-web.tls.certresolver=letsencrypt
       - traefik.http.routers.engrisk-web.priority=1
       - traefik.http.services.engrisk-web.loadbalancer.server.port=3000
+      - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.permanent=true
 
 networks:
   engrisk:
