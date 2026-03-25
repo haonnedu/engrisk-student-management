@@ -68,11 +68,12 @@ services:
       - traefik.http.routers.engrisk-api-http.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && PathPrefix(`/api/`)
       - traefik.http.routers.engrisk-api-http.entrypoints=web
       - traefik.http.routers.engrisk-api-http.middlewares=engrisk-https-redirect
+      - traefik.http.routers.engrisk-api-http.priority=1000
       - traefik.http.routers.engrisk-api.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && PathPrefix(`/api/`)
       - traefik.http.routers.engrisk-api.entrypoints=websecure
       - traefik.http.routers.engrisk-api.tls=true
       - traefik.http.routers.engrisk-api.tls.certresolver=letsencrypt
-      - traefik.http.routers.engrisk-api.priority=100
+      - traefik.http.routers.engrisk-api.priority=1000
       - traefik.http.routers.engrisk-api.service=engrisk-api
       - traefik.http.services.engrisk-api.loadbalancer.server.port=3001
     command: ["node", "dist/main.js"]
@@ -108,11 +109,12 @@ services:
       - traefik.docker.network=proxy
       - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.permanent=true
-      - traefik.http.routers.engrisk-web-http.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && !PathPrefix(`/api/`)
+      - traefik.http.routers.engrisk-web-http.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
       - traefik.http.routers.engrisk-web-http.entrypoints=web
       - traefik.http.routers.engrisk-web-http.middlewares=engrisk-https-redirect
+      - traefik.http.routers.engrisk-web-http.priority=1
       - traefik.http.routers.engrisk-web-http.service=engrisk-web
-      - traefik.http.routers.engrisk-web.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && !PathPrefix(`/api/`)
+      - traefik.http.routers.engrisk-web.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
       - traefik.http.routers.engrisk-web.entrypoints=websecure
       - traefik.http.routers.engrisk-web.tls=true
       - traefik.http.routers.engrisk-web.tls.certresolver=letsencrypt
