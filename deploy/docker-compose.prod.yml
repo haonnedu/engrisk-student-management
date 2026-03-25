@@ -108,11 +108,11 @@ services:
       - traefik.docker.network=proxy
       - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.permanent=true
-      - traefik.http.routers.engrisk-web-http.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
+      - traefik.http.routers.engrisk-web-http.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && !PathPrefix(`/api/`)
       - traefik.http.routers.engrisk-web-http.entrypoints=web
       - traefik.http.routers.engrisk-web-http.middlewares=engrisk-https-redirect
       - traefik.http.routers.engrisk-web-http.service=engrisk-web
-      - traefik.http.routers.engrisk-web.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
+      - traefik.http.routers.engrisk-web.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && !PathPrefix(`/api/`)
       - traefik.http.routers.engrisk-web.entrypoints=websecure
       - traefik.http.routers.engrisk-web.tls=true
       - traefik.http.routers.engrisk-web.tls.certresolver=letsencrypt
