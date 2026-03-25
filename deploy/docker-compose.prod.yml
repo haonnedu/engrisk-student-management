@@ -3,7 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: esm_postgres
     restart: unless-stopped
-    networks: [engrisk]
+    networks:
+      - engrisk
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,10 +15,10 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.6'  # 30% of 2 cores
+          cpus: "0.6"
         reservations:
           memory: 256M
-          cpus: '0.2'  # 10% of 2 cores reserved
+          cpus: "0.2"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -33,7 +34,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks: [engrisk]
+    networks:
+      - engrisk
+      - proxy
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
@@ -42,83 +45,81 @@ services:
       PORT: ${PORT_BE}
       FRONTEND_URL: ${FRONTEND_URL}
       API_PREFIX: api/v1
-      # Limit Node.js CPU usage
       NODE_OPTIONS: "--max-old-space-size=768"
-    ports:
-      - "${PORT_BE}:${PORT_BE}"
     deploy:
       resources:
         limits:
           memory: 1G
-          cpus: '0.8'  # 40% of 2 cores
+          cpus: "0.8"
         reservations:
           memory: 512M
-          cpus: '0.4'  # 20% of 2 cores reserved
+          cpus: "0.4"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:${PORT_BE}/api/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 20s
-    # Migrations are handled by docker-entrypoint.sh
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.engrisk-https-redirect.redirectscheme.permanent=true
+      - traefik.http.routers.engrisk-api-http.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && PathPrefix(`/api`)
+      - traefik.http.routers.engrisk-api-http.entrypoints=web
+      - traefik.http.routers.engrisk-api-http.middlewares=engrisk-https-redirect
+      - traefik.http.routers.engrisk-api.rule=(Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)) && PathPrefix(`/api`)
+      - traefik.http.routers.engrisk-api.entrypoints=websecure
+      - traefik.http.routers.engrisk-api.tls=true
+      - traefik.http.routers.engrisk-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.engrisk-api.priority=100
+      - traefik.http.services.engrisk-api.loadbalancer.server.port=3001
     command: ["node", "dist/main.js"]
 
   frontend:
     image: ghcr.io/${IMAGE_NAME}-frontend:${TAG}
     container_name: engrisk-frontend
     restart: unless-stopped
-    networks: [engrisk]
+    networks:
+      - engrisk
+      - proxy
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: 3000
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      # Limit Node.js memory usage
       NODE_OPTIONS: "--max-old-space-size=512"
-    ports:
-      - "${PORT_FE}:3000"
     deploy:
       resources:
         limits:
           memory: 1G
-          cpus: '1.0'
+          cpus: "1.0"
         reservations:
           memory: 512M
-          cpus: '0.5'
+          cpus: "0.5"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
       interval: 30s
       timeout: 15s
       retries: 5
       start_period: 60s
-
-  nginx:
-    image: ghcr.io/${IMAGE_NAME}-nginx:${TAG}
-    container_name: engrisk-nginx
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_started
-      frontend:
-        condition: service_started
-    networks: [engrisk]
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.4'  # 20% of 2 cores (nginx rất nhẹ, nhưng có thể tăng để handle nhiều connections)
-        reservations:
-          memory: 64M
-          cpus: '0.1'  # 5% of 2 cores reserved
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.engrisk-web-http.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
+      - traefik.http.routers.engrisk-web-http.entrypoints=web
+      - traefik.http.routers.engrisk-web-http.middlewares=engrisk-https-redirect
+      - traefik.http.routers.engrisk-web.rule=Host(`msjenny.io.vn`) || Host(`www.msjenny.io.vn`)
+      - traefik.http.routers.engrisk-web.entrypoints=websecure
+      - traefik.http.routers.engrisk-web.tls=true
+      - traefik.http.routers.engrisk-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.engrisk-web.priority=1
+      - traefik.http.services.engrisk-web.loadbalancer.server.port=3000
 
 networks:
   engrisk:
     name: engrisk-network
+    external: true
+  proxy:
     external: true
 
 volumes:

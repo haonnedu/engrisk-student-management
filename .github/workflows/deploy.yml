@@ -27,8 +27,6 @@ jobs:
             context: ./be
           - name: frontend
             context: ./fe
-          - name: nginx
-            context: ./deploy/nginx
 
     steps:
       - name: Checkout
@@ -64,10 +62,8 @@ jobs:
           provenance: false
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-          # Limit build resources to avoid "no space left on device" errors
           platforms: linux/amd64
           no-cache-filter: ""
-          # For frontend, disable cache to ensure clean build
           no-cache: ${{ matrix.name == 'frontend' && false }}
 
   deploy:
@@ -76,23 +72,23 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout (compose/nginx.conf)
+      - name: Checkout deploy files
         uses: actions/checkout@v4
 
-      - name: Copy compose & nginx.conf to server
+      - name: Copy deploy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT }}
-          source: deploy/** 
+          source: deploy/**
           target: /var/www/engrisk-student-management
 
-      - name: Deploy via SSH (compose pull/up)
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
-        env:                              # ⬅️ đưa secrets/vars vào môi trường của runner
-          TAG: ${{ github.sha }}          # truyền TAG từ GitHub vào
+        env:
+          TAG: ${{ github.sha }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -107,171 +103,154 @@ jobs:
           script_stop: true
           script: |
             set -Eeuo pipefail
-            
-            # Function to show all logs on error
+
             show_all_logs() {
-              echo "════════════════════════════════════════"
-              echo "❌ DEPLOYMENT FAILED - Showing all logs:"
-              echo "════════════════════════════════════════"
+              echo "========================================"
+              echo "DEPLOYMENT FAILED - Showing all logs"
+              echo "========================================"
               cd /var/www/engrisk-student-management
               COMPOSE_FILE="docker-compose.prod.yml"
               [ -f "deploy/docker-compose.prod.yml" ] && COMPOSE_FILE="deploy/docker-compose.prod.yml"
-              
+
               echo "--- Container Status ---"
               docker ps -a
-              
+
               echo "--- Backend Logs ---"
               docker compose -f "$COMPOSE_FILE" logs --tail=100 backend 2>&1 || docker logs engrisk-backend --tail=100 2>&1 || echo "No backend logs"
-              
+
               echo "--- Frontend Logs ---"
               docker compose -f "$COMPOSE_FILE" logs --tail=50 frontend 2>&1 || docker logs engrisk-frontend --tail=50 2>&1 || echo "No frontend logs"
-              
-              echo "--- Nginx Logs ---"
-              docker compose -f "$COMPOSE_FILE" logs --tail=50 nginx 2>&1 || docker logs engrisk-nginx --tail=50 2>&1 || echo "No nginx logs"
-              
+
               echo "--- Database Logs ---"
               docker compose -f "$COMPOSE_FILE" logs --tail=30 db 2>&1 || docker logs esm_postgres --tail=30 2>&1 || echo "No db logs"
             }
-            
-            # Trap any error and show logs
+
             trap 'show_all_logs' ERR
+
             APP_DIR=/var/www/engrisk-student-management
             DOMAIN=msjenny.io.vn
-      
+
             echo "Using TAG=$TAG, DB_USER=$DB_USER, IMAGE_NAME=$IMAGE_NAME"
-            mkdir -p "$APP_DIR" "$APP_DIR/nginx-config"
+            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
-      
+
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
-      
+
             umask 177
             cat > .env <<ENV
             TAG=${TAG}
             DOMAIN=${DOMAIN}
-            
-            # DB
+
             POSTGRES_DB=student_management
             POSTGRES_USER=${DB_USER}
             POSTGRES_PASSWORD=${DB_PASSWORD}
             DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@esm_postgres:5432/student_management
-            
-            # JWT
+
             JWT_SECRET=${JWT_SECRET}
             JWT_EXPIRES_IN=24h
-            
-            # Backend
+
             NODE_ENV=production
             PORT_BE=3001
             FRONTEND_URL=https://${DOMAIN}
             API_PREFIX=api/v1
-            
-            # Frontend
+
             PORT_FE=3000
             NEXT_PUBLIC_API_URL=https://${DOMAIN}/api/v1
             ENV
-            
-                  chmod 600 .env
-      
+
+            chmod 600 .env
+
             COMPOSE_FILE="docker-compose.prod.yml"
             if [ ! -f "$COMPOSE_FILE" ] && [ -f "deploy/docker-compose.prod.yml" ]; then
               COMPOSE_FILE="deploy/docker-compose.prod.yml"
             fi
-            echo "✓ Using compose file: $COMPOSE_FILE"
-      
-            # Create network and volume if they don't exist
-            echo "→ Checking network and volume..."
+            echo "Using compose file: $COMPOSE_FILE"
+
             docker network inspect engrisk-network >/dev/null 2>&1 || docker network create engrisk-network
+            docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
             docker volume inspect postgres_data >/dev/null 2>&1 || docker volume create postgres_data
-            echo "✓ Network and volume ready"
-      
-            # Start database if it's stopped, or create if not exists
+            echo "Network and volume ready"
+
             if docker ps -a --format '{{.Names}}' | grep -q '^esm_postgres$'; then
-              echo "→ Database container exists, ensuring it's running..."
+              echo "Database container exists, ensuring it's running..."
               docker start esm_postgres || true
               sleep 3
             fi
-      
-            # Remove old app containers (keeping database)
-            echo "→ Removing old app containers..."
-            # Stop and remove specific services (not db)
-            docker compose -f "$COMPOSE_FILE" --env-file .env rm -sf backend frontend nginx 2>&1 || true
-            
-            # Force remove by name to handle any stuck containers
+
+            echo "Removing old app containers..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env rm -sf backend frontend 2>&1 || true
+
             for container in engrisk-backend engrisk-frontend engrisk-nginx; do
               if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
-                echo "  Force removing stuck container: $container"
+                echo "Force removing stuck container: $container"
                 docker stop "$container" 2>&1 || true
                 docker rm -f "$container" 2>&1 || true
               fi
             done
-            echo "✓ Old containers removed"
-      
-            echo "→ Pulling new images..."
-            docker compose -f "$COMPOSE_FILE" --env-file .env pull backend frontend nginx
-            echo "✓ Images pulled"
-      
-            echo "→ Starting containers..."
+            echo "Old containers removed"
+
+            echo "Pulling new images..."
+            docker compose -f "$COMPOSE_FILE" --env-file .env pull backend frontend
+            echo "Images pulled"
+
+            echo "Starting containers..."
             docker compose -f "$COMPOSE_FILE" --env-file .env up -d
-            
-            echo "→ Checking container status..."
+
+            echo "Checking container status..."
             docker compose -f "$COMPOSE_FILE" --env-file .env ps
-            
-            echo "→ Waiting for services to be ready (this may take 30-60s for migrations)..."
+
+            echo "Waiting for services to be ready..."
             sleep 15
-            
-            echo "→ Testing backend health (with retries)..."
+
+            echo "Testing backend health..."
             MAX_ATTEMPTS=12
             ATTEMPT=1
             while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
-              echo "  Attempt $ATTEMPT/$MAX_ATTEMPTS..."
+              echo "Attempt $ATTEMPT/$MAX_ATTEMPTS..."
               if curl -fsS -k "https://${DOMAIN}/api/v1/health" >/dev/null 2>&1; then
-                echo "✓ Backend is healthy"
+                echo "Backend is healthy"
                 break
               fi
-              
+
               if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-                echo "❌ Backend health check failed after $MAX_ATTEMPTS attempts!"
-                echo "→ Backend logs:"
+                echo "Backend health check failed after $MAX_ATTEMPTS attempts"
                 docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=200 backend
                 exit 1
               fi
-              
+
               sleep 5
               ATTEMPT=$((ATTEMPT + 1))
             done
-            
-            echo "→ Testing frontend..."
+
+            echo "Testing frontend..."
             if ! curl -fsS -k "https://${DOMAIN}/" >/dev/null 2>&1; then
-              echo "❌ Frontend health check failed!"
-              docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 nginx
+              echo "Frontend health check failed"
               docker compose -f "$COMPOSE_FILE" --env-file .env logs --tail=100 frontend
               exit 1
             fi
-            echo "✓ Frontend is healthy"
-            
+            echo "Frontend is healthy"
+
             echo ""
-            echo "════════════════════════════════════════"
-            echo "✓ DEPLOYMENT SUCCESSFUL!"
-            echo "════════════════════════════════════════"
-            echo "→ Running containers:"
+            echo "========================================"
+            echo "DEPLOYMENT SUCCESSFUL"
+            echo "========================================"
             docker compose -f "$COMPOSE_FILE" --env-file .env ps
             echo ""
-            echo "→ Deployed version: $TAG"
-            echo "→ Site: https://${DOMAIN}"
-            echo "→ API Health: https://${DOMAIN}/api/v1/health"
-            
-            # Clean up old unused images to save disk space
+            echo "Deployed version: $TAG"
+            echo "Site: https://${DOMAIN}"
+            echo "API Health: https://${DOMAIN}/api/v1/health"
+
             echo ""
-            echo "→ Cleaning up old Docker images..."
+            echo "Cleaning up old Docker images..."
             docker image prune -af --filter "label!=keep" --filter "until=24h" || true
-            echo "✓ Cleanup complete"
+            echo "Cleanup complete"
 
       - name: Production Health Check (external)
         run: |
-          echo "→ Final verification from GitHub Actions runner..."
+          echo "Final verification from GitHub Actions runner..."
           sleep 10
-          echo "→ Checking API health..."
+          echo "Checking API health..."
           curl -f -k https://msjenny.io.vn/api/v1/health
-          echo "→ Checking frontend..."
+          echo "Checking frontend..."
           curl -f -k https://msjenny.io.vn/
-          echo "✓ External health checks passed!"
+          echo "External health checks passed"
