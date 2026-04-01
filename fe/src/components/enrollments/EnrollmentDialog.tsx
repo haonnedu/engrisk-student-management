@@ -22,7 +22,6 @@ import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useForm } from "react-hook-form";
@@ -56,6 +55,17 @@ type EnrollmentDialogProps = {
   onSaved?: () => void;
 };
 
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+
+  return debounced;
+}
+
 export function EnrollmentDialog({
   mode = "create",
   enrollment,
@@ -64,22 +74,25 @@ export function EnrollmentDialog({
 }: EnrollmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [studentFilter, setStudentFilter] = useState("");
+  const debouncedStudentFilter = useDebouncedValue(studentFilter, 500);
 
-  const defaultValues: Partial<EnrollmentFormValues> =
-    mode === "edit" && enrollment
-      ? {
-          studentId: enrollment.studentId,
-          courseId: enrollment.courseId,
-          sectionId: enrollment.sectionId || "none",
-          status: enrollment.status,
-        }
-      : {
-          status: "ENROLLED",
-          sectionId: "none",
-        };
+  const defaultValues = useMemo<Partial<EnrollmentFormValues>>(
+    () =>
+      mode === "edit" && enrollment
+        ? {
+            studentId: enrollment.studentId,
+            courseId: enrollment.courseId,
+            sectionId: enrollment.sectionId || "none",
+            status: enrollment.status,
+          }
+        : {
+            status: "ENROLLED",
+            sectionId: "none",
+          },
+    [mode, enrollment]
+  );
 
   const {
-    register,
     handleSubmit,
     reset,
     setValue,
@@ -93,7 +106,12 @@ export function EnrollmentDialog({
   const createEnrollmentMutation = useCreateEnrollment();
   const updateEnrollmentMutation = useUpdateEnrollment();
   const { data: classesData } = useClasses(1, 100);
-  const { data: studentsData } = useStudents(1, 100);
+  const { data: studentsData, isLoading: isStudentsLoading } = useStudents(
+    1,
+    20,
+    undefined,
+    debouncedStudentFilter
+  );
   const { data: coursesData } = useCourses(1, 100);
 
   const watchedCourseId = watch("courseId");
@@ -103,27 +121,19 @@ export function EnrollmentDialog({
     if (open && mode === "edit" && enrollment) {
       reset(defaultValues as EnrollmentFormValues);
     }
-  }, [open, mode, enrollment, reset]);
+  }, [open, mode, enrollment, reset, defaultValues]);
+
+  useEffect(() => {
+    if (!open) {
+      setStudentFilter("");
+    }
+  }, [open]);
 
   // Filter sections based on selected course
   const filteredSections =
     classesData?.data?.filter(
       (section: any) => section.courseId === watchedCourseId
     ) || [];
-
-  // Filter students based on search input
-  const filteredStudents = useMemo(() => {
-    if (!studentsData?.data) return [];
-    if (!studentFilter.trim()) return studentsData.data;
-    
-    const filterLower = studentFilter.toLowerCase();
-    return studentsData.data.filter((student) => {
-      const engName = (student.engName || "").toLowerCase();
-      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-      const studentId = student.studentId?.toLowerCase() || "";
-      return engName.includes(filterLower) || fullName.includes(filterLower) || studentId.includes(filterLower);
-    });
-  }, [studentsData?.data, studentFilter]);
 
   function onSubmit(values: EnrollmentFormValues) {
     // Convert "none" to undefined for API
@@ -233,12 +243,16 @@ export function EnrollmentDialog({
                       className="h-8"
                     />
                   </div>
-                  {filteredStudents.length === 0 ? (
+                  {isStudentsLoading ? (
+                    <SelectItem value="loading-results" disabled>
+                      Searching students...
+                    </SelectItem>
+                  ) : !studentsData?.data?.length ? (
                     <SelectItem value="no-results" disabled>
                       No students found
                     </SelectItem>
                   ) : (
-                    filteredStudents.map((student) => (
+                    studentsData.data.map((student) => (
                       <SelectItem key={student.id} value={student.id}>
                         {student.engName} - {student.firstName} {student.lastName}
                         {student.studentId && ` (${student.studentId})`}
