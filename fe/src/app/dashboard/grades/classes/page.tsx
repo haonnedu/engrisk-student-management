@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Users, BookOpen, Calendar, GraduationCap } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { LevelUpClassDialog } from "@/components/classes/LevelUpClassDialog";
 
 export default function GradesClassesPage() {
   const [search, setSearch] = useState("");
@@ -36,7 +37,7 @@ export default function GradesClassesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Grades Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Grades Management</h1>
           <p className="text-muted-foreground">
             Select a class to view and manage student grades
           </p>
@@ -48,7 +49,7 @@ export default function GradesClassesPage() {
           placeholder="Search classes..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full max-w-sm"
         />
       </div>
 
@@ -101,10 +102,10 @@ export default function GradesClassesPage() {
                 )}
               </div>
 
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-4 pt-4 border-t flex gap-2">
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="flex-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/dashboard/grades/classes/${classItem.id}`);
@@ -113,6 +114,12 @@ export default function GradesClassesPage() {
                   <GraduationCap className="mr-2 h-4 w-4" />
                   View Grades
                 </Button>
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <LevelUpClassDialog sourceClass={classItem} />
+                </div>
               </div>
             </CardContent>
           </Card>

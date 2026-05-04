@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="w-full">
-        <div className="mx-auto w-full max-w-screen-2xl space-y-6 p-4 min-w-0">
+        <div className="mx-auto w-full max-w-screen-2xl space-y-4 sm:space-y-5 min-w-0">
           {children}
         </div>
       </div>

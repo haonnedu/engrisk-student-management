@@ -1,47 +1,52 @@
 "use client";
 
 import { useLocale } from "@/contexts/LocaleContext";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Languages } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const languages = [
-  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-] as const;
-
-export function LanguageSwitcher() {
-  const { locale, setLocale } = useLocale();
-
-  const currentLanguage = languages.find((lang) => lang.code === locale) || languages[0];
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white">
-          <Languages className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
-          <span className="sm:hidden">{currentLanguage.flag}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => setLocale(language.code)}
-            className={locale === language.code ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">{language.flag}</span>
-            {language.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+interface LanguageSwitcherProps {
+  /** "sidebar" = white-on-dark style; "navbar" = standard style */
+  variant?: "sidebar" | "navbar";
 }
 
+const LANGUAGES = [
+  { code: "vi" as const, flag: "🇻🇳", label: "VI" },
+  { code: "en" as const, flag: "🇬🇧", label: "EN" },
+];
+
+export function LanguageSwitcher({ variant = "sidebar" }: LanguageSwitcherProps) {
+  const { locale, setLocale } = useLocale();
+
+  return (
+    <div className="flex items-center gap-1 rounded-lg p-0.5"
+      style={
+        variant === "sidebar"
+          ? { background: "rgba(255,255,255,0.08)" }
+          : { background: "var(--muted)" }
+      }
+    >
+      {LANGUAGES.map((lang) => {
+        const isActive = locale === lang.code;
+        return (
+          <button
+            key={lang.code}
+            type="button"
+            onClick={() => setLocale(lang.code)}
+            className={cn(
+              "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150 select-none",
+              isActive
+                ? variant === "sidebar"
+                  ? "bg-white text-blue-700 shadow-sm"
+                  : "bg-background text-foreground shadow-sm"
+                : variant === "sidebar"
+                  ? "text-white/60 hover:text-white/90"
+                  : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span>{lang.flag}</span>
+            <span>{lang.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

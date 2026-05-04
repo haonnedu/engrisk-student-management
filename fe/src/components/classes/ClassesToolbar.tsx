@@ -13,12 +13,12 @@ export function ClassesToolbar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 className="text-xl font-semibold">Classes</h1>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Search classes..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-56"
+          className="w-full sm:w-52"
         />
         <ClassDialog />
       </div>

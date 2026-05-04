@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { GradeTypeDialog } from "./GradeTypeDialog";
 
 interface GradeTypesToolbarProps {
@@ -27,28 +25,26 @@ export function GradeTypesToolbar({
   onIsActiveChange,
 }: GradeTypesToolbarProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h1 className="text-xl font-semibold">Grade Types</h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 sm:flex-none">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search grade types..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-8 w-[300px]"
+            className="pl-8 w-full sm:w-52"
           />
         </div>
         <Select
           value={isActive === undefined ? "all" : isActive.toString()}
           onValueChange={(value) => {
-            if (value === "all") {
-              onIsActiveChange(undefined);
-            } else {
-              onIsActiveChange(value === "true");
-            }
+            if (value === "all") onIsActiveChange(undefined);
+            else onIsActiveChange(value === "true");
           }}
         >
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-full sm:w-36">
             <SelectValue placeholder="Filter status" />
           </SelectTrigger>
           <SelectContent>
@@ -57,8 +53,8 @@ export function GradeTypesToolbar({
             <SelectItem value="false">Inactive</SelectItem>
           </SelectContent>
         </Select>
+        <GradeTypeDialog />
       </div>
-      <GradeTypeDialog />
     </div>
   );
 }

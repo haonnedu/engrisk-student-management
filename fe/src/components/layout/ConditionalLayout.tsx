@@ -107,7 +107,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           </header>
 
           {/* MAIN: min-w-0 + overflow-x-hidden để content không tràn/đè lên sidebar, scroll ngang chỉ trong từng trang */}
-          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -125,7 +125,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           </header>
 
           {/* MAIN */}
-          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -143,7 +143,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
           </header>
 
           {/* MAIN */}
-          <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
@@ -154,14 +154,13 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        {/* HEADER: KHÔNG giãn, cao 56px */}
+        {/* HEADER */}
         <header className="sticky top-0 z-40 h-14 shrink-0 border-b bg-background/80 backdrop-blur w-full">
-          {/* trigger + navbar */}
           <Navbar />
         </header>
 
-        {/* MAIN: min-w-0 + overflow-x-hidden để content không tràn/đè lên sidebar */}
-        <main className="flex-1 p-4 min-w-0 overflow-x-hidden">{children}</main>
+        {/* MAIN */}
+        <main className="flex-1 p-3 sm:p-4 md:p-6 min-w-0 overflow-x-hidden">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

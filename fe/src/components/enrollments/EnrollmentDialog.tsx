@@ -42,7 +42,7 @@ import { toast } from "sonner";
 const enrollmentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   courseId: z.string().min(1, "Course is required"),
-  sectionId: z.string().optional(),
+  sectionId: z.string().min(1, "Class is required"),
   status: z.enum(["ENROLLED", "COMPLETED", "DROPPED", "FAILED"]).optional(),
 });
 
@@ -82,12 +82,12 @@ export function EnrollmentDialog({
         ? {
             studentId: enrollment.studentId,
             courseId: enrollment.courseId,
-            sectionId: enrollment.sectionId || "none",
+            sectionId: enrollment.sectionId || "",
             status: enrollment.status,
           }
         : {
             status: "ENROLLED",
-            sectionId: "none",
+            sectionId: "",
           },
     [mode, enrollment]
   );
@@ -136,11 +136,7 @@ export function EnrollmentDialog({
     ) || [];
 
   function onSubmit(values: EnrollmentFormValues) {
-    // Convert "none" to undefined for API
-    const submitData = {
-      ...values,
-      sectionId: values.sectionId === "none" ? undefined : values.sectionId,
-    };
+    const submitData = { ...values };
 
     if (mode === "edit" && enrollment) {
       updateEnrollmentMutation.mutate(
@@ -273,7 +269,7 @@ export function EnrollmentDialog({
                 value={watch("courseId") || ""}
                 onValueChange={(value) => {
                   setValue("courseId", value);
-                  setValue("sectionId", "none"); // Reset section when course changes
+                  setValue("sectionId", ""); // Reset section when course changes
                 }}
               >
                 <Tooltip>
@@ -310,18 +306,25 @@ export function EnrollmentDialog({
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="sectionId">Class (Optional)</Label>
+            <Label htmlFor="sectionId">
+              Class <span className="text-destructive">*</span>
+            </Label>
             <Select
-              value={watch("sectionId") || "none"}
+              value={watch("sectionId") || ""}
               onValueChange={(value) => setValue("sectionId", value)}
+              disabled={!watchedCourseId}
             >
               <Tooltip>
                 <TooltipTrigger asChild>
                   <SelectTrigger className="w-full truncate">
-                    <SelectValue placeholder="Select class" />
+                    <SelectValue
+                      placeholder={
+                        watchedCourseId ? "Select class" : "Select course first"
+                      }
+                    />
                   </SelectTrigger>
                 </TooltipTrigger>
-                {watch("sectionId") && watch("sectionId") !== "none" && (
+                {watch("sectionId") && (
                   <TooltipContent>
                     {(() => {
                       const section = filteredSections.find(
@@ -333,14 +336,22 @@ export function EnrollmentDialog({
                 )}
               </Tooltip>
               <SelectContent>
-                <SelectItem value="none">No class</SelectItem>
-                {filteredSections.map((section: any) => (
-                  <SelectItem key={section.id} value={section.id}>
-                    {section.name} ({section.code})
+                {filteredSections.length === 0 ? (
+                  <SelectItem value="__empty__" disabled>
+                    No classes for this course
                   </SelectItem>
-                ))}
+                ) : (
+                  filteredSections.map((section: any) => (
+                    <SelectItem key={section.id} value={section.id}>
+                      {section.name} ({section.code})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            {errors.sectionId && (
+              <p className="text-sm text-red-500">{errors.sectionId.message}</p>
+            )}
           </div>
 
           <div className="grid gap-1.5">

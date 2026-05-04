@@ -42,74 +42,74 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.25 0.02 250);
+  --foreground: oklch(0.18 0.03 258);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.02 250);
+  --card-foreground: oklch(0.18 0.03 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.02 250);
-  --primary: oklch(0.58 0.16 250);
+  --popover-foreground: oklch(0.18 0.03 258);
+  --primary: oklch(0.46 0.20 258);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.02 250);
-  --secondary-foreground: oklch(0.35 0.08 250);
-  --muted: oklch(0.96 0.01 250);
-  --muted-foreground: oklch(0.5 0.03 250);
-  --accent: oklch(0.78 0.08 250);
-  --accent-foreground: oklch(0.25 0.08 250);
+  --secondary: oklch(0.94 0.02 258);
+  --secondary-foreground: oklch(0.30 0.08 258);
+  --muted: oklch(0.96 0.01 258);
+  --muted-foreground: oklch(0.52 0.03 258);
+  --accent: oklch(0.92 0.03 258);
+  --accent-foreground: oklch(0.25 0.08 258);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.02 250);
-  --input: oklch(0.90 0.02 250);
-  --ring: oklch(0.58 0.16 250);
-  --chart-1: oklch(0.58 0.16 250);
-  --chart-2: oklch(0.78 0.08 250);
-  --chart-3: oklch(0.65 0.18 150);
-  --chart-4: oklch(0.75 0.15 80);
-  --chart-5: oklch(0.60 0.20 320);
-  /* Sidebar: hồng nhạt, chữ tối, hover đậm hơn */
-  --sidebar: oklch(0.82 0.08 350);
-  --sidebar-foreground: oklch(0.28 0.04 350);
-  --sidebar-primary: oklch(0.55 0.18 350);
+  --border: oklch(0.89 0.02 258);
+  --input: oklch(0.89 0.02 258);
+  --ring: oklch(0.46 0.20 258);
+  --chart-1: oklch(0.50 0.20 258);
+  --chart-2: oklch(0.65 0.16 185);
+  --chart-3: oklch(0.65 0.18 145);
+  --chart-4: oklch(0.72 0.18 75);
+  --chart-5: oklch(0.62 0.22 310);
+  /* Sidebar: dark navy for educational/professional feel */
+  --sidebar: oklch(0.22 0.10 265);
+  --sidebar-foreground: oklch(0.92 0.02 265);
+  --sidebar-primary: oklch(0.60 0.16 210);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.75 0.12 350);
-  --sidebar-accent-foreground: oklch(0.25 0.06 350);
-  --sidebar-border: oklch(0.72 0.10 350);
-  --sidebar-ring: oklch(0.60 0.14 350);
+  --sidebar-accent: oklch(0.30 0.08 265);
+  --sidebar-accent-foreground: oklch(0.95 0.01 265);
+  --sidebar-border: oklch(0.30 0.06 265);
+  --sidebar-ring: oklch(0.55 0.14 210);
 }
 
 .dark {
-  --background: oklch(0.18 0.02 250);
-  --foreground: oklch(0.95 0.01 250);
-  --card: oklch(0.22 0.03 250);
-  --card-foreground: oklch(0.95 0.01 250);
-  --popover: oklch(0.22 0.03 250);
-  --popover-foreground: oklch(0.95 0.01 250);
-  --primary: oklch(0.65 0.14 250);
+  --background: oklch(0.17 0.02 258);
+  --foreground: oklch(0.95 0.01 258);
+  --card: oklch(0.21 0.03 258);
+  --card-foreground: oklch(0.95 0.01 258);
+  --popover: oklch(0.21 0.03 258);
+  --popover-foreground: oklch(0.95 0.01 258);
+  --primary: oklch(0.62 0.18 258);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.28 0.04 250);
-  --secondary-foreground: oklch(0.90 0.02 250);
-  --muted: oklch(0.28 0.04 250);
-  --muted-foreground: oklch(0.70 0.03 250);
-  --accent: oklch(0.35 0.06 250);
-  --accent-foreground: oklch(0.90 0.02 250);
+  --secondary: oklch(0.28 0.04 258);
+  --secondary-foreground: oklch(0.90 0.02 258);
+  --muted: oklch(0.28 0.04 258);
+  --muted-foreground: oklch(0.68 0.03 258);
+  --accent: oklch(0.32 0.05 258);
+  --accent-foreground: oklch(0.90 0.02 258);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.35 0.04 250);
-  --input: oklch(0.30 0.04 250);
-  --ring: oklch(0.65 0.14 250);
-  --chart-1: oklch(0.65 0.14 250);
-  --chart-2: oklch(0.78 0.08 250);
-  --chart-3: oklch(0.65 0.18 150);
-  --chart-4: oklch(0.75 0.15 80);
-  --chart-5: oklch(0.60 0.20 320);
-  /* Dark mode sidebar: hồng đậm, hover hồng nhạt hơn */
-  --sidebar: oklch(0.32 0.08 350);
-  --sidebar-foreground: oklch(0.92 0.02 350);
-  --sidebar-primary: oklch(0.65 0.14 350);
+  --border: oklch(0.32 0.04 258);
+  --input: oklch(0.28 0.04 258);
+  --ring: oklch(0.62 0.18 258);
+  --chart-1: oklch(0.62 0.18 258);
+  --chart-2: oklch(0.68 0.16 185);
+  --chart-3: oklch(0.65 0.18 145);
+  --chart-4: oklch(0.72 0.18 75);
+  --chart-5: oklch(0.62 0.22 310);
+  /* Dark sidebar: deeper navy */
+  --sidebar: oklch(0.16 0.08 265);
+  --sidebar-foreground: oklch(0.92 0.02 265);
+  --sidebar-primary: oklch(0.62 0.16 210);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.42 0.10 350);
-  --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(0.38 0.08 350);
-  --sidebar-ring: oklch(0.55 0.12 350);
+  --sidebar-accent: oklch(0.24 0.07 265);
+  --sidebar-accent-foreground: oklch(0.95 0.01 265);
+  --sidebar-border: oklch(0.25 0.06 265);
+  --sidebar-ring: oklch(0.55 0.14 210);
 }
 
 @layer base {
@@ -121,22 +121,29 @@
   }
 }
 
-/* Sidebar: dải màu gradient hồng nhạt */
+/* Sidebar: dark navy gradient — professional educational theme */
 [data-slot="sidebar-inner"] {
   background: linear-gradient(
     165deg,
-    oklch(0.84 0.06 355) 0%,
-    oklch(0.82 0.08 350) 50%,
-    oklch(0.80 0.08 340) 100%
+    oklch(0.25 0.13 270) 0%,
+    oklch(0.20 0.10 263) 55%,
+    oklch(0.17 0.09 256) 100%
   ) !important;
 }
 .dark [data-slot="sidebar-inner"] {
   background: linear-gradient(
     165deg,
-    oklch(0.34 0.08 355) 0%,
-    oklch(0.30 0.09 350) 50%,
-    oklch(0.28 0.08 340) 100%
+    oklch(0.19 0.10 270) 0%,
+    oklch(0.15 0.08 263) 55%,
+    oklch(0.13 0.07 256) 100%
   ) !important;
+}
+
+/* Smooth card hover transitions */
+@layer utilities {
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
 }
 
 /* Mobile touch improvements for date picker */
@@ -151,13 +158,11 @@
       overflow-y: auto;
       z-index: 9999 !important;
     }
-    
-    /* Ensure dialog content allows touch through for popovers */
+
     [data-slot="dialog-content"] {
       overflow: visible;
     }
-    
-    /* Better touch targets for calendar */
+
     .rdp-button {
       min-height: 44px !important;
       min-width: 44px !important;

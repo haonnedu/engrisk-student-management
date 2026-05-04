@@ -1,117 +1,133 @@
 "use client";
 
 import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslations } from "@/hooks/useTranslations";
 
-// Mock data for chart
-const chartData = [
-  { month: "Jul", students: 140, courses: 7, enrollments: 25 },
-  { month: "Aug", students: 145, courses: 8, enrollments: 18 },
-  { month: "Sep", students: 150, courses: 8, enrollments: 22 },
-  { month: "Oct", students: 152, courses: 9, enrollments: 15 },
-  { month: "Nov", students: 154, courses: 9, enrollments: 20 },
-  { month: "Dec", students: 156, courses: 8, enrollments: 12 },
+const RAW_DATA = [
+  { monthKey: "jul", students: 140, enrollments: 25, courses: 7 },
+  { monthKey: "aug", students: 145, enrollments: 18, courses: 8 },
+  { monthKey: "sep", students: 150, enrollments: 22, courses: 8 },
+  { monthKey: "oct", students: 152, enrollments: 15, courses: 9 },
+  { monthKey: "nov", students: 154, enrollments: 20, courses: 9 },
+  { monthKey: "dec", students: 156, enrollments: 12, courses: 8 },
 ];
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border bg-card shadow-lg p-3 text-sm min-w-[140px]">
+      <p className="font-semibold text-foreground mb-2">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center justify-between gap-4 py-0.5">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full" style={{ background: entry.color }} />
+            {entry.name}
+          </span>
+          <span className="font-medium text-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Chart() {
-  const maxStudents = Math.max(...chartData.map((d) => d.students));
-  const maxCourses = Math.max(...chartData.map((d) => d.courses));
-  const maxEnrollments = Math.max(...chartData.map((d) => d.enrollments));
+  const { t } = useTranslations("dashboard.chart");
+
+  const data = RAW_DATA.map((d) => ({
+    month: t(`months.${d.monthKey}`),
+    [t("students")]: d.students,
+    [t("enrollments")]: d.enrollments,
+  }));
+
+  const studentKey = t("students");
+  const enrollmentKey = t("enrollments");
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Student Growth & Course Activity</CardTitle>
-        <CardDescription>
-          Monthly statistics for students and courses
-        </CardDescription>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Chart */}
-          <div className="h-80 flex items-end space-x-3">
-            {chartData.map((data, index) => (
-              <div
-                key={data.month}
-                className="flex-1 flex flex-col items-center space-y-3"
-              >
-                {/* Students Bar */}
-                <div className="w-full flex flex-col items-center space-y-1">
-                  <div
-                    className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg shadow-sm"
-                    style={{
-                      height: `${(data.students / maxStudents) * 140}px`,
-                      minHeight: "8px",
-                    }}
-                  ></div>
-                  <span className="text-xs font-medium text-gray-700">
-                    {data.students}
-                  </span>
-                </div>
+      <CardContent className="flex-1 pb-4">
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradStudents" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradEnrollments" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#8b5cf6" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
 
-                {/* Courses Bar */}
-                <div className="w-full flex flex-col items-center space-y-1">
-                  <div
-                    className="w-full bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg shadow-sm"
-                    style={{
-                      height: `${(data.courses / maxCourses) * 100}px`,
-                      minHeight: "8px",
-                    }}
-                  ></div>
-                  <span className="text-xs font-medium text-gray-700">
-                    {data.courses}
-                  </span>
-                </div>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border)"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+              iconType="circle"
+              iconSize={8}
+            />
 
-                {/* Enrollments Bar */}
-                <div className="w-full flex flex-col items-center space-y-1">
-                  <div
-                    className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg shadow-sm"
-                    style={{
-                      height: `${(data.enrollments / maxEnrollments) * 80}px`,
-                      minHeight: "8px",
-                    }}
-                  ></div>
-                  <span className="text-xs font-medium text-gray-700">
-                    {data.enrollments}
-                  </span>
-                </div>
-
-                {/* Month Label */}
-                <span className="text-xs font-semibold text-gray-800 mt-2">
-                  {data.month}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="flex items-center justify-center space-x-8">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gradient-to-r from-blue-600 to-blue-400 rounded"></div>
-              <span className="text-sm font-medium text-gray-700">
-                Total Students
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gradient-to-r from-green-600 to-green-400 rounded"></div>
-              <span className="text-sm font-medium text-gray-700">
-                Active Courses
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gradient-to-r from-purple-600 to-purple-400 rounded"></div>
-              <span className="text-sm font-medium text-gray-700">
-                New Enrollments
-              </span>
-            </div>
-          </div>
-        </div>
+            <Area
+              type="monotone"
+              dataKey={studentKey}
+              stroke="#3b82f6"
+              strokeWidth={2.5}
+              fill="url(#gradStudents)"
+              dot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
+              activeDot={{ r: 6, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }}
+            />
+            <Area
+              type="monotone"
+              dataKey={enrollmentKey}
+              stroke="#8b5cf6"
+              strokeWidth={2.5}
+              fill="url(#gradEnrollments)"
+              dot={{ r: 4, fill: "#8b5cf6", strokeWidth: 0 }}
+              activeDot={{ r: 6, fill: "#8b5cf6", strokeWidth: 2, stroke: "#fff" }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

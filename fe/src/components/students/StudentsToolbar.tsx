@@ -22,7 +22,6 @@ export function StudentsToolbar({
       const response = await api.get("/students/template", {
         responseType: "blob",
       });
-      
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -30,7 +29,6 @@ export function StudentsToolbar({
       document.body.appendChild(link);
       link.click();
       link.remove();
-      
       toast.success("Template downloaded successfully!");
     } catch (error: any) {
       toast.error("Failed to download template");
@@ -48,62 +46,53 @@ export function StudentsToolbar({
 
     try {
       const response = await api.post("/students/import", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       const { created, failed, errors } = response.data;
-      
       if (created > 0) {
         toast.success(
           `Successfully imported ${created} student(s)${failed > 0 ? `, ${failed} failed` : ""}`
         );
       }
-      
       if (failed > 0 && errors.length > 0) {
         console.error("Import errors:", errors);
         toast.warning(`${failed} student(s) failed to import. Check console for details.`);
       }
 
-      // Refresh the page to show new students
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to import students");
       console.error(error);
     } finally {
       setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
   };
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 className="text-xl font-semibold">Students</h1>
-      <div className="flex items-center gap-2">
+
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Search students..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-56"
+          className="w-full sm:w-48"
         />
+
         <Button
           variant="outline"
           size="sm"
           onClick={handleDownloadTemplate}
-          className="gap-2"
+          className="gap-2 shrink-0"
+          title="Download Excel template"
         >
           <Download className="h-4 w-4" />
-          Download Template
+          <span className="hidden sm:inline">Template</span>
         </Button>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -114,13 +103,17 @@ export function StudentsToolbar({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleImportClick}
+          onClick={() => fileInputRef.current?.click()}
           disabled={isImporting}
-          className="gap-2"
+          className="gap-2 shrink-0"
+          title="Import from Excel"
         >
           <Upload className="h-4 w-4" />
-          {isImporting ? "Importing..." : "Import Excel"}
+          <span className="hidden sm:inline">
+            {isImporting ? "Importing..." : "Import"}
+          </span>
         </Button>
+
         <StudentDialog />
       </div>
     </div>

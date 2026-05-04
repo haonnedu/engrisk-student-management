@@ -259,35 +259,38 @@ export default function ClassGradesPage() {
             aria-hidden
           />
         )}
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 p-4">
+          <div className="flex items-start gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push("/dashboard/grades/classes")}
+              className="shrink-0 mt-0.5"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Classes
+              <span className="hidden sm:inline">Back to Classes</span>
+              <span className="sm:hidden">Back</span>
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">{classInfo.name}</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold">{classInfo.name}</h1>
+              <p className="text-sm text-muted-foreground">
                 {classInfo.code} •{" "}
                 {classInfo.course?.title || "No course assigned"}
-            </p>
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <SectionGradeTypesDialog
-            sectionId={classId}
-            sectionName={classInfo.name}
-          />
-          <Button variant="outline" onClick={handleExportExcel} disabled={isExporting}>
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export Excel"}
-          </Button>
-        </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <SectionGradeTypesDialog
+              sectionId={classId}
+              sectionName={classInfo.name}
+            />
+            <Button variant="outline" onClick={handleExportExcel} disabled={isExporting}>
+              <Download className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export Excel"}</span>
+              <span className="sm:hidden">{isExporting ? "..." : "Export"}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -307,15 +310,15 @@ export default function ClassGradesPage() {
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder="Search students..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
         <Select value={gradeTypeFilter} onValueChange={setGradeTypeFilter}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by grade type" />
           </SelectTrigger>
           <SelectContent>
@@ -332,13 +335,27 @@ export default function ClassGradesPage() {
       {/* Grades Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 sticky left-0 z-10 bg-background">No</TableHead>
-                  <TableHead className="min-w-[150px] sticky left-[33px] z-10 bg-background">Name</TableHead>
-                  <TableHead className="min-w-[120px] sticky left-[182px] z-10 bg-background">English Name</TableHead>
+                  {/* ── Sticky: No ── always sticky */}
+                  <TableHead
+                    className="w-10 sticky left-0 z-[50] border-r border-border bg-card"
+                  >
+                    No
+                  </TableHead>
+                  {/* ── Sticky: Name ── sticky on sm+ only */}
+                  <TableHead
+                    className="min-w-[140px] bg-card sm:sticky sm:left-[41px] sm:z-[50] sm:border-r sm:border-border"
+                  >
+                    Name
+                  </TableHead>
+                  {/* ── Sticky: Eng Name ── sticky on sm+ only */}
+                  <TableHead
+                    className="min-w-[110px] bg-card sm:sticky sm:left-[181px] sm:z-[50] sm:border-r sm:border-border"
+                  >
+                    Eng Name
+                  </TableHead>
                   <TableHead className="min-w-[100px]">Class</TableHead>
                   <TableHead className="min-w-[80px]">Grade</TableHead>
                   {gradeTypes.map((gradeType) => (
@@ -360,19 +377,32 @@ export default function ClassGradesPage() {
               <TableBody>
                 {filteredStudents.map((studentData, index) => (
                   <TableRow key={studentData.student.id}>
-                    <TableCell className="font-medium sticky left-0 z-10 bg-background">{index + 1}</TableCell>
-                    <TableCell className="sticky left-[33px] z-10 bg-background">
+                    {/* ── Sticky: No ── */}
+                    <TableCell
+                      className="font-medium sticky left-0 z-[40] border-r border-border bg-card"
+                    >
+                      {index + 1}
+                    </TableCell>
+                    {/* ── Sticky: Name ── sm+ only */}
+                    <TableCell
+                      className="bg-card sm:sticky sm:left-[41px] sm:z-[40] sm:border-r sm:border-border"
+                    >
                       <div>
                         <div className="font-medium">
                           {studentData.student.firstName}{" "}
                           {studentData.student.lastName}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {studentData.student.studentId}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="sticky left-[182px] z-10 bg-background">{studentData.student.engName || "-"}</TableCell>
+                    {/* ── Sticky: Eng Name ── sm+ only */}
+                    <TableCell
+                      className="bg-card sm:sticky sm:left-[181px] sm:z-[40] sm:border-r sm:border-border"
+                    >
+                      {studentData.student.engName || "-"}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{classInfo.code}</Badge>
                     </TableCell>
@@ -424,7 +454,6 @@ export default function ClassGradesPage() {
                 ))}
               </TableBody>
             </Table>
-          </div>
         </CardContent>
       </Card>
 
@@ -441,7 +470,7 @@ export default function ClassGradesPage() {
       )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-between py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 py-4">
         <div className="text-sm text-muted-foreground">
           Showing {(page - 1) * pageSize + 1} to{" "}
           {Math.min(page * pageSize, totalStudents)} of {totalStudents} students

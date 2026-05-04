@@ -93,6 +93,115 @@
       "passwordMismatch": "Mật khẩu xác nhận không khớp",
       "passwordTooShort": "Mật khẩu mới phải có ít nhất 6 ký tự"
     }
+  },
+  "nav": {
+    "appName": "Ms. Jenny",
+    "taglines": {
+      "admin": "Quản Lý Học Sinh",
+      "teacher": "Cổng Giáo Viên",
+      "student": "Cổng Thông Tin Học Sinh"
+    },
+    "groups": {
+      "navigation": "Điều Hướng",
+      "student": "Học Sinh",
+      "course": "Khóa Học",
+      "grade": "Điểm Số",
+      "teacher": "Giáo Viên",
+      "management": "Quản Lý"
+    },
+    "items": {
+      "dashboard": "Tổng Quan",
+      "attendance": "Điểm Danh",
+      "students": "Danh Sách Học Sinh",
+      "enrollments": "Đăng Ký Học",
+      "courses": "Khóa Học",
+      "classes": "Lớp Học",
+      "grades": "Quản Lý Điểm",
+      "gradeTypes": "Loại Điểm",
+      "teachers": "Giáo Viên",
+      "timesheets": "Bảng Công",
+      "homework": "Bài Tập",
+      "overview": "Tổng Quan",
+      "myTimesheets": "Bảng Công"
+    }
+  },
+  "auth": {
+    "logout": "Đăng Xuất",
+    "login": "Đăng Nhập",
+    "roles": {
+      "ADMIN": "Quản Trị Viên",
+      "SUPER_ADMIN": "Super Admin",
+      "TEACHER": "Giáo Viên",
+      "STUDENT": "Học Sinh"
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "Chào mừng trở lại!",
+    "portalName": "EngRisk Education Portal",
+    "viewCourses": "Khóa Học",
+    "manageGrades": "Quản Lý Điểm",
+    "stats": {
+      "totalStudents": "Tổng Học Sinh",
+      "totalStudentsDesc": "Đang theo học",
+      "activeCourses": "Khóa Học Đang Mở",
+      "activeCoursesDesc": "+2 khóa mới tháng này",
+      "totalClasses": "Tổng Số Lớp",
+      "totalClassesDesc": "+1 lớp mới tuần này",
+      "pendingGrades": "Điểm Chờ Duyệt",
+      "pendingGradesDesc": "Cần xem xét",
+      "trendStudents": "12%",
+      "trendCourses": "2 khóa",
+      "trendClasses": "1 lớp"
+    },
+    "quickActions": {
+      "title": "Thao Tác Nhanh",
+      "description": "Các tác vụ thường dùng",
+      "viewCourses": "Xem Khóa Học",
+      "viewCoursesDesc": "Duyệt và quản lý catalog",
+      "gradeManagement": "Quản Lý Điểm",
+      "gradeManagementDesc": "Nhập và xem điểm học sinh",
+      "takeAttendance": "Điểm Danh",
+      "takeAttendanceDesc": "Ghi nhận sự có mặt",
+      "manageEnrollments": "Đăng Ký Học",
+      "manageEnrollmentsDesc": "Xử lý đăng ký khóa học",
+      "addStudent": "Thêm Học Sinh",
+      "addStudentDesc": "Tạo hồ sơ học sinh mới",
+      "viewTeachers": "Giáo Viên",
+      "viewTeachersDesc": "Quản lý thông tin giáo viên"
+    },
+    "events": {
+      "title": "Sự Kiện Sắp Tới",
+      "description": "Các mốc quan trọng cần lưu ý",
+      "viewAll": "Xem Tất Cả",
+      "finalExam": "Thi cuối kỳ - ENG101",
+      "finalExamDate": "15 tháng 12, 2024",
+      "gradeDeadline": "Hạn nộp điểm",
+      "gradeDeadlineDate": "20 tháng 12, 2024",
+      "newSemester": "Khai giảng học kỳ mới",
+      "newSemesterDate": "8 tháng 1, 2025",
+      "examBadge": "Thi Cử",
+      "deadlineBadge": "Deadline",
+      "eventBadge": "Sự Kiện"
+    },
+    "chart": {
+      "title": "Tăng Trưởng Học Sinh",
+      "description": "Tổng quan 6 tháng về học sinh và đăng ký mới",
+      "students": "Học Sinh",
+      "enrollments": "Đăng Ký Mới",
+      "courses": "Khóa Học",
+      "activityTitle": "Hoạt Động Gần Đây",
+      "activityDescription": "Cập nhật mới nhất trong hệ thống",
+      "months": {
+        "jan": "Th1", "feb": "Th2", "mar": "Th3",
+        "apr": "Th4", "may": "Th5", "jun": "Th6",
+        "jul": "Th7", "aug": "Th8", "sep": "Th9",
+        "oct": "Th10", "nov": "Th11", "dec": "Th12"
+      }
+    }
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "redirecting": "Đang chuyển hướng..."
   }
 }
-

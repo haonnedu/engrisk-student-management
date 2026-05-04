@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 import {
   Sidebar,
@@ -21,6 +22,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -34,117 +36,126 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/hooks/useTranslations";
 
-// Map Tailwind color name → CSS value (để icon con không bị sidebar override)
 const ICON_COLORS: Record<string, string> = {
-  "text-sky-500": "#0ea5e9",
-  "text-green-500": "#22c55e",
-  "text-emerald-500": "#10b981",
-  "text-teal-500": "#14b8a6",
-  "text-violet-500": "#8b5cf6",
-  "text-purple-500": "#a855f7",
-  "text-amber-500": "#f59e0b",
-  "text-orange-500": "#f97316",
-  "text-rose-500": "#f43f5e",
-  "text-pink-500": "#ec4899",
+  "text-sky-400": "#38bdf8",
+  "text-green-400": "#4ade80",
+  "text-emerald-400": "#34d399",
+  "text-teal-400": "#2dd4bf",
+  "text-violet-400": "#a78bfa",
+  "text-purple-400": "#c084fc",
+  "text-amber-400": "#fbbf24",
+  "text-orange-400": "#fb923c",
+  "text-rose-400": "#fb7185",
+  "text-pink-400": "#f472b6",
 };
 
-// Menu item type
 type MenuItem = {
   title: string;
   url: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  iconColor?: string; // key trong ICON_COLORS hoặc Tailwind class
+  iconColor?: string;
 };
 
-// Menu group type
 type MenuGroup = {
+  id: string;
   title: string;
   items: MenuItem[];
-  defaultOpen?: boolean;
-  groupIconColor?: string; // màu cho chevron header nhóm
+  groupIconColor?: string;
 };
 
-// Menu groups organized by entity type
-const menuGroups: MenuGroup[] = [
-  {
-    title: "Student",
-    groupIconColor: "text-emerald-500",
-    items: [
-      { title: "Students", url: "/dashboard/students", icon: Users, iconColor: "text-emerald-500" },
-      { title: "Enrollments", url: "/dashboard/enrollments", icon: UserPlus, iconColor: "text-teal-500" },
-    ],
-    defaultOpen: true,
-  },
-  {
-    title: "Course",
-    groupIconColor: "text-violet-500",
-    items: [
-      { title: "Courses", url: "/dashboard/courses", icon: BookMarked, iconColor: "text-violet-500" },
-      { title: "Classes", url: "/dashboard/classes", icon: BookOpen, iconColor: "text-purple-500" },
-    ],
-    defaultOpen: true,
-  },
-  {
-    title: "Grade",
-    groupIconColor: "text-amber-500",
-    items: [
-      { title: "Grades", url: "/dashboard/grades/classes", icon: GraduationCap, iconColor: "text-amber-500" },
-      { title: "Grade Types", url: "/dashboard/grade-types", icon: BarChart3, iconColor: "text-orange-500" },
-    ],
-    defaultOpen: true,
-  },
-  {
-    title: "Teacher",
-    groupIconColor: "text-rose-500",
-    items: [
-      { title: "Teachers", url: "/dashboard/teachers", icon: UserCircle2, iconColor: "text-rose-500" },
-      { title: "Timesheets", url: "/dashboard/timesheets", icon: Clock, iconColor: "text-pink-500" },
-    ],
-    defaultOpen: true,
-  },
-];
-
-// Standalone menu items
-const standaloneItems: MenuItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: Home, iconColor: "text-sky-500" },
-  { title: "Attendance", url: "/dashboard/attendance", icon: UserCheck, iconColor: "text-green-500" },
-];
-
 export function AppSidebar() {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const initialState: Record<string, boolean> = {};
-    menuGroups.forEach((group) => {
-      initialState[group.title] = group.defaultOpen ?? true;
-    });
-    return initialState;
+  const { t } = useTranslations("nav");
+
+  const menuGroups: MenuGroup[] = [
+    {
+      id: "student",
+      title: t("groups.student"),
+      groupIconColor: "text-emerald-400",
+      items: [
+        { title: t("items.students"), url: "/dashboard/students", icon: Users, iconColor: "text-emerald-400" },
+        { title: t("items.enrollments"), url: "/dashboard/enrollments", icon: UserPlus, iconColor: "text-teal-400" },
+      ],
+    },
+    {
+      id: "course",
+      title: t("groups.course"),
+      groupIconColor: "text-violet-400",
+      items: [
+        { title: t("items.courses"), url: "/dashboard/courses", icon: BookMarked, iconColor: "text-violet-400" },
+        { title: t("items.classes"), url: "/dashboard/classes", icon: BookOpen, iconColor: "text-purple-400" },
+      ],
+    },
+    {
+      id: "grade",
+      title: t("groups.grade"),
+      groupIconColor: "text-amber-400",
+      items: [
+        { title: t("items.grades"), url: "/dashboard/grades/classes", icon: GraduationCap, iconColor: "text-amber-400" },
+        { title: t("items.gradeTypes"), url: "/dashboard/grade-types", icon: BarChart3, iconColor: "text-orange-400" },
+      ],
+    },
+    {
+      id: "teacher",
+      title: t("groups.teacher"),
+      groupIconColor: "text-rose-400",
+      items: [
+        { title: t("items.teachers"), url: "/dashboard/teachers", icon: UserCircle2, iconColor: "text-rose-400" },
+        { title: t("items.timesheets"), url: "/dashboard/timesheets", icon: Clock, iconColor: "text-pink-400" },
+      ],
+    },
+  ];
+
+  const standaloneItems: MenuItem[] = [
+    { title: t("items.dashboard"), url: "/dashboard", icon: Home, iconColor: "text-sky-400" },
+    { title: t("items.attendance"), url: "/dashboard/attendance", icon: UserCheck, iconColor: "text-green-400" },
+  ];
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    student: true,
+    course: true,
+    grade: true,
+    teacher: true,
   });
 
-  const toggleGroup = (groupTitle: string) => {
-    setOpenGroups((prev) => ({
-      ...prev,
-      [groupTitle]: !prev[groupTitle],
-    }));
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
     <Sidebar>
-      <SidebarContent>
+      {/* Branding header */}
+      <SidebarHeader className="border-b border-white/10 pb-4 pt-5 px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm shrink-0">
+            <GraduationCap className="h-5 w-5 text-blue-200" />
+          </div>
+          <div className="leading-tight">
+            <p className="font-bold text-white text-sm">{t("appName")}</p>
+            <p className="text-xs text-blue-200/70">{t("taglines.admin")}</p>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="pt-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-white/40 text-xs uppercase tracking-widest px-3">
+            {t("groups.navigation")}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {/* Standalone items */}
               {standaloneItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="[&>svg]:shrink-0">
+                    <Link href={item.url} className="[&>svg]:shrink-0">
                       <item.icon
                         className="size-4"
-                        style={item.iconColor ? { color: ICON_COLORS[item.iconColor] ?? item.iconColor } : undefined}
+                        style={item.iconColor ? { color: ICON_COLORS[item.iconColor] } : undefined}
                       />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -152,9 +163,9 @@ export function AppSidebar() {
               {/* Grouped items with collapsible */}
               {menuGroups.map((group) => (
                 <Collapsible
-                  key={group.title}
-                  open={openGroups[group.title]}
-                  onOpenChange={() => toggleGroup(group.title)}
+                  key={group.id}
+                  open={openGroups[group.id]}
+                  onOpenChange={() => toggleGroup(group.id)}
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
@@ -162,9 +173,13 @@ export function AppSidebar() {
                         <ChevronDown
                           className={cn(
                             "size-4 transition-transform duration-200",
-                            openGroups[group.title] && "rotate-180"
+                            openGroups[group.id] && "rotate-180"
                           )}
-                          style={group.groupIconColor ? { color: ICON_COLORS[group.groupIconColor] ?? undefined } : undefined}
+                          style={
+                            group.groupIconColor
+                              ? { color: ICON_COLORS[group.groupIconColor] }
+                              : undefined
+                          }
                         />
                         <span>{group.title}</span>
                       </SidebarMenuButton>
@@ -172,15 +187,15 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {group.items.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubItem key={item.url}>
                             <SidebarMenuSubButton asChild>
-                              <a href={item.url} className="[&>svg]:shrink-0">
+                              <Link href={item.url} className="[&>svg]:shrink-0">
                                 <item.icon
                                   className="size-4"
-                                  style={item.iconColor ? { color: ICON_COLORS[item.iconColor] ?? item.iconColor } : undefined}
+                                  style={item.iconColor ? { color: ICON_COLORS[item.iconColor] } : undefined}
                                 />
                                 <span>{item.title}</span>
-                              </a>
+                              </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}

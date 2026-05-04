@@ -33,6 +33,17 @@ export class EnrollmentsController {
     return this.enrollmentsService.create(body);
   }
 
+  @ApiOperation({ summary: "Level up a class: complete old enrollments and re-enroll students in a new course/class" })
+  @ApiResponse({ status: 200, description: "Level up completed" })
+  @Post("level-up")
+  levelUpClass(@Body() body: { sourceSectionId: string; targetCourseId: string; targetSectionId: string }) {
+    return this.enrollmentsService.levelUpClass(
+      body.sourceSectionId,
+      body.targetCourseId,
+      body.targetSectionId,
+    );
+  }
+
   @ApiOperation({ summary: "Get all enrollments" })
   @ApiResponse({
     status: 200,

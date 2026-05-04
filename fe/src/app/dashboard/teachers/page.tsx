@@ -205,7 +205,7 @@ export default function TeachersPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Teachers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Teachers</h1>
           <p className="text-muted-foreground">
             Manage teaching staff and their accounts
           </p>
@@ -228,7 +228,7 @@ export default function TeachersPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>
                   <Input
@@ -342,8 +342,8 @@ export default function TeachersPage() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="w-[200px]">
+          <div className="flex flex-wrap gap-4">
+            <div className="w-full sm:w-[200px]">
               <Label htmlFor="status">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status">
@@ -370,8 +370,8 @@ export default function TeachersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Teacher</TableHead>

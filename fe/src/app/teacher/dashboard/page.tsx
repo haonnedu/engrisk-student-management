@@ -22,7 +22,7 @@ export default function TeacherDashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Teacher Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome back! Here's an overview of your teaching activities.
         </p>
@@ -147,7 +147,7 @@ export default function TeacherDashboardPage() {
               {timesheetsData.data.slice(0, 5).map((timesheet) => (
                 <div
                   key={timesheet.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0"
+                  className="flex flex-wrap items-start justify-between gap-2 border-b pb-4 last:border-0"
                 >
                   <div>
                     <p className="font-medium">

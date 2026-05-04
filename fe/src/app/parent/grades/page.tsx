@@ -200,7 +200,7 @@ export default function ParentGradesPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('description')}
           </p>
@@ -271,8 +271,8 @@ export default function ParentGradesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[480px]">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
@@ -321,7 +321,7 @@ export default function ParentGradesPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-4">
             <div className="text-sm text-muted-foreground">
               {t('showing', { current: table.getRowModel().rows.length, total: gradesData.length })}
             </div>

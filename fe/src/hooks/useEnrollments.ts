@@ -107,6 +107,44 @@ export function useUpdateEnrollment() {
   });
 }
 
+export type LevelUpResult = {
+  total: number;
+  succeeded: number;
+  skipped: number;
+  failed: number;
+  details: Array<{
+    student: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      engName: string;
+      studentId: string;
+    };
+    status: "success" | "skipped" | "failed";
+    reason?: string;
+  }>;
+};
+
+export function useLevelUpClass() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      sourceSectionId: string;
+      targetCourseId: string;
+      targetSectionId: string;
+    }): Promise<LevelUpResult> => {
+      const response = await api.post("/enrollments/level-up", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      queryClient.invalidateQueries({ queryKey: ["grades"] });
+    },
+  });
+}
+
 export function useDeleteEnrollment() {
   const queryClient = useQueryClient();
 

@@ -3,6 +3,7 @@ import { useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EnrollmentDialog } from "@/components/enrollments/EnrollmentDialog";
+import { BulkEnrollDialog } from "@/components/enrollments/BulkEnrollDialog";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useClasses } from "@/hooks/useClasses";
+import { Users } from "lucide-react";
 
 export function EnrollmentsToolbar({
   value,
@@ -40,9 +42,9 @@ export function EnrollmentsToolbar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 className="text-xl font-semibold">Enrollments</h1>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Select value={sectionId || "all"} onValueChange={onSectionChange}>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select class" />
           </SelectTrigger>
           <SelectContent>
@@ -59,7 +61,15 @@ export function EnrollmentsToolbar({
           placeholder="Search enrollments..."
           value={value}
           onChange={handleInputChange}
-          className="w-56"
+          className="w-full sm:w-48"
+        />
+        <BulkEnrollDialog
+          trigger={
+            <Button variant="outline" className="shrink-0">
+              <Users className="h-4 w-4 mr-2" />
+              <span>Bulk Enroll</span>
+            </Button>
+          }
         />
         <EnrollmentDialog />
       </div>

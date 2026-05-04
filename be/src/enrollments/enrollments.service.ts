@@ -27,6 +27,39 @@ export class EnrollmentsService {
       );
     }
 
+    // Resolve grade types BEFORE creating the enrollment.
+    // If a section is provided, it MUST have grade types configured first.
+    let gradeTypes: { id: string; name: string }[] = [];
+
+    if (data.sectionId) {
+      const sectionGradeTypes = await this.prisma.sectionGradeType.findMany({
+        where: { sectionId: data.sectionId, isActive: true },
+        include: { gradeType: true },
+        orderBy: { sortOrder: "asc" },
+      });
+
+      // Only include grade types that are also globally active
+      const filtered = sectionGradeTypes.filter((sgt) => sgt.gradeType.isActive);
+
+      if (filtered.length === 0) {
+        const section = await this.prisma.classSection.findUnique({
+          where: { id: data.sectionId },
+          select: { name: true },
+        });
+        throw new BadRequestException(
+          `Class "${section?.name ?? data.sectionId}" has no grade types configured. ` +
+          `Please set up grade types for this class before enrolling students.`
+        );
+      }
+
+      gradeTypes = filtered.map((sgt) => sgt.gradeType);
+    } else {
+      gradeTypes = await this.prisma.gradeType.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+      });
+    }
+
     // Create enrollment
     const enrollment = await this.prisma.enrollment.create({
       data,
@@ -57,31 +90,159 @@ export class EnrollmentsService {
       },
     });
 
-    // Auto-create default grades for all active grade types
-    const gradeTypes = await this.prisma.gradeType.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
+    // Find which grade types already have a record for this student+course
+    const existingGrades = await this.prisma.grade.findMany({
+      where: {
+        studentId: data.studentId,
+        courseId: data.courseId,
+        gradeTypeId: { in: gradeTypes.map((gt) => gt.id) },
+      },
+      select: { gradeTypeId: true },
     });
+    const existingGradeTypeIds = new Set(existingGrades.map((g) => g.gradeTypeId));
 
-    const gradePromises = gradeTypes.map((gradeType) =>
-      this.prisma.grade.create({
-        data: {
+    const newGradeTypes = gradeTypes.filter((gt) => !existingGradeTypeIds.has(gt.id));
+
+    if (newGradeTypes.length > 0) {
+      await this.prisma.grade.createMany({
+        data: newGradeTypes.map((gradeType) => ({
           studentId: data.studentId,
           courseId: data.courseId,
           gradeTypeId: gradeType.id,
           grade: 0,
           comments: `Auto-generated for ${gradeType.name}`,
-        },
-      })
-    );
-
-    try {
-      await Promise.all(gradePromises);
-    } catch (error) {
-      console.log("Some grades may already exist, continuing...");
+        })),
+      });
     }
 
     return enrollment;
+  }
+
+  async levelUpClass(
+    sourceSectionId: string,
+    targetCourseId: string,
+    targetSectionId: string,
+  ) {
+    // 1. Validate target section exists
+    const targetSection = await this.prisma.classSection.findUnique({
+      where: { id: targetSectionId },
+      select: { name: true, courseId: true },
+    });
+    if (!targetSection) {
+      throw new NotFoundException(`Target class not found.`);
+    }
+
+    // 2. Validate target section has grade types configured
+    const targetSectionGradeTypes = await this.prisma.sectionGradeType.findMany({
+      where: { sectionId: targetSectionId, isActive: true },
+      include: { gradeType: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    const targetGradeTypes = targetSectionGradeTypes
+      .filter((sgt) => sgt.gradeType.isActive)
+      .map((sgt) => sgt.gradeType);
+
+    if (targetGradeTypes.length === 0) {
+      throw new BadRequestException(
+        `Target class "${targetSection.name}" has no grade types configured. ` +
+        `Please set up grade types before leveling up.`,
+      );
+    }
+
+    // 3. Get all ENROLLED students in source section
+    const sourceEnrollments = await this.prisma.enrollment.findMany({
+      where: { sectionId: sourceSectionId, status: 'ENROLLED' },
+      include: {
+        student: {
+          select: { id: true, firstName: true, lastName: true, engName: true, studentId: true },
+        },
+      },
+    });
+
+    if (sourceEnrollments.length === 0) {
+      throw new BadRequestException('No active (ENROLLED) students found in the source class.');
+    }
+
+    // 4. Process each student
+    const results: Array<{
+      student: any;
+      status: 'success' | 'skipped' | 'failed';
+      reason?: string;
+    }> = [];
+
+    for (const enrollment of sourceEnrollments) {
+      try {
+        // Skip if already enrolled in the target course
+        const existingTargetEnrollment = await this.prisma.enrollment.findFirst({
+          where: { studentId: enrollment.studentId, courseId: targetCourseId },
+        });
+
+        if (existingTargetEnrollment) {
+          results.push({
+            student: enrollment.student,
+            status: 'skipped',
+            reason: 'Already enrolled in target course',
+          });
+          continue;
+        }
+
+        // Mark old enrollment as COMPLETED
+        await this.prisma.enrollment.update({
+          where: { id: enrollment.id },
+          data: { status: 'COMPLETED', completedAt: new Date() },
+        });
+
+        // Create new enrollment in target course + section
+        await this.prisma.enrollment.create({
+          data: {
+            studentId: enrollment.studentId,
+            courseId: targetCourseId,
+            sectionId: targetSectionId,
+            status: 'ENROLLED',
+          },
+        });
+
+        // Create grades — skip grade types that already have records
+        const existingGrades = await this.prisma.grade.findMany({
+          where: {
+            studentId: enrollment.studentId,
+            courseId: targetCourseId,
+            gradeTypeId: { in: targetGradeTypes.map((gt) => gt.id) },
+          },
+          select: { gradeTypeId: true },
+        });
+        const existingIds = new Set(existingGrades.map((g) => g.gradeTypeId));
+        const newGradeTypes = targetGradeTypes.filter((gt) => !existingIds.has(gt.id));
+
+        if (newGradeTypes.length > 0) {
+          await this.prisma.grade.createMany({
+            data: newGradeTypes.map((gt) => ({
+              studentId: enrollment.studentId,
+              courseId: targetCourseId,
+              gradeTypeId: gt.id,
+              grade: 0,
+              comments: `Auto-generated for ${gt.name}`,
+            })),
+          });
+        }
+
+        results.push({ student: enrollment.student, status: 'success' });
+      } catch (error) {
+        results.push({
+          student: enrollment.student,
+          status: 'failed',
+          reason: (error as any)?.message ?? 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      total: sourceEnrollments.length,
+      succeeded: results.filter((r) => r.status === 'success').length,
+      skipped: results.filter((r) => r.status === 'skipped').length,
+      failed: results.filter((r) => r.status === 'failed').length,
+      details: results,
+    };
   }
 
   findAll(page = 1, limit = 10, search?: string, sectionId?: string) {

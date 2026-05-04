@@ -93,6 +93,115 @@
       "passwordMismatch": "Passwords do not match",
       "passwordTooShort": "New password must be at least 6 characters"
     }
+  },
+  "nav": {
+    "appName": "Ms. Jenny",
+    "taglines": {
+      "admin": "Student Management",
+      "teacher": "Teacher Portal",
+      "student": "Student Portal"
+    },
+    "groups": {
+      "navigation": "Navigation",
+      "student": "Student",
+      "course": "Course",
+      "grade": "Grade",
+      "teacher": "Teacher",
+      "management": "Management"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "attendance": "Attendance",
+      "students": "Students",
+      "enrollments": "Enrollments",
+      "courses": "Courses",
+      "classes": "Classes",
+      "grades": "Grades",
+      "gradeTypes": "Grade Types",
+      "teachers": "Teachers",
+      "timesheets": "Timesheets",
+      "homework": "Homework",
+      "overview": "Overview",
+      "myTimesheets": "My Timesheets"
+    }
+  },
+  "auth": {
+    "logout": "Log Out",
+    "login": "Login",
+    "roles": {
+      "ADMIN": "Administrator",
+      "SUPER_ADMIN": "Super Admin",
+      "TEACHER": "Teacher",
+      "STUDENT": "Student"
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back!",
+    "portalName": "EngRisk Education Portal",
+    "viewCourses": "Courses",
+    "manageGrades": "Manage Grades",
+    "stats": {
+      "totalStudents": "Total Students",
+      "totalStudentsDesc": "Currently enrolled",
+      "activeCourses": "Active Courses",
+      "activeCoursesDesc": "+2 new this month",
+      "totalClasses": "Total Classes",
+      "totalClassesDesc": "+1 new this week",
+      "pendingGrades": "Pending Grades",
+      "pendingGradesDesc": "Need attention",
+      "trendStudents": "12%",
+      "trendCourses": "2 courses",
+      "trendClasses": "1 class"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "description": "Common tasks and shortcuts",
+      "viewCourses": "View Courses",
+      "viewCoursesDesc": "Browse and manage catalog",
+      "gradeManagement": "Grade Management",
+      "gradeManagementDesc": "Enter and manage student grades",
+      "takeAttendance": "Take Attendance",
+      "takeAttendanceDesc": "Mark student attendance",
+      "manageEnrollments": "Manage Enrollments",
+      "manageEnrollmentsDesc": "Handle course enrollments",
+      "addStudent": "Add New Student",
+      "addStudentDesc": "Create a new student profile",
+      "viewTeachers": "Teachers",
+      "viewTeachersDesc": "Manage teacher information"
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "description": "Important dates and deadlines",
+      "viewAll": "View All",
+      "finalExam": "Final Exam - ENG101",
+      "finalExamDate": "December 15, 2024",
+      "gradeDeadline": "Grade Submission Deadline",
+      "gradeDeadlineDate": "December 20, 2024",
+      "newSemester": "New Semester Starts",
+      "newSemesterDate": "January 8, 2025",
+      "examBadge": "Exam",
+      "deadlineBadge": "Deadline",
+      "eventBadge": "Event"
+    },
+    "chart": {
+      "title": "Student Growth & Activity",
+      "description": "6-month overview of student and enrollment trends",
+      "students": "Students",
+      "enrollments": "New Enrollments",
+      "courses": "Active Courses",
+      "activityTitle": "Recent Activity",
+      "activityDescription": "Latest updates in the system",
+      "months": {
+        "jan": "Jan", "feb": "Feb", "mar": "Mar",
+        "apr": "Apr", "may": "May", "jun": "Jun",
+        "jul": "Jul", "aug": "Aug", "sep": "Sep",
+        "oct": "Oct", "nov": "Nov", "dec": "Dec"
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "redirecting": "Redirecting..."
   }
 }
-
