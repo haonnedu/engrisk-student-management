@@ -8,85 +8,9 @@ export class GradeTypesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createGradeTypeDto: CreateGradeTypeDto) {
-    // Create the grade type
-    const gradeType = await this.prisma.gradeType.create({
+    return this.prisma.gradeType.create({
       data: createGradeTypeDto,
     });
-
-    // If the grade type is active, create default grades for all existing students
-    if (gradeType.isActive) {
-      await this.createDefaultGradesForExistingStudents(gradeType.id);
-    }
-
-    return gradeType;
-  }
-
-  private async createDefaultGradesForExistingStudents(gradeTypeId: string) {
-    // Get all active enrollments (student + course combinations)
-    const enrollments = await this.prisma.enrollment.findMany({
-      where: {
-        status: "ENROLLED" as any,
-      },
-      select: {
-        studentId: true,
-        courseId: true,
-      },
-      distinct: ["studentId", "courseId"],
-    });
-
-    if (enrollments.length === 0) {
-      return;
-    }
-
-    // Check which grades already exist to avoid duplicates
-    // Use OR condition to check for each specific (studentId, courseId) combination
-    // Batch the checks if there are many enrollments to avoid query size limits
-    const BATCH_SIZE = 500;
-    const existingGradeKeys = new Set<string>();
-
-    for (let i = 0; i < enrollments.length; i += BATCH_SIZE) {
-      const batch = enrollments.slice(i, i + BATCH_SIZE);
-      const existingGrades = await this.prisma.grade.findMany({
-        where: {
-          gradeTypeId: gradeTypeId,
-          OR: batch.map((e) => ({
-            studentId: e.studentId,
-            courseId: e.courseId,
-          })),
-        },
-        select: {
-          studentId: true,
-          courseId: true,
-        },
-      });
-
-      existingGrades.forEach((g) => {
-        existingGradeKeys.add(`${g.studentId}-${g.courseId}`);
-      });
-    }
-
-    // Filter out enrollments that already have grades for this grade type
-    const newGrades = enrollments.filter(
-      (enrollment) =>
-        !existingGradeKeys.has(`${enrollment.studentId}-${enrollment.courseId}`)
-    );
-
-    // Create default grades for new combinations only
-    const gradePromises = newGrades.map((enrollment) =>
-      this.prisma.grade.create({
-        data: {
-          studentId: enrollment.studentId,
-          courseId: enrollment.courseId,
-          gradeTypeId: gradeTypeId,
-          grade: 0, // Default score
-          comments: `Auto-generated for new grade type`,
-        },
-      })
-    );
-
-    if (gradePromises.length > 0) {
-      await Promise.all(gradePromises);
-    }
   }
 
   async findAll(page = 1, limit = 10, search?: string, isActive?: boolean) {
@@ -147,24 +71,10 @@ export class GradeTypesService {
   }
 
   async update(id: string, updateGradeTypeDto: UpdateGradeTypeDto) {
-    // Get current grade type to check if isActive is changing
-    const currentGradeType = await this.prisma.gradeType.findUnique({
-      where: { id },
-      select: { isActive: true },
-    });
-
-    // Update the grade type
-    const updatedGradeType = await this.prisma.gradeType.update({
+    return this.prisma.gradeType.update({
       where: { id },
       data: updateGradeTypeDto,
     });
-
-    // If grade type is being activated and wasn't active before, create default grades
-    if (updatedGradeType.isActive && !currentGradeType?.isActive) {
-      await this.createDefaultGradesForExistingStudents(id);
-    }
-
-    return updatedGradeType;
   }
 
   async remove(id: string) {

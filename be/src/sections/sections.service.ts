@@ -67,26 +67,56 @@ export class ClassesService {
       select: { sortOrder: true },
     });
 
-    return this.prisma.sectionGradeType.upsert({
-      where: {
-        sectionId_gradeTypeId: {
-          sectionId,
-          gradeTypeId,
-        },
-      },
-      update: {
-        isActive: true,
-      },
+    const result = await this.prisma.sectionGradeType.upsert({
+      where: { sectionId_gradeTypeId: { sectionId, gradeTypeId } },
+      update: { isActive: true },
       create: {
         sectionId,
         gradeTypeId,
         isActive: true,
         sortOrder: (maxSortOrder?.sortOrder ?? -1) + 1,
       },
-      include: {
-        gradeType: true,
-      },
+      include: { gradeType: true },
     });
+
+    // Create grade records for all currently enrolled students who don't have one yet
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { sectionId, status: "ENROLLED" },
+      select: { studentId: true, courseId: true },
+    });
+
+    if (enrollments.length > 0) {
+      // Find which students already have a grade record for this type
+      const existingGrades = await this.prisma.grade.findMany({
+        where: {
+          gradeTypeId,
+          OR: enrollments.map((e) => ({
+            studentId: e.studentId,
+            courseId: e.courseId,
+          })),
+        },
+        select: { studentId: true, courseId: true },
+      });
+      const existingKeys = new Set(
+        existingGrades.map((g) => `${g.studentId}-${g.courseId}`)
+      );
+
+      const newGrades = enrollments
+        .filter((e) => !existingKeys.has(`${e.studentId}-${e.courseId}`))
+        .map((e) => ({
+          studentId: e.studentId,
+          courseId: e.courseId,
+          gradeTypeId,
+          grade: 0,
+          comments: `Auto-generated for ${gradeType.name}`,
+        }));
+
+      if (newGrades.length > 0) {
+        await this.prisma.grade.createMany({ data: newGrades });
+      }
+    }
+
+    return result;
   }
 
   // Remove grade type from section
