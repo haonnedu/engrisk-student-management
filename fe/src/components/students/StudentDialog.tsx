@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useClasses, type ClassSection } from "@/hooks/useClasses";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,19 +37,24 @@ const studentSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   engName: z.string().min(1, "English name is required"),
-  dateOfBirth: z
+  birthYear: z
     .string()
-    .min(1, "Date of birth is required")
-    .transform((str) => {
-      // Convert date string to ISO-8601 format
-      const date = new Date(str);
-      return date.toISOString();
-    }),
+    .min(1, "Birth year is required")
+    .regex(/^\d{4}$/, "Enter a 4-digit year")
+    .refine(
+      (y) => {
+        const n = Number(y);
+        return n >= 1900 && n <= new Date().getFullYear();
+      },
+      { message: "Invalid birth year" }
+    ),
   phone: z.string().optional(),
   address: z.string().optional(),
   emergencyContact: z.string().optional(),
   classSchool: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "GRADUATED", "SUSPENDED"]).optional(),
+  // Create mode only: enroll the new student into this class right away
+  sectionId: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -68,12 +80,19 @@ export function StudentDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
-  const toInputDate = (isoOrDate: string) => {
+  // Existing records keep their full date; the form only exposes the year.
+  const toYear = (isoOrDate: string) => {
     const d = new Date(isoOrDate);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+    return Number.isNaN(d.getTime()) ? "" : String(d.getUTCFullYear());
+  };
+
+  // Build the dateOfBirth payload from the entered year.
+  // In edit mode, keep the original date untouched if the year did not change.
+  const toDateOfBirth = (year: string) => {
+    if (mode === "edit" && student?.dateOfBirth && toYear(student.dateOfBirth) === year) {
+      return student.dateOfBirth;
+    }
+    return `${year}-01-01T00:00:00.000Z`;
   };
 
   const defaultValues: Partial<StudentFormValues> =
@@ -82,14 +101,14 @@ export function StudentDialog({
           firstName: student.firstName,
           lastName: student.lastName,
           engName: (student as any).engName,
-          dateOfBirth: toInputDate(student.dateOfBirth),
+          birthYear: toYear(student.dateOfBirth),
           phone: student.phone ?? "",
           address: student.address ?? "",
           emergencyContact: student.emergencyContact ?? "",
           classSchool: (student as any).classSchool ?? "",
           status: student.status ?? "ACTIVE",
         }
-      : { status: "ACTIVE", engName: "" };
+      : { status: "ACTIVE", engName: "", sectionId: "" };
 
   const {
     register,
@@ -106,6 +125,14 @@ export function StudentDialog({
   const createStudentMutation = useCreateStudent();
   const updateStudentMutation = useUpdateStudent();
 
+  // Classes are only selectable when creating a student
+  const { data: classesData } = useClasses(1, 200);
+  const classes: ClassSection[] = React.useMemo(() => {
+    const list = classesData?.data ?? classesData ?? [];
+    return Array.isArray(list) ? list : [];
+  }, [classesData]);
+  const selectedSectionId = watch("sectionId");
+
   // Reset form with selected student when opening edit dialog
   React.useEffect(() => {
     if (open && mode === "edit" && student) {
@@ -113,7 +140,10 @@ export function StudentDialog({
     }
   }, [open, mode, student, reset]);
 
-  function onSubmit(values: StudentFormValues) {
+  function onSubmit(formValues: StudentFormValues) {
+    const { birthYear, sectionId, ...rest } = formValues;
+    const values = { ...rest, dateOfBirth: toDateOfBirth(birthYear) };
+
     if (mode === "edit" && student) {
       updateStudentMutation.mutate(
         { id: student.id, data: values as Partial<CreateStudentDto> },
@@ -133,9 +163,18 @@ export function StudentDialog({
       return;
     }
 
-    createStudentMutation.mutate(values as CreateStudentDto, {
+    const payload: CreateStudentDto = {
+      ...(values as CreateStudentDto),
+      ...(sectionId ? { sectionId } : {}),
+    };
+
+    createStudentMutation.mutate(payload, {
       onSuccess: () => {
-        toast.success("Student created successfully!");
+        toast.success(
+          sectionId
+            ? "Student created and added to class!"
+            : "Student created successfully!"
+        );
         reset();
         setOpen(false);
         onSaved?.();
@@ -210,26 +249,21 @@ export function StudentDialog({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="dateOfBirth">
-                Date of birth <span className="text-red-500">*</span>
+              <Label htmlFor="birthYear">
+                Birth year <span className="text-red-500">*</span>
               </Label>
-              <DatePicker
-                value={
-                  watch("dateOfBirth")
-                    ? new Date(watch("dateOfBirth"))
-                    : undefined
-                }
-                onChange={(date) => {
-                  if (date) {
-                    setValue("dateOfBirth", date.toISOString().split("T")[0]);
-                  }
-                }}
-                placeholder="Select date of birth"
-                className="h-9"
+              <Input
+                id="birthYear"
+                type="number"
+                inputMode="numeric"
+                min={1900}
+                max={new Date().getFullYear()}
+                placeholder="e.g., 2015"
+                {...register("birthYear")}
               />
-              {errors.dateOfBirth && (
+              {errors.birthYear && (
                 <p className="text-sm text-red-500">
-                  {errors.dateOfBirth.message}
+                  {errors.birthYear.message}
                 </p>
               )}
             </div>
@@ -257,6 +291,35 @@ export function StudentDialog({
               </p>
             )}
           </div>
+
+          {mode === "create" && (
+            <div className="grid gap-1.5">
+              <Label htmlFor="sectionId">Enroll in class</Label>
+              <Select
+                value={selectedSectionId || ""}
+                onValueChange={(value) =>
+                  setValue("sectionId", value === "__none__" ? "" : value)
+                }
+              >
+                <SelectTrigger id="sectionId" className="w-full truncate">
+                  <SelectValue placeholder="Optional - select a class" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No class</SelectItem>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} ({c.code})
+                      {c.course?.title ? ` - ${c.course.title}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The student will be enrolled in the class&apos;s course
+                automatically.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">

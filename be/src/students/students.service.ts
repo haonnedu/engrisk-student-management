@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { EnrollmentsService } from "../enrollments/enrollments.service";
 import { CreateStudentDto, UpdateStudentDto } from "./dto";
 import { StudentStatus, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
@@ -7,7 +8,10 @@ import * as XLSX from "xlsx";
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private enrollmentsService: EnrollmentsService,
+  ) {}
 
   async generateTemplate(): Promise<Buffer> {
     const headers = [
@@ -115,6 +119,41 @@ export class StudentsService {
   }
 
   async create(createStudentDto: CreateStudentDto) {
+    const { sectionId, ...studentDto } = createStudentDto;
+
+    // Validate the target class up-front so we don't create an orphan student
+    // when the class is invalid.
+    let section: { id: string; name: string; courseId: string | null } | null = null;
+    if (sectionId) {
+      section = await this.prisma.classSection.findUnique({
+        where: { id: sectionId },
+        select: { id: true, name: true, courseId: true },
+      });
+      if (!section) {
+        throw new NotFoundException(`Class with ID ${sectionId} not found`);
+      }
+      if (!section.courseId) {
+        throw new BadRequestException(
+          `Class "${section.name}" is not linked to a course. ` +
+            `Please assign a course to this class before adding students.`
+        );
+      }
+    }
+
+    const student = await this.createStudentRecord(studentDto);
+
+    if (section) {
+      await this.enrollmentsService.create({
+        studentId: student.id,
+        courseId: section.courseId,
+        sectionId: section.id,
+      });
+    }
+
+    return student;
+  }
+
+  private async createStudentRecord(createStudentDto: Omit<CreateStudentDto, "sectionId">) {
     // If userId is not provided, automatically create a User with default password
     let userId = createStudentDto.userId;
 
@@ -329,7 +368,9 @@ export class StudentsService {
     return student;
   }
 
-  async update(id: string, updateStudentDto: UpdateStudentDto) {
+  async update(id: string, dto: UpdateStudentDto) {
+    // sectionId is only meaningful at creation time; enrollments are managed separately
+    const { sectionId: _ignored, ...updateStudentDto } = dto;
     const student = await this.findOne(id);
 
     // If phone is being updated, also update it in the user table
@@ -361,10 +402,11 @@ export class StudentsService {
     });
   }
 
-  async updateByUserId(userId: string, updateStudentDto: UpdateStudentDto) {
+  async updateByUserId(userId: string, dto: UpdateStudentDto) {
     if (!userId) {
       throw new NotFoundException('User ID is required');
     }
+    const { sectionId: _ignored, ...updateStudentDto } = dto;
 
     const student = await this.findByUserId(userId);
 

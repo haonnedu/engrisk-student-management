@@ -92,4 +92,14 @@ export class CreateStudentDto {
   @IsEnum(StudentStatus)
   @IsOptional()
   status?: StudentStatus;
+
+  @ApiPropertyOptional({
+    description:
+      "Class (section) to enroll the student into right after creation. " +
+      "The course is derived from the class.",
+    example: "clx1234567890",
+  })
+  @IsString()
+  @IsOptional()
+  sectionId?: string;
 }

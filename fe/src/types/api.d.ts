@@ -778,6 +778,11 @@ export interface components {
              * @enum {string}
              */
             status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "SUSPENDED";
+            /**
+             * @description Class (section) to enroll the student into right after creation
+             * @example clx1234567890
+             */
+            sectionId?: string;
         };
         UpdateStudentDto: {
             /**
