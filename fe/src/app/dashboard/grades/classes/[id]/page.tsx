@@ -448,6 +448,7 @@ export default function ClassGradesPage() {
                         student={studentData.student}
                         grades={studentData.grades}
                         gradeTypes={gradeTypes}
+                        classInfo={classInfo}
                       />
                     </TableCell>
                   </TableRow>
