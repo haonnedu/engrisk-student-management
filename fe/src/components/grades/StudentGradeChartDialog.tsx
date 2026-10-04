@@ -95,7 +95,7 @@ export function StudentGradeChartDialog({
           <span className="sr-only">View grade chart</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] h-[92vh] max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             Grade Chart - {student.firstName} {student.lastName}
@@ -105,24 +105,32 @@ export function StudentGradeChartDialog({
             Student ID: {student.studentId} | Average: {average.toFixed(1)}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex gap-6 min-w-max p-4">
-            {/* Chart */}
-            <div className="h-80 w-96 flex-shrink-0">
+        <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex flex-col lg:flex-row gap-6 p-4 h-full">
+            {/* Chart: horizontal bars, one row per grade type */}
+            <div
+              className="flex-1 min-w-0"
+              style={{ minHeight: Math.max(320, chartData.length * 44 + 60) }}
+            >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
+                  barCategoryGap={12}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis
-                    dataKey="name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
+                    type="number"
+                    domain={[0, 100]}
                     tick={{ fontSize: 12 }}
                   />
                   <YAxis
-                    domain={[0, 100]}
-                    tick={{ fontSize: 12 }}
-                    width={40}
+                    type="category"
+                    dataKey="name"
+                    width={140}
+                    tick={{ fontSize: 13 }}
+                    interval={0}
                   />
                   <Tooltip
                     formatter={(value: number, name: string, props: any) => {
@@ -134,7 +142,7 @@ export function StudentGradeChartDialog({
                     labelFormatter={(label) => `Grade Type: ${label}`}
                     contentStyle={{ fontSize: "12px" }}
                   />
-                  <Bar dataKey="grade" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="grade" radius={[0, 4, 4, 0]} maxBarSize={28}>
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -147,8 +155,8 @@ export function StudentGradeChartDialog({
             </div>
 
             {/* Grade Summary Table */}
-            <div className="border rounded-lg flex-shrink-0">
-              <table className="text-sm">
+            <div className="border rounded-lg flex-shrink-0 self-start overflow-auto max-h-full">
+              <table className="text-sm whitespace-nowrap">
                 <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-2 text-left">Grade Type</th>
