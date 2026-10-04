@@ -95,7 +95,7 @@ export function StudentGradeChartDialog({
           <span className="sr-only">View grade chart</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] h-[92vh] max-h-[92vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-[96vw] lg:max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             Grade Chart - {student.firstName} {student.lastName}
@@ -105,32 +105,101 @@ export function StudentGradeChartDialog({
             Student ID: {student.studentId} | Average: {average.toFixed(1)}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-auto">
-          <div className="flex flex-col lg:flex-row gap-6 p-4 h-full">
-            {/* Chart: horizontal bars, one row per grade type */}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+          {/* Grade summary: one column per grade type */}
+          <div className="border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm whitespace-nowrap">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left sticky left-0 bg-muted">
+                    Grade Type
+                  </th>
+                  {chartData.map((item, index) => (
+                    <th key={index} className="px-4 py-2 text-center">
+                      {item.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t">
+                  <td className="px-4 py-2 font-medium sticky left-0 bg-background">
+                    Grade
+                  </td>
+                  {chartData.map((item, index) => (
+                    <td key={index} className="px-4 py-2 text-center">
+                      {item.hasGrade ? (
+                        <span className="font-semibold">
+                          {item.grade.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-t">
+                  <td className="px-4 py-2 font-medium sticky left-0 bg-background">
+                    Status
+                  </td>
+                  {chartData.map((item, index) => (
+                    <td key={index} className="px-4 py-2 text-center">
+                      {item.hasGrade ? (
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                            item.grade >= 85
+                              ? "bg-green-100 text-green-800"
+                              : item.grade >= 70
+                              ? "bg-blue-100 text-blue-800"
+                              : item.grade >= 55
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.grade >= 85
+                            ? "Excellent"
+                            : item.grade >= 70
+                            ? "Good"
+                            : item.grade >= 55
+                            ? "Average"
+                            : "Needs Improvement"}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          No grade
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Compact chart below the table */}
+          <div className="border rounded-lg p-3">
             <div
-              className="flex-1 min-w-0"
-              style={{ minHeight: Math.max(320, chartData.length * 44 + 60) }}
+              className="h-64 mx-auto"
+              style={{ maxWidth: Math.max(360, chartData.length * 90 + 80) }}
             >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  layout="vertical"
-                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
-                  barCategoryGap={12}
+                  margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
-                    type="number"
-                    domain={[0, 100]}
+                    dataKey="name"
                     tick={{ fontSize: 12 }}
+                    interval={0}
+                    angle={chartData.length > 8 ? -30 : 0}
+                    textAnchor={chartData.length > 8 ? "end" : "middle"}
+                    height={chartData.length > 8 ? 60 : 30}
                   />
                   <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={140}
-                    tick={{ fontSize: 13 }}
-                    interval={0}
+                    domain={[0, 100]}
+                    tick={{ fontSize: 12 }}
+                    width={36}
                   />
                   <Tooltip
                     formatter={(value: number, name: string, props: any) => {
@@ -142,7 +211,7 @@ export function StudentGradeChartDialog({
                     labelFormatter={(label) => `Grade Type: ${label}`}
                     contentStyle={{ fontSize: "12px" }}
                   />
-                  <Bar dataKey="grade" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                  <Bar dataKey="grade" radius={[4, 4, 0, 0]} maxBarSize={40}>
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -152,65 +221,6 @@ export function StudentGradeChartDialog({
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-
-            {/* Grade Summary Table */}
-            <div className="border rounded-lg flex-shrink-0 self-start overflow-auto max-h-full">
-              <table className="text-sm whitespace-nowrap">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Grade Type</th>
-                    <th className="px-4 py-2 text-center">Grade</th>
-                    <th className="px-4 py-2 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {chartData.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-t hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-4 py-2 font-medium">{item.name}</td>
-                      <td className="px-4 py-2 text-center">
-                        {item.hasGrade ? (
-                          <span className="font-semibold">
-                            {item.grade.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-center">
-                        {item.hasGrade ? (
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                              item.grade >= 85
-                                ? "bg-green-100 text-green-800"
-                                : item.grade >= 70
-                                ? "bg-blue-100 text-blue-800"
-                                : item.grade >= 55
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {item.grade >= 85
-                              ? "Excellent"
-                              : item.grade >= 70
-                              ? "Good"
-                              : item.grade >= 55
-                              ? "Average"
-                              : "Needs Improvement"}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            No grade
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
