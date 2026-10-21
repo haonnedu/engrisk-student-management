@@ -85,14 +85,25 @@ export function useGrade(id: string) {
   });
 }
 
-export function useGradesByClass(classId: string, page = 1, limit = 10) {
+export function useGradesByClass(
+  classId: string,
+  page = 1,
+  limit = 10,
+  search = ""
+) {
   return useQuery({
-    queryKey: ["grades", "class", classId, page, limit],
+    queryKey: ["grades", "class", classId, page, limit, search],
     queryFn: async () => {
-      // Get paginated enrollments for this class
-      const enrollmentsResponse = await api.get(
-        `/enrollments?sectionId=${classId}&page=${page}&limit=${limit}`
-      );
+      // Get paginated, currently enrolled students for this class.
+      // Search is done server-side so it covers every page, not just the current one.
+      const params = new URLSearchParams({
+        sectionId: classId,
+        status: "ENROLLED",
+        page: String(page),
+        limit: String(limit),
+      });
+      if (search.trim()) params.set("search", search.trim());
+      const enrollmentsResponse = await api.get(`/enrollments?${params}`);
       const enrollments = enrollmentsResponse.data.data || [];
       const totalStudents = enrollmentsResponse.data.meta?.total || 0;
 

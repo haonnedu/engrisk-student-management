@@ -1,3 +1,4 @@
+import { EnrollmentStatus } from "@prisma/client";
 import {
   Body,
   Controller,
@@ -53,14 +54,16 @@ export class EnrollmentsController {
   @ApiQuery({ name: "limit", required: false, type: Number })
   @ApiQuery({ name: "search", required: false, type: String })
   @ApiQuery({ name: "sectionId", required: false, type: String })
+  @ApiQuery({ name: "status", required: false, enum: EnrollmentStatus })
   @Get()
   findAll(
     @Query("page") page?: number,
     @Query("limit") limit?: number,
     @Query("search") search?: string,
-    @Query("sectionId") sectionId?: string
+    @Query("sectionId") sectionId?: string,
+    @Query("status") status?: EnrollmentStatus
   ) {
-    return this.enrollmentsService.findAll(page, limit, search, sectionId);
+    return this.enrollmentsService.findAll(page, limit, search, sectionId, status);
   }
 
   @ApiOperation({ summary: "Get an enrollment by ID" })

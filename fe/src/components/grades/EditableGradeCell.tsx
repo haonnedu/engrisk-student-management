@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/popover";
 import { Check, X, MessageSquare } from "lucide-react";
 import { useUpdateGrade } from "@/hooks/useGrades";
+import { cn } from "@/lib/utils";
+import { AxiosError } from "axios";
 import { toast } from "sonner";
 
 interface EditableGradeCellProps {
@@ -21,16 +23,40 @@ interface EditableGradeCellProps {
     courseId: string;
     comments?: string;
   };
+  /** Shown in the editor popover so the teacher knows which column they edit. */
+  label?: string;
   onUpdate: () => void;
 }
 
-export function EditableGradeCell({ grade, onUpdate }: EditableGradeCellProps) {
+/** Rows created automatically when a student is enrolled carry this comment. */
+export const isAutoComment = (comments?: string) =>
+  !!comments && comments.startsWith("Auto-generated");
+
+/** A score of 0 on an auto-generated row means "not graded yet". */
+export const isUngraded = (grade: { grade: number; comments?: string }) =>
+  grade.grade === 0 && isAutoComment(grade.comments);
+
+/** Scores are 0-100. Thresholds match the Distinction / Credit / Pass labels. */
+export const scoreTone = (score: number) =>
+  score >= 80
+    ? "text-emerald-600 dark:text-emerald-400"
+    : score >= 70
+    ? "text-blue-600 dark:text-blue-400"
+    : score >= 50
+    ? "text-amber-600 dark:text-amber-400"
+    : "text-red-600 dark:text-red-400";
+
+export function EditableGradeCell({ grade, label, onUpdate }: EditableGradeCellProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(grade.grade.toString());
-  const [comments, setComments] = useState(grade.comments || "");
+  const [comments, setComments] = useState(
+    isAutoComment(grade.comments) ? "" : grade.comments || ""
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const updateGradeMutation = useUpdateGrade();
+  const ungraded = isUngraded(grade);
+  const hasRealComment = !!grade.comments && !isAutoComment(grade.comments);
 
   const handleSave = async () => {
     const newGrade = parseFloat(value);
@@ -44,13 +70,18 @@ export function EditableGradeCell({ grade, onUpdate }: EditableGradeCellProps) {
     try {
       await updateGradeMutation.mutateAsync({
         id: grade.id,
-        data: { grade: newGrade, comments: comments || undefined },
+        // Always send a string so the "Auto-generated" placeholder is cleared
+        // once the teacher has actually graded the cell.
+        data: { grade: newGrade, comments },
       });
       setIsEditing(false);
       onUpdate();
-      toast.success("Grade updated successfully");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update grade");
+      toast.success("Grade updated");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(
+        axiosError.response?.data?.message || "Failed to update grade"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +89,7 @@ export function EditableGradeCell({ grade, onUpdate }: EditableGradeCellProps) {
 
   const handleCancel = () => {
     setValue(grade.grade.toString());
-    setComments(grade.comments || "");
+    setComments(isAutoComment(grade.comments) ? "" : grade.comments || "");
     setIsEditing(false);
   };
 
@@ -71,104 +102,91 @@ export function EditableGradeCell({ grade, onUpdate }: EditableGradeCellProps) {
     }
   };
 
-  if (isEditing) {
-    return (
-      <Popover open={isEditing} onOpenChange={setIsEditing}>
-        <PopoverTrigger asChild>
-          <div className="cursor-pointer hover:bg-muted rounded px-2 py-1 text-center">
-            <span
-              className={
-                grade.grade >= 8.5
-                  ? "text-green-600 font-medium"
-                  : grade.grade >= 7.0
-                  ? "text-blue-600"
-                  : grade.grade >= 5.5
-                  ? "text-yellow-600"
-                  : "text-red-600"
-              }
-            >
-              {grade.grade}
-            </span>
-          </div>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="center">
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                Score (0-100)
-              </label>
-              <Input
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="h-8 text-center text-sm mt-1"
-                type="number"
-                min="0"
-                max="100"
-                autoFocus
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                Comments
-              </label>
-              <Textarea
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Add comment..."
-                className="h-16 text-sm mt-1 resize-none"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isLoading}
-              >
-                <X className="h-3 w-3 mr-1" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isLoading}
-              >
-                <Check className="h-3 w-3 mr-1" />
-                Save
-              </Button>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
+  const display = (
+    <button
+      type="button"
+      className={cn(
+        "group relative inline-flex h-8 min-w-[2.75rem] items-center justify-center rounded-md px-2 text-sm tabular-nums",
+        "transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        ungraded
+          ? "text-muted-foreground/60 border border-dashed border-border"
+          : cn("font-medium", scoreTone(grade.grade))
+      )}
+      title={
+        ungraded
+          ? "Not graded yet. Click to enter a score."
+          : hasRealComment
+          ? `Comment: ${grade.comments}`
+          : "Click to edit"
+      }
+    >
+      {ungraded ? "·" : grade.grade}
+      {hasRealComment && (
+        <MessageSquare className="absolute -right-1 -top-1 h-3 w-3 text-primary opacity-80" />
+      )}
+    </button>
+  );
 
   return (
-    <div
-      className="cursor-pointer hover:bg-muted rounded px-2 py-1 text-center relative group"
-      onClick={() => setIsEditing(true)}
-      title={grade.comments ? `Comment: ${grade.comments}` : "Click to edit"}
+    <Popover
+      open={isEditing}
+      onOpenChange={(open) => (open ? setIsEditing(true) : handleCancel())}
     >
-      <span
-        className={
-          grade.grade >= 8.5
-            ? "text-green-600 font-medium"
-            : grade.grade >= 7.0
-            ? "text-blue-600"
-            : grade.grade >= 5.5
-            ? "text-yellow-600"
-            : "text-red-600"
-        }
-      >
-        {grade.grade}
-      </span>
-      {grade.comments && (
-        <MessageSquare className="h-3 w-3 text-primary absolute -top-1 -right-1 opacity-70" />
-      )}
-    </div>
+      <PopoverTrigger asChild>{display}</PopoverTrigger>
+      <PopoverContent className="w-64 p-3" align="center">
+        <div className="space-y-3">
+          {label && (
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {label}
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">
+              Score (0-100)
+            </label>
+            <Input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              onFocus={(e) => e.target.select()}
+              className="mt-1 h-8 text-center text-sm"
+              type="number"
+              min="0"
+              max="100"
+              autoFocus
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">
+              Comments
+            </label>
+            <Textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Add comment..."
+              className="mt-1 h-16 resize-none text-sm"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              <X className="mr-1 h-3 w-3" />
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={isLoading}>
+              <Check className="mr-1 h-3 w-3" />
+              Save
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
