@@ -1,4 +1,5 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from "@nestjs/common";
+import { EnrollmentStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -90,32 +91,57 @@ export class EnrollmentsService {
       },
     });
 
-    // Find which grade types already have a record for this student+course
+    await this.createMissingGradeRows(data.studentId, data.courseId, gradeTypes);
+
+    return enrollment;
+  }
+
+  /**
+   * Create grade rows (grade = 0) for every grade type the student does not
+   * have yet for this course. Safe to call repeatedly.
+   */
+  private async createMissingGradeRows(
+    studentId: string,
+    courseId: string,
+    gradeTypes: { id: string; name: string }[],
+  ) {
+    if (gradeTypes.length === 0) return 0;
+
     const existingGrades = await this.prisma.grade.findMany({
       where: {
-        studentId: data.studentId,
-        courseId: data.courseId,
+        studentId,
+        courseId,
         gradeTypeId: { in: gradeTypes.map((gt) => gt.id) },
       },
       select: { gradeTypeId: true },
     });
     const existingGradeTypeIds = new Set(existingGrades.map((g) => g.gradeTypeId));
-
     const newGradeTypes = gradeTypes.filter((gt) => !existingGradeTypeIds.has(gt.id));
 
     if (newGradeTypes.length > 0) {
       await this.prisma.grade.createMany({
         data: newGradeTypes.map((gradeType) => ({
-          studentId: data.studentId,
-          courseId: data.courseId,
+          studentId,
+          courseId,
           gradeTypeId: gradeType.id,
           grade: 0,
           comments: `Auto-generated for ${gradeType.name}`,
         })),
       });
     }
+    return newGradeTypes.length;
+  }
 
-    return enrollment;
+  /** Active grade types configured for a section (also globally active). */
+  private async getSectionActiveGradeTypes(sectionId: string) {
+    const sectionGradeTypes = await this.prisma.sectionGradeType.findMany({
+      where: { sectionId, isActive: true },
+      include: { gradeType: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return sectionGradeTypes
+      .filter((sgt) => sgt.gradeType.isActive)
+      .map((sgt) => sgt.gradeType);
   }
 
   async levelUpClass(
@@ -245,7 +271,13 @@ export class EnrollmentsService {
     };
   }
 
-  findAll(page = 1, limit = 10, search?: string, sectionId?: string) {
+  findAll(
+    page = 1,
+    limit = 10,
+    search?: string,
+    sectionId?: string,
+    status?: EnrollmentStatus,
+  ) {
     const skip = (page - 1) * limit;
     const where: any = {};
 
@@ -281,6 +313,10 @@ export class EnrollmentsService {
 
     if (sectionId) {
       where.sectionId = sectionId;
+    }
+
+    if (status) {
+      where.status = status;
     }
 
     return Promise.all([
@@ -353,8 +389,16 @@ export class EnrollmentsService {
     });
   }
 
-  update(id: string, data: any) {
-    return this.prisma.enrollment.update({
+  async update(id: string, data: any) {
+    const before = await this.prisma.enrollment.findUnique({
+      where: { id },
+      select: { studentId: true, courseId: true, sectionId: true, status: true },
+    });
+    if (!before) {
+      throw new NotFoundException("Enrollment not found");
+    }
+
+    const updated = await this.prisma.enrollment.update({
       where: { id },
       data,
       include: {
@@ -383,6 +427,24 @@ export class EnrollmentsService {
         },
       },
     });
+
+    // When a student is (re-)activated in a class or moved to another class,
+    // make sure grade rows exist for every grade type of that class.
+    // Otherwise the grade sheet shows "-" for grade types added while the
+    // student was not ENROLLED.
+    const becameEnrolled =
+      updated.status === "ENROLLED" && before.status !== "ENROLLED";
+    const sectionChanged =
+      !!updated.sectionId && updated.sectionId !== before.sectionId;
+    const courseChanged = updated.courseId !== before.courseId;
+
+    if (updated.sectionId && updated.status === "ENROLLED" &&
+        (becameEnrolled || sectionChanged || courseChanged)) {
+      const gradeTypes = await this.getSectionActiveGradeTypes(updated.sectionId);
+      await this.createMissingGradeRows(updated.studentId, updated.courseId, gradeTypes);
+    }
+
+    return updated;
   }
 
   async remove(id: string) {

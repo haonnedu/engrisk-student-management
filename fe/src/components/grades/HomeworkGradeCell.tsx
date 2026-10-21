@@ -35,11 +35,11 @@ export function HomeworkGradeCell({
     <div className="flex items-center gap-2">
       <Badge
         variant={
-          homeworkGrade >= 8.5
+          homeworkGrade >= 80
             ? "default"
-            : homeworkGrade >= 7.0
+            : homeworkGrade >= 70
             ? "secondary"
-            : homeworkGrade >= 5.5
+            : homeworkGrade >= 50
             ? "outline"
             : "destructive"
         }
